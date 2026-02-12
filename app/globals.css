@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #050505;
+  --color-foreground: #fafafa;
+  --color-muted: #888888;
+  --color-accent: #d4af37;
+  --color-surface: #111111;
+  --color-border: #222222;
+
+  --font-heading: var(--font-playfair-display);
+  --font-body: var(--font-inter);
+
+  --animate-fade-up: fadeUp 0.8s ease-out forwards;
+  --animate-fade-in: fadeIn 0.8s ease-out forwards;
+  --animate-slow-pan: slowPan 20s ease-in-out infinite alternate;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slowPan {
+  from {
+    transform: scale(1.05) translate(0, 0);
+  }
+
+  to {
+    transform: scale(1.1) translate(-2%, -2%);
+  }
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.text-gold {
+  color: var(--color-accent);
+}
+
+.bg-gold {
+  background-color: var(--color-accent);
+}
+
+.border-gold {
+  border-color: var(--color-accent);
+}
+
+/* Page Transitions */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 500ms, transform 500ms;
+}
+
+.page-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 500ms, transform 500ms;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: black;
+}
+
+@layer base {
+  * {
+    @apply border-white/10;
+  }
+}
