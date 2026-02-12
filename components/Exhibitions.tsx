@@ -22,41 +22,41 @@ export default function Exhibitions() {
                     {/* Header */}
                     <div className="md:w-1/3 space-y-6">
                         <span className="text-gold text-[10px] tracking-[0.5em] uppercase block">{t('exhibitions.timeline')}</span>
-                        <h2 className="text-4xl md:text-6xl font-heading text-white font-light">
+                        <h2 className="text-4xl md:text-6xl font-heading text-foreground font-light">
                             {/* Splitting for style if possible, or just rendering */}
                             <span className="italic">{t('exhibitions.selectedExhibitions')}</span>
                         </h2>
-                        <p className="text-white/40 text-sm max-w-xs font-body tracking-wide leading-relaxed">
+                        <p className="text-foreground/40 text-sm max-w-xs font-body tracking-wide leading-relaxed">
                             {t('exhibitions.chronology')}
                         </p>
                     </div>
 
                     {/* List */}
-                    <div className="md:w-2/3 space-y-px bg-white/5 border border-white/5">
+                    <div className="md:w-2/3 space-y-px bg-foreground/5 border border-foreground/5">
                         {events.map((event, index) => (
                             <motion.div
                                 key={index}
                                 initial={{ opacity: 0 }}
                                 whileInView={{ opacity: 1 }}
                                 transition={{ duration: 0.8, delay: index * 0.1 }}
-                                className="group relative flex items-center justify-between p-10 hover:bg-white/5 transition-all duration-500 cursor-default border-b border-white/5 last:border-0"
+                                className="group relative flex items-center justify-between p-10 hover:bg-foreground/5 transition-all duration-500 cursor-default border-b border-foreground/5 last:border-0"
                             >
                                 <div className="flex gap-12 items-baseline">
-                                    <span className="text-sm font-heading text-white/20 group-hover:text-gold transition-colors duration-500">
+                                    <span className="text-sm font-heading text-foreground/20 group-hover:text-gold transition-colors duration-500">
                                         {event.year}
                                     </span>
                                     <div className="space-y-1">
-                                        <h3 className="text-xl md:text-2xl font-heading text-white group-hover:italic transition-all duration-500">
+                                        <h3 className="text-xl md:text-2xl font-heading text-foreground group-hover:italic transition-all duration-500">
                                             {event.title}
                                         </h3>
-                                        <p className="text-[10px] tracking-widest text-white/30 uppercase">
+                                        <p className="text-[10px] tracking-widest text-foreground/30 uppercase">
                                             {event.venue} — {event.city}
                                         </p>
                                     </div>
                                 </div>
 
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-500 hidden md:block">
-                                    <span className="text-[10px] tracking-[0.3em] font-medium text-white uppercase border-b border-white pb-1">
+                                    <span className="text-[10px] tracking-[0.3em] font-medium text-foreground uppercase border-b border-foreground pb-1">
                                         {t('exhibitions.details')}
                                     </span>
                                 </div>

@@ -32,7 +32,7 @@ export default function Hero({ profileType }: HeroProps) {
         <section className="relative h-[90vh] md:h-screen w-full overflow-hidden flex items-center justify-center p-6 prose-none">
             {/* Background with slow cinematic pan */}
             <div className="absolute inset-0 z-0">
-                <div className="absolute inset-0 bg-black/60 z-10" />
+                <div className="absolute inset-0 bg-background/60 z-10" />
                 <div
                     className="w-full h-full bg-neutral-900 animate-slow-pan"
                     style={{
@@ -55,7 +55,7 @@ export default function Hero({ profileType }: HeroProps) {
                         {profileType}
                     </p>
 
-                    <h2 className="text-4xl md:text-7xl lg:text-8xl font-heading text-white leading-[1.1] font-light">
+                    <h2 className="text-4xl md:text-7xl lg:text-8xl font-heading text-foreground leading-[1.1] font-light">
                         {headline.split(',').map((part: string, i: number) => (
                             <span key={i} className="block">
                                 {part}{i < headline.split(',').length - 1 ? ',' : ''}
@@ -64,13 +64,13 @@ export default function Hero({ profileType }: HeroProps) {
                     </h2>
 
                     <div className="flex flex-col items-center gap-10 pt-4">
-                        <p className="text-sm md:text-lg text-white/50 font-body max-w-xl mx-auto tracking-wide">
+                        <p className="text-sm md:text-lg text-foreground/50 font-body max-w-xl mx-auto tracking-wide">
                             {subtext}
                         </p>
 
                         <Link
                             href={link}
-                            className="group relative inline-flex items-center gap-4 px-10 py-4 bg-white text-black text-xs tracking-[0.3em] uppercase font-medium hover:bg-gold transition-colors duration-500"
+                            className="group relative inline-flex items-center gap-4 px-10 py-4 bg-foreground text-background text-xs tracking-[0.3em] uppercase font-medium hover:bg-gold transition-colors duration-500"
                         >
                             {cta}
                             <span className="transition-transform duration-500 group-hover:translate-x-2">→</span>
@@ -87,8 +87,8 @@ export default function Hero({ profileType }: HeroProps) {
                     transition={{ delay: 1, duration: 2, ease: "circOut" }}
                     className="flex items-center gap-4"
                 >
-                    <div className="h-[1px] w-24 bg-white/20" />
-                    <span className="text-[10px] uppercase tracking-[0.4em] text-white/40 italic">
+                    <div className="h-[1px] w-24 bg-foreground/20" />
+                    <span className="text-[10px] uppercase tracking-[0.4em] text-foreground/40 italic">
                         Exploring {accent}
                     </span>
                 </motion.div>

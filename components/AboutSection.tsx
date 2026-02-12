@@ -25,14 +25,14 @@ export default function AboutSection({ profileType }: AboutSectionProps) {
         : t('about.art.text2');
 
     return (
-        <section id="about" className="relative py-40 bg-background text-white overflow-hidden border-t border-white/5">
+        <section id="about" className="relative py-40 bg-background text-foreground overflow-hidden border-t border-foreground/5">
             <div className="container mx-auto px-6 md:px-12 grid md:grid-cols-2 gap-24 items-center">
                 {/* Visual Element */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 1.5, ease: 'easeOut' }}
-                    className="relative aspect-4/5 bg-neutral-900 group"
+                    className="relative aspect-4/5 bg-surface group"
                 >
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-1000 z-10" />
                     <div
@@ -58,18 +58,18 @@ export default function AboutSection({ profileType }: AboutSectionProps) {
                     </div>
 
                     <div className="space-y-8 max-w-lg">
-                        <p className="text-white/50 font-body leading-relaxed text-lg tracking-wide">
+                        <p className="text-foreground/50 font-body leading-relaxed text-lg tracking-wide">
                             {text1}
                         </p>
-                        <p className="text-white/50 font-body leading-relaxed text-lg tracking-wide">
+                        <p className="text-foreground/50 font-body leading-relaxed text-lg tracking-wide">
                             {text2}
                         </p>
                     </div>
 
-                    <div className="pt-8 border-t border-white/10 flex items-center justify-between">
+                    <div className="pt-8 border-t border-foreground/10 flex items-center justify-between">
                         <div className="space-y-1">
-                            <p className="text-[10px] tracking-widest text-white/30 uppercase">Ijabiken Moyo</p>
-                            <p className="text-[10px] tracking-widest text-gold uppercase underline underline-offset-8 cursor-pointer hover:text-white transition-colors">
+                            <p className="text-[10px] tracking-widest text-foreground/30 uppercase">Ijabiken Moyo</p>
+                            <p className="text-[10px] tracking-widest text-gold uppercase underline underline-offset-8 cursor-pointer hover:text-foreground transition-colors">
                                 {t('common.readFullBio')}
                             </p>
                         </div>

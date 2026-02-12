@@ -34,8 +34,8 @@ export default function NewsletterForm({ profileType }: NewsletterFormProps) {
         >
             <div className="space-y-4">
                 <span className="text-gold text-[10px] tracking-[0.5em] uppercase">{t('newsletter.title')}</span>
-                <h2 className="text-4xl md:text-6xl font-heading text-white">{title}</h2>
-                <p className="text-white/40 font-body tracking-wide leading-relaxed">
+                <h2 className="text-4xl md:text-6xl font-heading text-foreground">{title}</h2>
+                <p className="text-foreground/40 font-body tracking-wide leading-relaxed">
                     {description}
                 </p>
             </div>
@@ -44,14 +44,14 @@ export default function NewsletterForm({ profileType }: NewsletterFormProps) {
                 <input
                     type="email"
                     placeholder={t('newsletter.placeholder')}
-                    className="w-full bg-transparent border-b border-white/20 py-4 text-center text-white text-[10px] tracking-[0.3em] font-medium focus:outline-none focus:border-gold transition-colors placeholder:text-white/20"
+                    className="w-full bg-transparent border-b border-foreground/20 py-4 text-center text-foreground text-[10px] tracking-[0.3em] font-medium focus:outline-none focus:border-gold transition-colors placeholder:text-foreground/20"
                 />
-                <button className="mt-12 w-full bg-white text-black text-[10px] tracking-[0.5em] uppercase py-5 font-bold hover:bg-gold transition-colors duration-500">
+                <button className="mt-12 w-full bg-foreground text-background text-[10px] tracking-[0.5em] uppercase py-5 font-bold hover:bg-gold transition-colors duration-500">
                     {buttonText}
                 </button>
             </div>
 
-            <p className="text-[10px] text-white/20 tracking-widest uppercase">
+            <p className="text-[10px] text-foreground/20 tracking-widest uppercase">
                 {t('newsletter.privacy')}
             </p>
         </motion.div>

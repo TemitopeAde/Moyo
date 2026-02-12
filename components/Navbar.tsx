@@ -8,6 +8,7 @@ import { useProfile } from '@/context/ProfileContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import LanguageSwitcher from './LanguageSwitcher';
+import ThemeToggle from './ThemeToggle';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { FaInstagram, FaBehance } from 'react-icons/fa';
@@ -65,12 +66,12 @@ export default function Navbar() {
             <nav
                 className={cn(
                     'fixed top-0 left-0 right-0 z-50 transition-all duration-700 ease-in-out py-6 md:py-8 px-6 md:px-12 flex justify-between items-center',
-                    scrolled ? 'bg-background/80 backdrop-blur-xl py-4 border-b border-white/5' : 'bg-transparent'
+                    scrolled ? 'bg-background/80 backdrop-blur-xl py-4 border-b border-foreground/5' : 'bg-transparent'
                 )}
             >
                 {/* Brand */}
                 <Link href="/" className="group z-50 relative">
-                    <div className="text-xl md:text-2xl font-heading tracking-tight text-white flex items-center gap-1">
+                    <div className="text-xl md:text-2xl font-heading tracking-tight text-foreground flex items-center gap-1">
                         MOYO<span className="text-gold transition-transform duration-500 group-hover:rotate-180">.</span>
                     </div>
                 </Link>
@@ -81,7 +82,7 @@ export default function Navbar() {
                         href="/photography"
                         className={cn(
                             "px-4 py-1.5 rounded-full text-[10px] tracking-widest uppercase transition-all duration-500",
-                            profile === 'photography' ? "bg-white text-black" : "text-white/40 hover:text-white"
+                            profile === 'photography' ? "bg-foreground text-background" : "text-foreground/40 hover:text-foreground"
                         )}
                     >
                         {t('common.photography')}
@@ -90,7 +91,7 @@ export default function Navbar() {
                         href="/art"
                         className={cn(
                             "px-4 py-1.5 rounded-full text-[10px] tracking-widest uppercase transition-all duration-500",
-                            profile === 'art' ? "bg-white text-black" : "text-white/40 hover:text-white"
+                            profile === 'art' ? "bg-foreground text-background" : "text-foreground/40 hover:text-foreground"
                         )}
                     >
                         {t('common.fineArt')}
@@ -99,14 +100,14 @@ export default function Navbar() {
 
                 {/* Desktop Nav Links */}
                 <div className="hidden md:flex items-center space-x-10">
-                    <div className="flex items-center space-x-8 text-[10px] font-body tracking-[0.2em] text-white/60">
+                    <div className="flex items-center space-x-8 text-[10px] font-body tracking-[0.2em] text-foreground/60">
                         {links.map((link) => (
                             <Link
                                 key={link.name}
                                 href={link.href}
                                 className={cn(
-                                    "hover:text-white transition-colors duration-300 uppercase",
-                                    pathname === link.href && "text-white font-medium"
+                                    "hover:text-foreground transition-colors duration-300 uppercase",
+                                    pathname === link.href && "text-foreground font-medium"
                                 )}
                             >
                                 {link.name}
@@ -114,21 +115,22 @@ export default function Navbar() {
                         ))}
                     </div>
 
-                    <div className="h-4 w-[1px] bg-white/10" />
+                    <div className="h-4 w-[1px] bg-foreground/10" />
 
                     <div className="flex items-center gap-6">
+                        <ThemeToggle />
                         <LanguageSwitcher />
                         {profile === 'photography' ? (
                             <Link
                                 href="/photography/bookings"
-                                className="bg-white text-black text-[10px] tracking-[0.2em] font-medium px-6 py-2.5 rounded-sm hover:bg-gold hover:text-black transition-all duration-300 uppercase"
+                                className="bg-foreground text-background text-[10px] tracking-[0.2em] font-medium px-6 py-2.5 rounded-sm hover:bg-gold hover:text-background transition-all duration-300 uppercase"
                             >
                                 {t('common.bookNow')}
                             </Link>
                         ) : (
                             <Link
                                 href="/art/newsletter"
-                                className="border border-white/20 text-white text-[10px] tracking-[0.2em] font-medium px-6 py-2.5 rounded-sm hover:border-gold hover:text-gold transition-all duration-300 uppercase"
+                                className="border border-foreground/20 text-foreground text-[10px] tracking-[0.2em] font-medium px-6 py-2.5 rounded-sm hover:border-gold hover:text-gold transition-all duration-300 uppercase"
                             >
                                 {t('common.newsletter')}
                             </Link>
@@ -143,15 +145,15 @@ export default function Navbar() {
                 >
                     <motion.div
                         animate={mobileMenuOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
-                        className="w-8 h-[1px] bg-white group-hover:bg-gold transition-colors duration-300"
+                        className="w-8 h-[1px] bg-foreground group-hover:bg-gold transition-colors duration-300"
                     />
                     <motion.div
                         animate={mobileMenuOpen ? { opacity: 0 } : { opacity: 1 }}
-                        className="w-5 h-[1px] bg-white group-hover:bg-gold transition-colors duration-300 self-end"
+                        className="w-5 h-[1px] bg-foreground group-hover:bg-gold transition-colors duration-300 self-end"
                     />
                     <motion.div
                         animate={mobileMenuOpen ? { rotate: -45, y: -6, width: 32 } : { rotate: 0, y: 0, width: 20 }}
-                        className="w-5 h-[1px] bg-white group-hover:bg-gold transition-colors duration-300 self-end" // Adjusted initial width to match design
+                        className="w-5 h-[1px] bg-foreground group-hover:bg-gold transition-colors duration-300 self-end" // Adjusted initial width to match design
                     />
                 </button>
             </nav>
@@ -174,7 +176,7 @@ export default function Navbar() {
                                     onClick={() => setProfile('photography')}
                                     className={cn(
                                         "px-6 py-2 rounded-full text-xs tracking-widest uppercase transition-all duration-500",
-                                        profile === 'photography' ? "bg-white text-black" : "text-white/40"
+                                        profile === 'photography' ? "bg-foreground text-background" : "text-foreground/40"
                                     )}
                                 >
                                     {t('common.photography')}
@@ -183,7 +185,7 @@ export default function Navbar() {
                                     onClick={() => setProfile('art')}
                                     className={cn(
                                         "px-6 py-2 rounded-full text-xs tracking-widest uppercase transition-all duration-500",
-                                        profile === 'art' ? "bg-white text-black" : "text-white/40"
+                                        profile === 'art' ? "bg-foreground text-background" : "text-foreground/40"
                                     )}
                                 >
                                     {t('common.fineArt')}
@@ -201,7 +203,7 @@ export default function Navbar() {
                                     >
                                         <Link
                                             href={link.href}
-                                            className="text-3xl font-heading text-white hover:text-gold transition-colors"
+                                            className="text-3xl font-heading text-foreground hover:text-gold transition-colors"
                                             onClick={() => setMobileMenuOpen(false)}
                                         >
                                             {link.name}
@@ -210,14 +212,17 @@ export default function Navbar() {
                                 ))}
                             </div>
 
-                            <div className="w-12 h-px bg-white/10" />
+                            <div className="w-12 h-px bg-foreground/10" />
 
                             <div className="flex flex-col items-center gap-8">
-                                <LanguageSwitcher />
+                                <div className="flex items-center gap-4">
+                                    <ThemeToggle />
+                                    <LanguageSwitcher />
+                                </div>
 
-                                <div className="flex gap-8 text-white/40">
-                                    <a href="#" className="hover:text-white transition-colors text-xs tracking-widest uppercase"><FaInstagram size={18} /></a>
-                                    <a href="#" className="hover:text-white transition-colors text-xs tracking-widest uppercase"><FaBehance size={18} /></a>
+                                <div className="flex gap-8 text-foreground/40">
+                                    <a href="#" className="hover:text-foreground transition-colors text-xs tracking-widest uppercase"><FaInstagram size={18} /></a>
+                                    <a href="#" className="hover:text-foreground transition-colors text-xs tracking-widest uppercase"><FaBehance size={18} /></a>
                                 </div>
                             </div>
 

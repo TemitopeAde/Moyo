@@ -19,12 +19,12 @@ export default function ProfileToggle() {
 
     return (
         <div className="flex flex-col items-center gap-8 animate-fade-in" style={{ animationDelay: '1s' }}>
-            <div className="flex bg-white/5 border border-white/10 rounded-full p-1 backdrop-blur-md relative group isolate">
+            <div className="flex bg-foreground/5 border border-foreground/10 rounded-full p-1 backdrop-blur-md relative group isolate">
                 <button
                     onClick={() => handleSelect('photography')}
                     className={`relative z-10 px-8 py-3 rounded-full text-sm tracking-[0.2em] uppercase transition-all duration-500 ${profile === 'photography'
-                            ? 'bg-white text-black font-medium shadow-lg'
-                            : 'text-white/60 hover:text-white hover:bg-white/10'
+                        ? 'bg-foreground text-background font-medium shadow-lg'
+                        : 'text-foreground/60 hover:text-foreground hover:bg-foreground/10'
                         }`}
                 >
                     {t('common.photography')}
@@ -33,8 +33,8 @@ export default function ProfileToggle() {
                 <button
                     onClick={() => handleSelect('art')}
                     className={`relative z-10 px-8 py-3 rounded-full text-sm tracking-[0.2em] uppercase transition-all duration-500 ${profile === 'art'
-                            ? 'bg-white text-black font-medium shadow-lg'
-                            : 'text-white/60 hover:text-white hover:bg-white/10'
+                        ? 'bg-foreground text-background font-medium shadow-lg'
+                        : 'text-foreground/60 hover:text-foreground hover:bg-foreground/10'
                         }`}
                 >
                     {t('common.fineArt')}
@@ -43,7 +43,7 @@ export default function ProfileToggle() {
 
             {!profile && (
                 <div className="text-center max-w-md">
-                    <p className="text-white/40 text-xs tracking-widest uppercase mb-4 animate-pulse">
+                    <p className="text-foreground/40 text-xs tracking-widest uppercase mb-4 animate-pulse">
                         {t('common.chooseExperience')}
                     </p>
                 </div>

@@ -24,7 +24,7 @@ export default function PhotographyGrid() {
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
                     <div className="space-y-4">
                         <span className="text-gold text-[10px] tracking-[0.5em] uppercase block">{t('photography.selectedPortfolio')}</span>
-                        <h2 className="text-4xl md:text-6xl font-heading text-white font-light">
+                        <h2 className="text-4xl md:text-6xl font-heading text-foreground font-light">
                             {/* Splitting "Visual Proximity" if needed or just using the full string */}
                             {/* To match design "Visual" normal, "Proximity" italic */}
                             {/* I'll assume the translation key is single string for now or split it manually if I added split keys */}
@@ -33,7 +33,7 @@ export default function PhotographyGrid() {
                             <span className="italic">{t('photography.visualProximity')}</span>
                         </h2>
                     </div>
-                    <p className="text-white/40 text-sm max-w-xs font-body tracking-wide leading-relaxed">
+                    <p className="text-foreground/40 text-sm max-w-xs font-body tracking-wide leading-relaxed">
                         {t('photography.gridDescription')}
                     </p>
                 </div>
@@ -45,7 +45,7 @@ export default function PhotographyGrid() {
                             initial={{ opacity: 0, y: 40 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             transition={{ duration: 1, delay: index * 0.1 }}
-                            className={`relative group overflow-hidden bg-neutral-900 ${item.span}`}
+                            className={`relative group overflow-hidden bg-surface ${item.span}`}
                         >
                             <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-700 z-10" />
                             <div
