@@ -16,6 +16,7 @@ import { FaInstagram, FaBehance } from 'react-icons/fa';
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [isInitialLoad, setIsInitialLoad] = useState<boolean | null>(null);
     const { profile, setProfile } = useProfile(); // We need setProfile for the mobile switcher
     const { language } = useLanguage();
     const { t } = useTranslate(language);
@@ -28,6 +29,16 @@ export default function Navbar() {
 
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    useEffect(() => {
+        const played = sessionStorage.getItem('moreli_nav_played');
+        if (!played) {
+            setIsInitialLoad(true);
+            sessionStorage.setItem('moreli_nav_played', 'true');
+        } else {
+            setIsInitialLoad(false);
+        }
     }, []);
 
     // Close mobile menu on route change
@@ -70,36 +81,58 @@ export default function Navbar() {
                 )}
             >
                 {/* Brand */}
-                <Link href="/" className="group z-50 relative">
-                    <div className="text-xl md:text-2xl font-heading tracking-tight text-foreground flex items-center gap-1">
-                        MOYO<span className="text-gold transition-transform duration-500 group-hover:rotate-180">.</span>
-                    </div>
-                </Link>
+                <motion.div
+                    initial={isInitialLoad ? { opacity: 0 } : false}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.4, delay: isInitialLoad ? 0.6 : 0, ease: "easeOut" }}
+                >
+                    <Link href="/" className="group z-50 relative">
+                        <div className="text-xl md:text-2xl font-heading tracking-tight text-foreground flex items-center gap-1">
+                            MOYO<span className="text-gold transition-transform duration-500 group-hover:rotate-180">.</span>
+                        </div>
+                    </Link>
+                </motion.div>
 
                 {/* Profile Toggle In Mini Mode (Desktop) */}
-                <div className="hidden lg:flex items-center glass rounded-full px-2 py-1 gap-1">
+                <motion.div
+                    initial={isInitialLoad ? { opacity: 0 } : false}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: isInitialLoad ? 0.9 : 0, ease: "easeOut" }}
+                    className="hidden lg:flex items-center glass rounded-full px-2 py-1 gap-1"
+                >
                     <Link
                         href="/photography"
                         className={cn(
-                            "px-4 py-1.5 rounded-full text-[10px] tracking-widest uppercase transition-all duration-500",
-                            profile === 'photography' ? "bg-foreground text-background" : "text-foreground/40 hover:text-foreground"
+                            "relative px-4 py-1.5 rounded-full text-[10px] tracking-widest uppercase transition-colors duration-500",
+                            profile === 'photography' ? "text-background" : "text-foreground/40 hover:text-foreground"
                         )}
                     >
                         {t('common.photography')}
+                        {profile === 'photography' && (
+                            <motion.div layoutId="navToggleKnob" className="absolute inset-0 bg-foreground rounded-full -z-10" transition={{ type: 'spring', stiffness: 400, damping: 35 }} />
+                        )}
                     </Link>
                     <Link
                         href="/art"
                         className={cn(
-                            "px-4 py-1.5 rounded-full text-[10px] tracking-widest uppercase transition-all duration-500",
-                            profile === 'art' ? "bg-foreground text-background" : "text-foreground/40 hover:text-foreground"
+                            "relative px-4 py-1.5 rounded-full text-[10px] tracking-widest uppercase transition-colors duration-500",
+                            profile === 'art' ? "text-background" : "text-foreground/40 hover:text-foreground"
                         )}
                     >
                         {t('common.fineArt')}
+                        {profile === 'art' && (
+                            <motion.div layoutId="navToggleKnob" className="absolute inset-0 bg-foreground rounded-full -z-10" transition={{ type: 'spring', stiffness: 400, damping: 35 }} />
+                        )}
                     </Link>
-                </div>
+                </motion.div>
 
                 {/* Desktop Nav Links */}
-                <div className="hidden md:flex items-center space-x-10">
+                <motion.div
+                    initial={isInitialLoad ? { opacity: 0 } : false}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: isInitialLoad ? 1.0 : 0, staggerChildren: 0.1, ease: "easeOut" }}
+                    className="hidden md:flex items-center space-x-10"
+                >
                     <div className="flex items-center space-x-8 text-[10px] font-body tracking-[0.2em] text-foreground/60">
                         {links.map((link) => (
                             <Link
@@ -136,7 +169,7 @@ export default function Navbar() {
                             </Link>
                         )}
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Mobile Menu Toggle */}
                 <button
