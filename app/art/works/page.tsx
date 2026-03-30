@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
@@ -8,22 +8,20 @@ import { useProfile } from '@/context/ProfileContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 
-const works = [
-    { id: 1, title: 'Form No. 1', year: '2025', medium: 'Oil on Canvas', size: '120x150cm', image: '/art_1.webp' },
-    { id: 2, title: 'Void Study', year: '2024', medium: 'Mixed Media', size: '100x100cm', image: '/art_2.webp' },
-    { id: 3, title: 'Ancestral II', year: '2024', medium: 'Charcoal & Ink', size: '80x120cm', image: '/art_3.webp' },
-    { id: 4, title: 'Presence', year: '2023', medium: 'Digital Print', size: 'Limited Ed. of 5', image: '/art_4.webp' },
-    { id: 5, title: 'Structure V', year: '2023', medium: 'Sculpture', size: 'Bronze', image: '/art_5.webp' },
-    { id: 6, title: 'Echo', year: '2022', medium: 'Acrylic', size: '150x200cm', image: '/art_6.webp' },
-];
-
 export default function WorksPage() {
     const { setProfile } = useProfile();
     const { language } = useLanguage();
     const { t } = useTranslate(language);
+    const [works, setWorks] = useState<any[]>([]);
 
     useEffect(() => {
         setProfile('art');
+        fetch('/api/catalog')
+            .then(res => res.json())
+            .then(data => {
+                if (data.artWorks) setWorks(data.artWorks);
+            })
+            .catch(err => console.error('Failed to fetch works', err));
     }, [setProfile]);
 
     return (

@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
@@ -7,16 +8,16 @@ import { useTranslate } from '@/lib/translations';
 export default function PhotographyGrid() {
     const { language } = useLanguage();
     const { t } = useTranslate(language);
+    const [items, setItems] = useState<any[]>([]);
 
-    // We can also translate the items if we move them inside the component or make them dynamic
-    // For now I will translate the categories as a demonstration
-    const items = [
-        { id: 1, title: "Identity Series", category: t('categories.editorial'), span: "md:col-span-2 md:row-span-2", image: "/photo_1.webp" },
-        { id: 2, title: "Quiet Presence", category: t('categories.portrait'), span: "md:col-span-1 md:row-span-1", image: "/photo_2.webp" },
-        { id: 3, title: "Urban Monolith", category: t('categories.commercial'), span: "md:col-span-1 md:row-span-2", image: "/photo_3.webp" },
-        { id: 4, title: "Ethereal Form", category: t('categories.personal'), span: "md:col-span-1 md:row-span-1", image: "/photo_4.webp" },
-        { id: 5, title: "London Dusk", category: t('categories.editorial'), span: "md:col-span-1 md:row-span-1", image: "/photo_5.webp" },
-    ];
+    useEffect(() => {
+        fetch('/api/catalog')
+            .then(res => res.json())
+            .then(data => {
+                if (data.photographyItems) setItems(data.photographyItems);
+            })
+            .catch(err => console.error('Failed to fetch photography items', err));
+    }, []);
 
     return (
         <section id="photography" className="py-32 bg-background">

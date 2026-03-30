@@ -1,0 +1,105 @@
+{
+  "artWorks": [
+    {
+      "title": "Form 1",
+      "year": "2023",
+      "medium": "Oil on canvas",
+      "size": "123x12cm",
+      "image": "/uploads/1774863853455-Screenshot-2026-03-30-at-02.50.03-1.png",
+      "id": 1774863853532
+    },
+    {
+      "title": "Test SVG",
+      "year": "2026",
+      "medium": "Code",
+      "size": "N/A",
+      "image": "/uploads/1772547949062-next.svg",
+      "id": 1772547956846
+    },
+    {
+      "id": 1,
+      "title": "Form No. 1",
+      "year": "2025",
+      "medium": "Oil on Canvas",
+      "size": "120x150cm",
+      "image": "/art_1.webp"
+    },
+    {
+      "id": 2,
+      "title": "Void Study",
+      "year": "2024",
+      "medium": "Mixed Media",
+      "size": "100x100cm",
+      "image": "/art_2.webp"
+    },
+    {
+      "id": 3,
+      "title": "Ancestral II",
+      "year": "2024",
+      "medium": "Charcoal & Ink",
+      "size": "80x120cm",
+      "image": "/art_3.webp"
+    },
+    {
+      "id": 4,
+      "title": "Presence",
+      "year": "2023",
+      "medium": "Digital Print",
+      "size": "Limited Ed. of 5",
+      "image": "/art_4.webp"
+    },
+    {
+      "id": 5,
+      "title": "Structure V",
+      "year": "2023",
+      "medium": "Sculpture",
+      "size": "Bronze",
+      "image": "/art_5.webp"
+    },
+    {
+      "id": 6,
+      "title": "Echo",
+      "year": "2022",
+      "medium": "Acrylic",
+      "size": "150x200cm",
+      "image": "/art_6.webp"
+    }
+  ],
+  "photographyItems": [
+    {
+      "id": 1,
+      "title": "Identity Series",
+      "category": "Editorial",
+      "span": "md:col-span-2 md:row-span-2",
+      "image": "/photo_1.webp"
+    },
+    {
+      "id": 2,
+      "title": "Quiet Presence",
+      "category": "Portrait",
+      "span": "md:col-span-1 md:row-span-1",
+      "image": "/photo_2.webp"
+    },
+    {
+      "id": 3,
+      "title": "Urban Monolith",
+      "category": "Commercial",
+      "span": "md:col-span-1 md:row-span-2",
+      "image": "/photo_3.webp"
+    },
+    {
+      "id": 4,
+      "title": "Ethereal Form",
+      "category": "Personal",
+      "span": "md:col-span-1 md:row-span-1",
+      "image": "/photo_4.webp"
+    },
+    {
+      "id": 5,
+      "title": "London Dusk",
+      "category": "Editorial",
+      "span": "md:col-span-1 md:row-span-1",
+      "image": "/photo_5.webp"
+    }
+  ]
+}
