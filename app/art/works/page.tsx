@@ -16,11 +16,9 @@ export default function WorksPage() {
 
     useEffect(() => {
         setProfile('art');
-        fetch('/api/catalog')
+        fetch('/api/artworks')
             .then(res => res.json())
-            .then(data => {
-                if (data.artWorks) setWorks(data.artWorks);
-            })
+            .then(data => setWorks(data.artworks || []))
             .catch(err => console.error('Failed to fetch works', err));
     }, [setProfile]);
 
@@ -58,11 +56,13 @@ export default function WorksPage() {
                             <div className="space-y-1">
                                 <div className="flex justify-between items-baseline">
                                     <h3 className="text-xl font-heading text-white group-hover:text-gold transition-colors duration-300">{work.title}</h3>
-                                    <span className="text-[10px] text-white/40 tracking-widest">{work.year}</span>
+                                    <span className="text-[10px] text-white/40 tracking-widest">${work.price}</span>
                                 </div>
                                 <div className="flex justify-between items-baseline">
-                                    <p className="text-[10px] text-white/60 uppercase tracking-widest">{work.medium}</p>
-                                    <p className="text-[10px] text-white/30 uppercase tracking-widest text-right">{work.size}</p>
+                                    <p className="text-[10px] text-white/60 uppercase tracking-widest">{work.category}</p>
+                                    <p className="text-[10px] text-white/30 uppercase tracking-widest text-right">
+                                        {work.is_available ? 'Available' : 'Sold Out'}
+                                    </p>
                                 </div>
                             </div>
                         </motion.div>

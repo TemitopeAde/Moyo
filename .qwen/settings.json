@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(www.npmjs.com)",
+      "WebFetch(dev.wix.com)"
+    ]
+  },
+  "$version": 3
+}

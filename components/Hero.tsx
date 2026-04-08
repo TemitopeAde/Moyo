@@ -17,6 +17,7 @@ interface HeroProps {
 export default function Hero({ profileType }: HeroProps) {
     const { language } = useLanguage();
     const { t } = useTranslate(language);
+    const [cmsHero, setCmsHero] = useState<{ heroText: string; heroImage: string } | null>(null);
 
     const [isInitialLoad, setIsInitialLoad] = useState<boolean | null>(null);
 
@@ -30,13 +31,17 @@ export default function Hero({ profileType }: HeroProps) {
         }
     }, []);
 
-    const headline = profileType === 'photography'
-        ? t('hero.photography')
-        : t('hero.art');
+    useEffect(() => {
+        fetch('/api/content')
+            .then((res) => res.json())
+            .then((data) => setCmsHero(data.content?.homepage))
+            .catch(() => null);
+    }, []);
 
-    const subtext = profileType === 'photography'
-        ? t('hero.photographySub')
-        : t('hero.artSub');
+    const defaultHeadline = profileType === 'photography' ? t('hero.photography') : t('hero.art');
+    const headline = cmsHero?.heroText || defaultHeadline;
+
+    const subtext = profileType === 'photography' ? t('hero.photographySub') : t('hero.artSub');
 
     const cta = profileType === 'photography'
         ? t('hero.ctaPhotography')
@@ -72,7 +77,7 @@ export default function Hero({ profileType }: HeroProps) {
                     }}
                     className="w-full h-full bg-neutral-900"
                     style={{
-                        backgroundImage: `url('/${profileType}_hero.webp')`,
+                        backgroundImage: `url('${cmsHero?.heroImage || '/' + profileType + '_hero.webp'}')`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         willChange: 'transform, opacity'

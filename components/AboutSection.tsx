@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
+import { useEffect, useState } from 'react';
 interface AboutSectionProps {
     profileType: 'photography' | 'art';
 }
@@ -10,14 +11,22 @@ interface AboutSectionProps {
 export default function AboutSection({ profileType }: AboutSectionProps) {
     const { language } = useLanguage();
     const { t } = useTranslate(language);
+    const [cmsAbout, setCmsAbout] = useState<{ text: string; image: string } | null>(null);
+
+    useEffect(() => {
+        fetch('/api/content')
+            .then((res) => res.json())
+            .then((data) => setCmsAbout(data.content?.about))
+            .catch(() => null);
+    }, []);
 
     const headline = profileType === 'photography'
         ? t('about.photography.headline')
         : t('about.art.headline');
 
-    const text1 = profileType === 'photography'
+    const text1 = cmsAbout?.text || (profileType === 'photography'
         ? t('about.photography.text1')
-        : t('about.art.text1');
+        : t('about.art.text1'));
 
     const text2 = profileType === 'photography'
         ? t('about.photography.text2')
@@ -36,7 +45,7 @@ export default function AboutSection({ profileType }: AboutSectionProps) {
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-1000 z-10" />
                     <div
                         className="w-full h-full grayscale hover:grayscale-0 transition-all duration-1000 bg-cover bg-center"
-                        style={{ backgroundImage: `url('/${profileType}_about.webp')` }}
+                        style={{ backgroundImage: `url('${cmsAbout?.image || '/' + profileType + '_about.webp'}')` }}
                     />
                     <div className="absolute -top-4 -left-4 w-12 h-12 border-t border-l border-gold/50" />
                     <div className="absolute -bottom-4 -right-4 w-12 h-12 border-b border-r border-gold/50" />

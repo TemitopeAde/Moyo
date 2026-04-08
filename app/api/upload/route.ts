@@ -1,39 +1,64 @@
-import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { NextRequest, NextResponse } from 'next/server';
+import { v2 as cloudinary } from 'cloudinary';
+import { requireAdmin } from '@/lib/auth';
 
-export async function POST(req: Request) {
-    try {
-        const formData = await req.formData();
-        const file = formData.get('file') as File;
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-        if (!file) {
-            return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
-        }
+export async function POST(req: NextRequest) {
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
 
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-
-        const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-
-        // Ensure upload directory exists
-        try {
-            await fs.access(uploadDir);
-        } catch {
-            await fs.mkdir(uploadDir, { recursive: true });
-        }
-
-        const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-        const filePath = path.join(uploadDir, fileName);
-
-        await fs.writeFile(filePath, buffer);
-
-        return NextResponse.json({
-            message: 'File uploaded successfully',
-            url: `/uploads/${fileName}`
-        });
-    } catch (error) {
-        console.error('Error uploading file:', error);
-        return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });
+  try {
+    console.log('[upload] request received', {
+      hasAdminHeader: !!req.headers.get('x-admin-key'),
+      cloudinaryConfigured: Boolean(
+        process.env.CLOUDINARY_CLOUD_NAME &&
+          process.env.CLOUDINARY_API_KEY &&
+          process.env.CLOUDINARY_API_SECRET
+      ),
+    });
+    const formData = await req.formData();
+    const file = formData.get('file') as File | null;
+    if (!file) {
+      console.warn('[upload] no file in formData');
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
+    console.log('[upload] file meta', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    });
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const upload = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'moyo-admin' },
+        (error, result) => {
+          if (error) {
+            console.error('[upload] cloudinary error', error);
+            reject(error);
+          } else {
+            console.log('[upload] cloudinary result', {
+              assetId: (result as any)?.asset_id,
+              publicId: (result as any)?.public_id,
+              bytes: (result as any)?.bytes,
+              secureUrl: Boolean((result as any)?.secure_url),
+            });
+            resolve(result);
+          }
+        }
+      );
+      stream.end(buffer);
+    });
+
+    return NextResponse.json({ url: (upload as any).secure_url });
+  } catch (error) {
+    console.error('[upload] Cloudinary upload failed', error);
+    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+  }
 }

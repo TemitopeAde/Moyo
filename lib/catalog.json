@@ -67,6 +67,13 @@
   ],
   "photographyItems": [
     {
+      "title": "My",
+      "category": "Editor",
+      "span": "md:col-span-1 md:row-span-1",
+      "image": "/uploads/1774865076659-Screenshot-2026-03-30-at-04.08.10.png",
+      "id": 1774865076719
+    },
+    {
       "id": 1,
       "title": "Identity Series",
       "category": "Editorial",

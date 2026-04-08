@@ -11,12 +11,22 @@ export default function PhotographyGrid() {
     const [items, setItems] = useState<any[]>([]);
 
     useEffect(() => {
-        fetch('/api/catalog')
+        fetch('/api/galleries')
             .then(res => res.json())
             .then(data => {
-                if (data.photographyItems) setItems(data.photographyItems);
+                const normalized =
+                    data.galleries?.flatMap((g: any, i: number) =>
+                        (g.approved_images || []).map((img: string, idx: number) => ({
+                            id: `${g.id}-${idx}`,
+                            image: img,
+                            title: g.client_name,
+                            category: g.slug,
+                            span: idx % 5 === 0 ? 'md:col-span-2 md:row-span-2' : 'md:col-span-1 md:row-span-1',
+                        }))
+                    ) || [];
+                setItems(normalized);
             })
-            .catch(err => console.error('Failed to fetch photography items', err));
+            .catch(err => console.error('Failed to fetch galleries', err));
     }, []);
 
     return (
