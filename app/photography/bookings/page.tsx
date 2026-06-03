@@ -42,7 +42,7 @@ export default function BookingsPage() {
             } else {
                 setStatus('error');
             }
-        } catch (error) {
+        } catch {
             setStatus('error');
         }
     };
@@ -116,7 +116,7 @@ export default function BookingsPage() {
                         <button
                             type="submit"
                             disabled={status === 'loading'}
-                            className="w-full bg-foreground text-background text-[10px] tracking-[0.4em] uppercase py-5 font-bold hover:bg-gold hover:text-foreground transition-colors disabled:opacity-50"
+                            className="w-full bg-foreground text-background text-[10px] tracking-[0.4em] uppercase py-5 font-bold hover:bg-gold hover:text-background transition-colors disabled:opacity-50"
                         >
                             {status === 'loading' ? 'Sending...' : t('booking.sendInquiry')}
                         </button>

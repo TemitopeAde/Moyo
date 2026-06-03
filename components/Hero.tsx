@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import { useEffect, useState } from 'react';
+import ThreeAtmosphere from '@/components/ThreeAtmosphere';
 
 // Exported Masked Line inside Hero so we don't need another file optionally,
 // or we can import from MaskedText
@@ -67,7 +68,6 @@ export default function Hero({ profileType }: HeroProps) {
         <section className="relative h-[90vh] md:h-screen w-full overflow-hidden flex items-center justify-center p-6 prose-none">
             {/* Background Image: No parallax, only relax scale */}
             <div className="absolute inset-0 z-0 bg-background overflow-hidden">
-                <div className="absolute inset-0 bg-background/60 z-10" />
                 <motion.div
                     initial={isFirst ? { opacity: 0, scale: 1.035 } : { opacity: 0, scale: 1 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -83,10 +83,15 @@ export default function Hero({ profileType }: HeroProps) {
                         willChange: 'transform, opacity'
                     }}
                 />
+                <ThreeAtmosphere
+                    preset={profileType}
+                    className="z-10 opacity-80 mix-blend-screen"
+                />
+                <div className="absolute inset-0 bg-background/65 z-20" />
             </div>
 
             {/* Content */}
-            <div className="relative z-20 text-center max-w-5xl">
+            <div className="relative z-30 text-center max-w-5xl">
                 <div className="space-y-8">
 
                     <div className="overflow-hidden">

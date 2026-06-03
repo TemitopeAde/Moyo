@@ -1,10 +1,18 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
-import { FiUpload, FiPlus, FiTrash2, FiCheckCircle, FiXCircle, FiLock, FiUnlock } from 'react-icons/fi';
+import {
+  FiCheckCircle,
+  FiLock,
+  FiTrash2,
+  FiUnlock,
+  FiUpload,
+  FiXCircle,
+} from 'react-icons/fi';
 
 type Artwork = {
   id: number;
@@ -26,6 +34,25 @@ type Gallery = {
   is_locked: boolean;
 };
 
+type PhotographyCatalogImage = {
+  id: number;
+  category_id: number;
+  image_url: string;
+  title: string;
+  alt_text: string;
+  display_order: number;
+};
+
+type PhotographyCatalogCategory = {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  display_order: number;
+  is_active: boolean;
+  images: PhotographyCatalogImage[];
+};
+
 type Content = {
   homepage: { heroText: string; heroImage: string };
   about: { text: string; image: string };
@@ -33,12 +60,12 @@ type Content = {
 
 type Contact = { phone: string; email: string; address: string };
 type Social = { id: number; platform: string; url: string; icon?: string };
-type Order = { id: number; items: any[]; total_price: number; status: string; customer_email: string };
+type Order = { id: number; items: unknown[]; total_price: number; status: string; customer_email: string };
 
-const sectionCard = 'bg-surface/30 p-8 md:p-12 border border-white/5 backdrop-blur-sm space-y-6';
+const sectionCard = 'bg-black/20 p-6 md:p-8 border border-white/10 space-y-6';
 const label = 'text-[10px] uppercase tracking-widest text-white/40';
 const inputClass =
-  'w-full bg-white/5 border border-white/10 px-4 py-3 text-white focus:border-gold outline-none transition-colors';
+  'w-full rounded-sm bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-gold outline-none transition-colors';
 
 export default function AdminPage() {
   const [adminKey, setAdminKey] = useState('');
@@ -47,6 +74,7 @@ export default function AdminPage() {
 
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [galleries, setGalleries] = useState<Gallery[]>([]);
+  const [catalogCategories, setCatalogCategories] = useState<PhotographyCatalogCategory[]>([]);
   const [content, setContent] = useState<Content>({
     homepage: { heroText: '', heroImage: '' },
     about: { text: '', image: '' },
@@ -65,10 +93,24 @@ export default function AdminPage() {
   });
 
   const [galleryForm, setGalleryForm] = useState({ clientName: '', slug: '', access_code: '' });
+  const [catalogCategoryForm, setCatalogCategoryForm] = useState({
+    name: '',
+    slug: '',
+    description: '',
+    display_order: '',
+  });
+  const [catalogImageForm, setCatalogImageForm] = useState({
+    category_id: '',
+    title: '',
+    alt_text: '',
+    image_url: '',
+    display_order: '',
+  });
   const [contentForm, setContentForm] = useState(content);
   const [contactForm, setContactForm] = useState(contact);
   const [socialForm, setSocialForm] = useState({ platform: '', url: '', icon: '' });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [catalogImageFile, setCatalogImageFile] = useState<File | null>(null);
   const [galleryUploads, setGalleryUploads] = useState<Record<string, File | null>>({});
   const [isAuthed, setIsAuthed] = useState(false);
   const [authChecking, setAuthChecking] = useState(false);
@@ -76,8 +118,7 @@ export default function AdminPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem('moyo-admin-key');
-    if (saved) setAdminKey(saved);
+    localStorage.removeItem('moyo-admin-key');
   }, []);
 
   const headers = useMemo(
@@ -93,12 +134,13 @@ export default function AdminPage() {
     try {
       const [artRes, galRes, contentRes, contactRes, socialRes, orderRes] = await Promise.all([
         fetch('/api/artworks'),
-        fetch('/api/galleries'),
+        fetch('/api/galleries', { headers }),
         fetch('/api/content'),
         fetch('/api/contact'),
         fetch('/api/socials'),
         fetch('/api/orders'),
       ]);
+      const catalogRes = await fetch('/api/photography-catalog/categories', { headers });
 
       const artData = await artRes.json();
       const galData = await galRes.json();
@@ -106,9 +148,11 @@ export default function AdminPage() {
       const contactData = await contactRes.json();
       const socialData = await socialRes.json();
       const orderData = await orderRes.json();
+      const catalogData = await catalogRes.json();
 
       setArtworks(artData.artworks || []);
       setGalleries(galData.galleries || []);
+      setCatalogCategories(catalogData.categories || []);
       setContent(conData.content || content);
       setContact(contactData.contact || contact);
       setSocials(socialData.socials || []);
@@ -125,23 +169,39 @@ export default function AdminPage() {
     fetchAll();
   }, [isAuthed]);
 
-  const verifyAdminKey = async () => {
+  const verifyAdminKey = async (keyToVerify: string) => {
+    const submittedKey = keyToVerify.trim();
     setAuthError(null);
+    setMessage(null);
+
+    if (!submittedKey) {
+      setIsAuthed(false);
+      setAuthError('Enter the admin password');
+      return false;
+    }
+
     setAuthChecking(true);
     try {
-      const res = await fetch('/api/artworks', { headers });
+      const res = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': submittedKey,
+        },
+      });
       if (!res.ok) {
         setIsAuthed(false);
+        localStorage.removeItem('moyo-admin-key');
         setAuthError('Invalid admin password');
         return false;
       }
-      localStorage.setItem('moyo-admin-key', adminKey);
+      setAdminKey(submittedKey);
       setIsAuthed(true);
       setMessage({ text: 'Admin unlocked', type: 'success' });
-      fetchAll();
       return true;
-    } catch (err) {
+    } catch {
       setIsAuthed(false);
+      localStorage.removeItem('moyo-admin-key');
       setAuthError('Unable to verify password');
       return false;
     } finally {
@@ -151,15 +211,8 @@ export default function AdminPage() {
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await verifyAdminKey();
+    await verifyAdminKey(adminKey);
   };
-
-  useEffect(() => {
-    if (adminKey && !isAuthed && !authChecking) {
-      verifyAdminKey();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adminKey]);
 
   const handleUpload = async (file: File) => {
     setUploading(true);
@@ -269,7 +322,7 @@ export default function AdminPage() {
     setMessage({ text: 'Gallery created', type: 'success' });
   };
 
-  const updateGallery = async (id: string, action: string, payload?: any) => {
+  const updateGallery = async (id: string, action: string, payload?: Record<string, unknown>) => {
     const res = await fetch('/api/galleries', {
       method: 'PUT',
       headers,
@@ -286,6 +339,105 @@ export default function AdminPage() {
     if (!url) return;
     await updateGallery(id.toString(), 'addImages', { images: [url] });
     setGalleryUploads((prev) => ({ ...prev, [id]: null }));
+  };
+
+  const createCatalogCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminKey) return setMessage({ text: 'Add admin key first', type: 'error' });
+
+    const res = await fetch('/api/photography-catalog/categories', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        ...catalogCategoryForm,
+        display_order: Number(catalogCategoryForm.display_order || 0),
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) return setMessage({ text: data.error || 'Failed to create category', type: 'error' });
+
+    setCatalogCategories((prev) => [data.category, ...prev]);
+    setCatalogCategoryForm({ name: '', slug: '', description: '', display_order: '' });
+    setMessage({ text: 'Photography category created', type: 'success' });
+  };
+
+  const toggleCatalogCategory = async (category: PhotographyCatalogCategory) => {
+    const res = await fetch('/api/photography-catalog/categories', {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ ...category, is_active: !category.is_active }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setCatalogCategories((prev) =>
+        prev.map((item) => (item.id === category.id ? { ...item, ...data.category } : item))
+      );
+    }
+  };
+
+  const deleteCatalogCategory = async (id: number) => {
+    const res = await fetch(`/api/photography-catalog/categories?id=${id}`, { method: 'DELETE', headers });
+    if (res.ok) {
+      setCatalogCategories((prev) => prev.filter((category) => category.id !== id));
+      if (catalogImageForm.category_id === String(id)) {
+        setCatalogImageForm((prev) => ({ ...prev, category_id: '' }));
+      }
+      setMessage({ text: 'Photography category deleted', type: 'success' });
+    }
+  };
+
+  const createCatalogImage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminKey) return setMessage({ text: 'Add admin key first', type: 'error' });
+    if (!catalogImageForm.category_id) {
+      return setMessage({ text: 'Choose a category first', type: 'error' });
+    }
+
+    let imageUrl = catalogImageForm.image_url;
+    if (catalogImageFile) {
+      const uploadedUrl = await handleUpload(catalogImageFile);
+      if (!uploadedUrl) return;
+      imageUrl = uploadedUrl;
+    }
+
+    if (!imageUrl) return setMessage({ text: 'Upload an image or paste an image URL', type: 'error' });
+
+    const res = await fetch('/api/photography-catalog/images', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        ...catalogImageForm,
+        category_id: Number(catalogImageForm.category_id),
+        image_url: imageUrl,
+        display_order: Number(catalogImageForm.display_order || 0),
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) return setMessage({ text: data.error || 'Failed to add image', type: 'error' });
+
+    setCatalogCategories((prev) =>
+      prev.map((category) =>
+        category.id === Number(catalogImageForm.category_id)
+          ? { ...category, images: [...(category.images || []), data.image] }
+          : category
+      )
+    );
+    setCatalogImageForm({ category_id: catalogImageForm.category_id, title: '', alt_text: '', image_url: '', display_order: '' });
+    setCatalogImageFile(null);
+    setMessage({ text: 'Catalog image added', type: 'success' });
+  };
+
+  const deleteCatalogImage = async (id: number) => {
+    const res = await fetch(`/api/photography-catalog/images?id=${id}`, { method: 'DELETE', headers });
+    if (res.ok) {
+      setCatalogCategories((prev) =>
+        prev.map((category) => ({
+          ...category,
+          images: category.images.filter((image) => image.id !== id),
+        }))
+      );
+      setMessage({ text: 'Catalog image deleted', type: 'success' });
+    }
   };
 
   const saveContent = async () => {
@@ -398,6 +550,12 @@ export default function AdminPage() {
             <span className="px-3 py-2 border border-white/10 bg-white/5 uppercase tracking-[0.25em]">
               API protected
             </span>
+            <Link
+              href="/admin/newsletter"
+              className="px-3 py-2 border border-gold/30 bg-gold/10 text-gold uppercase tracking-[0.25em] hover:border-gold hover:bg-gold hover:text-black transition-colors"
+            >
+              Newsletter Studio
+            </Link>
           </div>
           <div className="flex gap-2 items-center">
             <input
@@ -407,14 +565,20 @@ export default function AdminPage() {
               value={adminKey}
               onChange={(e) => {
                 setAdminKey(e.target.value);
-                localStorage.setItem('moyo-admin-key', e.target.value);
+                setIsAuthed(false);
               }}
             />
             <button
-              onClick={() => localStorage.removeItem('moyo-admin-key')}
+              onClick={() => {
+                setAdminKey('');
+                setIsAuthed(false);
+                setAuthError(null);
+                setMessage(null);
+                localStorage.removeItem('moyo-admin-key');
+              }}
               className="text-[10px] uppercase tracking-[0.3em] px-3 py-2 border border-white/10 text-white/60 hover:text-white"
             >
-              Clear
+              Lock
             </button>
           </div>
         </div>
@@ -569,6 +733,194 @@ export default function AdminPage() {
             </div>
           </section>
 
+          {/* Photography Catalog */}
+          <section className="grid lg:grid-cols-2 gap-12 items-start">
+            <div className={sectionCard}>
+              <h2 className="text-2xl font-heading text-white italic">Photography Catalog</h2>
+              <form className="space-y-4" onSubmit={createCatalogCategory}>
+                <div className="space-y-2">
+                  <label className={label}>Category Name</label>
+                  <input
+                    className={inputClass}
+                    placeholder="Wedding, Portrait, Editorial..."
+                    value={catalogCategoryForm.name}
+                    onChange={(e) => setCatalogCategoryForm({ ...catalogCategoryForm, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className={label}>Slug (optional)</label>
+                    <input
+                      className={inputClass}
+                      placeholder="wedding"
+                      value={catalogCategoryForm.slug}
+                      onChange={(e) => setCatalogCategoryForm({ ...catalogCategoryForm, slug: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={label}>Order</label>
+                    <input
+                      type="number"
+                      className={inputClass}
+                      value={catalogCategoryForm.display_order}
+                      onChange={(e) => setCatalogCategoryForm({ ...catalogCategoryForm, display_order: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className={label}>Description</label>
+                  <textarea
+                    className={`${inputClass} min-h-[90px]`}
+                    value={catalogCategoryForm.description}
+                    onChange={(e) => setCatalogCategoryForm({ ...catalogCategoryForm, description: e.target.value })}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-gold hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all"
+                >
+                  Create Category
+                </button>
+              </form>
+
+              <form className="pt-6 border-t border-white/5 space-y-4" onSubmit={createCatalogImage}>
+                <h3 className="text-[10px] uppercase tracking-[0.4em] text-gold">Add Image To Category</h3>
+                <div className="space-y-2">
+                  <label className={label}>Category</label>
+                  <select
+                    className={inputClass}
+                    value={catalogImageForm.category_id}
+                    onChange={(e) => setCatalogImageForm({ ...catalogImageForm, category_id: e.target.value })}
+                    required
+                  >
+                    <option value="">Choose category</option>
+                    {catalogCategories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className={label}>Title</label>
+                    <input
+                      className={inputClass}
+                      value={catalogImageForm.title}
+                      onChange={(e) => setCatalogImageForm({ ...catalogImageForm, title: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={label}>Order</label>
+                    <input
+                      type="number"
+                      className={inputClass}
+                      value={catalogImageForm.display_order}
+                      onChange={(e) => setCatalogImageForm({ ...catalogImageForm, display_order: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className={label}>Alt Text</label>
+                  <input
+                    className={inputClass}
+                    value={catalogImageForm.alt_text}
+                    onChange={(e) => setCatalogImageForm({ ...catalogImageForm, alt_text: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className={label}>Image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setCatalogImageFile(e.target.files?.[0] || null)}
+                    className="w-full text-xs text-white/70"
+                  />
+                  <input
+                    className={inputClass}
+                    placeholder="or paste image URL"
+                    value={catalogImageForm.image_url}
+                    onChange={(e) => setCatalogImageForm({ ...catalogImageForm, image_url: e.target.value })}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={uploading}
+                  className="w-full bg-white/10 hover:bg-white/20 text-white py-3 text-[10px] uppercase tracking-[0.3em] disabled:opacity-50"
+                >
+                  {uploading ? 'Uploading...' : 'Add Catalog Image'}
+                </button>
+              </form>
+            </div>
+
+            <div className="space-y-4 max-h-[760px] overflow-y-auto pr-2">
+              <h3 className="text-[10px] uppercase tracking-[0.5em] text-gold">Catalog Categories</h3>
+              {catalogCategories.map((category) => (
+                <div key={category.id} className="bg-surface/20 border border-white/5 p-4 space-y-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-white font-heading italic">{category.name}</p>
+                      <p className="text-[10px] text-white/40 uppercase tracking-widest">
+                        slug: {category.slug} • images: {category.images?.length || 0}
+                      </p>
+                      {category.description && (
+                        <p className="mt-2 text-xs text-white/50 leading-relaxed">{category.description}</p>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => toggleCatalogCategory(category)}
+                        className={`px-3 py-2 border text-[10px] uppercase tracking-[0.2em] ${
+                          category.is_active ? 'border-gold text-gold' : 'border-white/10 text-white/50'
+                        }`}
+                      >
+                        {category.is_active ? 'Active' : 'Hidden'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteCatalogCategory(category.id)}
+                        className="p-2 text-red-400 hover:text-red-200 border border-white/10"
+                      >
+                        <FiTrash2 />
+                      </button>
+                    </div>
+                  </div>
+
+                  {category.images?.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-3">
+                      {category.images.map((image) => (
+                        <div key={image.id} className="relative group overflow-hidden border border-white/10 bg-black">
+                          <img
+                            src={image.image_url}
+                            alt={image.alt_text || image.title || category.name}
+                            className="h-28 w-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => deleteCatalogImage(image.id)}
+                            className="absolute right-2 top-2 bg-black/70 p-2 text-red-300 opacity-0 transition-opacity group-hover:opacity-100"
+                          >
+                            <FiTrash2 />
+                          </button>
+                          {image.title && (
+                            <p className="px-2 py-2 text-[10px] text-white/60 truncate">{image.title}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-white/35">No images in this category yet.</p>
+                  )}
+                </div>
+              ))}
+              {catalogCategories.length === 0 && (
+                <p className="border border-white/10 p-6 text-xs text-white/40">No photography catalog categories yet.</p>
+              )}
+            </div>
+          </section>
+
           {/* Galleries */}
           <section className="grid lg:grid-cols-2 gap-12 items-start">
             <div className={sectionCard}>
@@ -633,8 +985,13 @@ export default function AdminPage() {
                   </div>
                   {gal.images.length > 0 && (
                     <div className="grid grid-cols-4 gap-2">
-                      {gal.images.map((img) => (
-                        <img key={img} src={img} className="h-20 w-full object-cover border border-white/10" />
+                      {gal.images.map((img, index) => (
+                        <img
+                          key={img}
+                          src={img}
+                          alt={`${gal.client_name} gallery upload ${index + 1}`}
+                          className="h-20 w-full object-cover border border-white/10"
+                        />
                       ))}
                     </div>
                   )}

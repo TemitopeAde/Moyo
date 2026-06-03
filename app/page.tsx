@@ -2,6 +2,8 @@
 
 import React from 'react';
 import ProfileToggle from '@/components/ProfileToggle';
+import InteractiveImageScene from '@/components/InteractiveImageScene';
+import ThreeAtmosphere from '@/components/ThreeAtmosphere';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
@@ -14,10 +16,14 @@ export default function GlobalEntryPage() {
     <main className="h-screen w-full relative bg-background overflow-hidden flex flex-col items-center justify-center text-center px-6 selection:bg-gold selection:text-black">
       {/* Cinematic Background Layer */}
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute inset-0 bg-linear-to-b from-background/80 via-background/40 to-background/90 z-10" />
-        <div
-          className="w-full h-full bg-[url('https://images.unsplash.com/photo-1493397212122-2b85def82c2b?q=80&w=2670&auto=format&fit=crop')] bg-cover bg-center animate-slow-pan grayscale opacity-40"
+        <InteractiveImageScene
+          imageSrc="/IMG_8476.jpg.jpeg"
+          className="z-0 opacity-75 grayscale"
         />
+        <ThreeAtmosphere preset="entry" className="z-10 opacity-80 mix-blend-screen" />
+        <div className="absolute inset-0 bg-linear-to-b from-background/75 via-background/35 to-background/95 z-20" />
+        <div className="absolute inset-0 bg-radial-[at_50%_45%] from-transparent via-background/20 to-background/80 z-20" />
+        <div className="cosmic-film-grain pointer-events-none absolute inset-0 z-20" />
       </div>
 
       {/* Content Container */}

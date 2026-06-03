@@ -1,0 +1,62 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
+
+function uniqueStrings(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return Array.from(
+    new Set(value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0))
+  );
+}
+
+export async function POST(req: NextRequest) {
+  const body = await req.json().catch(() => null);
+  const accessCode = String(body?.accessCode || '').trim();
+  const galleryId = Number(body?.galleryId);
+  const selectedImages = uniqueStrings(body?.images);
+
+  if (!accessCode || !Number.isFinite(galleryId)) {
+    return NextResponse.json({ error: 'Access code and gallery id are required.' }, { status: 400 });
+  }
+
+  if (selectedImages.length === 0) {
+    return NextResponse.json({ error: 'Select at least one image to approve.' }, { status: 400 });
+  }
+
+  const { rows } = await query(
+    `SELECT id, images, is_locked
+     FROM galleries
+     WHERE id = $1 AND access_code = $2
+     LIMIT 1`,
+    [galleryId, accessCode]
+  );
+
+  const gallery = rows[0];
+  if (!gallery) {
+    return NextResponse.json({ error: 'Invalid gallery access.' }, { status: 404 });
+  }
+
+  if (gallery.is_locked) {
+    return NextResponse.json({ error: 'This gallery is currently locked.' }, { status: 403 });
+  }
+
+  const galleryImages = new Set((gallery.images || []) as string[]);
+  const invalidImages = selectedImages.filter((image) => !galleryImages.has(image));
+
+  if (invalidImages.length > 0) {
+    return NextResponse.json({ error: 'Selection contains images outside this gallery.' }, { status: 400 });
+  }
+
+  const updated = await query(
+    `UPDATE galleries
+     SET approved_images = $1::text[]
+     WHERE id = $2
+     RETURNING approved_images`,
+    [selectedImages, galleryId]
+  );
+
+  return NextResponse.json({
+    message: 'Selection approved.',
+    approved_images: updated.rows[0]?.approved_images || [],
+    approved_count: selectedImages.length,
+  });
+}

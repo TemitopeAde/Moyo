@@ -71,6 +71,40 @@ async function ensureTables() {
       customer_email TEXT NOT NULL,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+      id SERIAL PRIMARY KEY,
+      email TEXT NOT NULL,
+      list_type TEXT NOT NULL,
+      status TEXT DEFAULT 'active',
+      unsubscribe_token TEXT UNIQUE NOT NULL,
+      subscribed_at TIMESTAMPTZ DEFAULT NOW(),
+      unsubscribed_at TIMESTAMPTZ,
+      last_emailed_at TIMESTAMPTZ,
+      UNIQUE(email, list_type)
+    );
+
+    CREATE TABLE IF NOT EXISTS photography_categories (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      slug TEXT UNIQUE NOT NULL,
+      description TEXT DEFAULT '',
+      display_order INTEGER DEFAULT 0,
+      is_active BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS photography_category_images (
+      id SERIAL PRIMARY KEY,
+      category_id INTEGER NOT NULL REFERENCES photography_categories(id) ON DELETE CASCADE,
+      image_url TEXT NOT NULL,
+      title TEXT DEFAULT '',
+      alt_text TEXT DEFAULT '',
+      display_order INTEGER DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
   `);
 
   // seed singleton rows
@@ -78,7 +112,7 @@ async function ensureTables() {
   await pool.query(`INSERT INTO contact (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);
 }
 
-export async function query(text: string, params?: any[]) {
+export async function query(text: string, params?: unknown[]) {
   await ensureTables();
   return pool.query(text, params);
 }

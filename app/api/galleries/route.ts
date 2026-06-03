@@ -7,7 +7,10 @@ function randomCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
+
   const { rows } = await query('SELECT * FROM galleries ORDER BY created_at DESC');
   return NextResponse.json({ galleries: rows });
 }
