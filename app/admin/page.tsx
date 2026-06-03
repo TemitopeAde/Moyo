@@ -4,8 +4,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
+  FiChevronDown,
   FiCheckCircle,
   FiLock,
   FiTrash2,
@@ -61,16 +62,82 @@ type Content = {
 type Contact = { phone: string; email: string; address: string };
 type Social = { id: number; platform: string; url: string; icon?: string };
 type Order = { id: number; items: unknown[]; total_price: number; status: string; customer_email: string };
+type AdminSection = 'artwork' | 'catalog' | 'galleries' | 'content-contact' | 'orders';
 
 const sectionCard = 'bg-black/20 p-6 md:p-8 border border-white/10 space-y-6';
 const label = 'text-[10px] uppercase tracking-widest text-white/40';
 const inputClass =
   'w-full rounded-sm bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-gold outline-none transition-colors';
 
+function AdminAccordionPanel({
+  id,
+  title,
+  summary,
+  openSection,
+  onOpen,
+  children,
+}: {
+  id: AdminSection;
+  title: string;
+  summary: string;
+  openSection: AdminSection;
+  onOpen: (section: AdminSection) => void;
+  children: React.ReactNode;
+}) {
+  const isOpen = openSection === id;
+  const panelId = `admin-panel-${id}`;
+  const buttonId = `admin-panel-${id}-button`;
+
+  return (
+    <div className={`border transition-colors ${isOpen ? 'border-gold/35 bg-gold/[0.03]' : 'border-white/10 bg-white/[0.02]'}`}>
+      <button
+        type="button"
+        id={buttonId}
+        aria-controls={panelId}
+        aria-expanded={isOpen}
+        onClick={() => onOpen(id)}
+        className="flex w-full items-center justify-between gap-6 px-5 py-5 text-left transition-colors hover:bg-white/[0.04] md:px-7"
+      >
+        <span className="space-y-1">
+          <span className={`block font-heading text-2xl italic ${isOpen ? 'text-gold' : 'text-white'}`}>
+            {title}
+          </span>
+          <span className="block text-[10px] uppercase tracking-[0.3em] text-white/35">
+            {summary}
+          </span>
+        </span>
+        <FiChevronDown
+          className={`shrink-0 text-xl transition-transform duration-300 ${isOpen ? 'rotate-180 text-gold' : 'text-white/40'}`}
+          aria-hidden="true"
+        />
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            id={panelId}
+            role="region"
+            aria-labelledby={buttonId}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="border-t border-white/10 px-5 py-8 md:px-7">
+              {children}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const [adminKey, setAdminKey] = useState('');
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [openAdminSection, setOpenAdminSection] = useState<AdminSection>('artwork');
 
   const [artworks, setArtworks] = useState<Artwork[]>([]);
   const [galleries, setGalleries] = useState<Gallery[]>([]);
@@ -598,8 +665,15 @@ export default function AdminPage() {
           </motion.div>
         )}
 
-        <div className="space-y-16">
+        <div className="space-y-4">
           {/* Artwork */}
+          <AdminAccordionPanel
+            id="artwork"
+            title="Artwork"
+            summary={`${artworks.length} ${artworks.length === 1 ? 'work' : 'works'}`}
+            openSection={openAdminSection}
+            onOpen={setOpenAdminSection}
+          >
           <section className="grid lg:grid-cols-2 gap-12 items-start">
             <div className={sectionCard}>
               <h2 className="text-2xl font-heading text-white italic">Artwork</h2>
@@ -732,8 +806,16 @@ export default function AdminPage() {
               ))}
             </div>
           </section>
+          </AdminAccordionPanel>
 
           {/* Photography Catalog */}
+          <AdminAccordionPanel
+            id="catalog"
+            title="Photography Catalog"
+            summary={`${catalogCategories.length} ${catalogCategories.length === 1 ? 'category' : 'categories'}`}
+            openSection={openAdminSection}
+            onOpen={setOpenAdminSection}
+          >
           <section className="grid lg:grid-cols-2 gap-12 items-start">
             <div className={sectionCard}>
               <h2 className="text-2xl font-heading text-white italic">Photography Catalog</h2>
@@ -920,8 +1002,16 @@ export default function AdminPage() {
               )}
             </div>
           </section>
+          </AdminAccordionPanel>
 
           {/* Galleries */}
+          <AdminAccordionPanel
+            id="galleries"
+            title="Galleries"
+            summary={`${galleries.length} ${galleries.length === 1 ? 'gallery' : 'galleries'}`}
+            openSection={openAdminSection}
+            onOpen={setOpenAdminSection}
+          >
           <section className="grid lg:grid-cols-2 gap-12 items-start">
             <div className={sectionCard}>
               <h2 className="text-2xl font-heading text-white italic">Galleries</h2>
@@ -1029,8 +1119,16 @@ export default function AdminPage() {
               ))}
             </div>
           </section>
+          </AdminAccordionPanel>
 
           {/* Content & Contact */}
+          <AdminAccordionPanel
+            id="content-contact"
+            title="Homepage & Contact"
+            summary={`${socials.length} social ${socials.length === 1 ? 'link' : 'links'}`}
+            openSection={openAdminSection}
+            onOpen={setOpenAdminSection}
+          >
           <section className="grid lg:grid-cols-2 gap-12 items-start">
             <div className={sectionCard}>
               <h2 className="text-2xl font-heading text-white italic">Homepage & About</h2>
@@ -1145,8 +1243,16 @@ export default function AdminPage() {
               </div>
             </div>
           </section>
+          </AdminAccordionPanel>
 
           {/* Orders */}
+          <AdminAccordionPanel
+            id="orders"
+            title="Orders"
+            summary={`${orders.length} ${orders.length === 1 ? 'order' : 'orders'}`}
+            openSection={openAdminSection}
+            onOpen={setOpenAdminSection}
+          >
           <section className={sectionCard}>
             <h2 className="text-2xl font-heading text-white italic mb-4">Orders</h2>
             <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
@@ -1172,6 +1278,7 @@ export default function AdminPage() {
               {orders.length === 0 && <p className="text-white/40 text-xs">No orders yet.</p>}
             </div>
           </section>
+          </AdminAccordionPanel>
         </div>
       </section>
 
