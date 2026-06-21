@@ -17,7 +17,8 @@ export default function GlobalEntryPage() {
       {/* Cinematic Background Layer */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <InteractiveImageScene
-          imageSrc="/IMG_8476.jpg.jpeg"
+          imageSrc="/homepage-desktop.jpg"
+          mobileImageSrc="/homepage-mobile.jpg"
           className="z-0 opacity-75 grayscale"
         />
         <ThreeAtmosphere preset="entry" className="z-10 opacity-80 mix-blend-screen" />

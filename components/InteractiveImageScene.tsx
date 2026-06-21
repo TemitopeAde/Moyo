@@ -5,6 +5,7 @@ import * as THREE from 'three';
 
 interface InteractiveImageSceneProps {
     imageSrc: string;
+    mobileImageSrc?: string;
     className?: string;
 }
 
@@ -170,7 +171,7 @@ function createLightStreaks() {
     return new THREE.LineSegments(geometry, material);
 }
 
-export default function InteractiveImageScene({ imageSrc, className = '' }: InteractiveImageSceneProps) {
+export default function InteractiveImageScene({ imageSrc, mobileImageSrc, className = '' }: InteractiveImageSceneProps) {
     const mountRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
@@ -199,6 +200,7 @@ export default function InteractiveImageScene({ imageSrc, className = '' }: Inte
         let mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial> | null = null;
         let glow: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial> | null = null;
         let texture: THREE.Texture | null = null;
+        let activeImageSrc = '';
         let disposed = false;
 
         const stars = createPointLayer(760, 22, 12, '#d9e4ff', 0.018, 0.58, 10);
@@ -253,6 +255,11 @@ export default function InteractiveImageScene({ imageSrc, className = '' }: Inte
             resizeMesh();
         };
 
+        const getResponsiveImageSrc = () => {
+            if (!mobileImageSrc) return imageSrc;
+            return window.matchMedia('(max-width: 767px)').matches ? mobileImageSrc : imageSrc;
+        };
+
         const updateScroll = () => {
             targetScroll.value = window.scrollY / Math.max(window.innerHeight, 1);
         };
@@ -302,55 +309,79 @@ export default function InteractiveImageScene({ imageSrc, className = '' }: Inte
             }
         };
 
-        loader.load(
-            imageSrc,
-            (loadedTexture) => {
-                if (disposed) {
-                    loadedTexture.dispose();
-                    return;
-                }
-
-                texture = loadedTexture;
-                texture.colorSpace = THREE.SRGBColorSpace;
-                texture.minFilter = THREE.LinearFilter;
-                texture.magFilter = THREE.LinearFilter;
-
-                const geometry = new THREE.PlaneGeometry(1, 1, 120, 120);
-                const material = new THREE.ShaderMaterial({
-                    uniforms: {
-                        uTexture: { value: texture },
-                        uMouse: { value: mouse },
-                        uScroll: { value: 0 },
-                    },
-                    vertexShader: portraitVertexShader,
-                    fragmentShader: portraitFragmentShader,
-                });
-
-                const glowGeometry = new THREE.PlaneGeometry(1, 1, 1, 1);
-                const glowMaterial = new THREE.MeshBasicMaterial({
-                    color: '#920110',
-                    transparent: true,
-                    opacity: 0.16,
-                    depthWrite: false,
-                    blending: THREE.AdditiveBlending,
-                });
-
-                glow = new THREE.Mesh(glowGeometry, glowMaterial);
-                glow.position.z = -0.16;
-                mesh = new THREE.Mesh(geometry, material);
-                portraitGroup.add(glow, mesh);
+        const ensureMeshes = (loadedTexture: THREE.Texture) => {
+            if (mesh) {
+                mesh.material.uniforms.uTexture.value = loadedTexture;
                 resizeMesh();
-                render();
-            },
-            undefined,
-            (error) => {
-                console.error('[interactive-image-scene] Failed to load image', error);
+                return;
             }
-        );
+
+            const geometry = new THREE.PlaneGeometry(1, 1, 120, 120);
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    uTexture: { value: loadedTexture },
+                    uMouse: { value: mouse },
+                    uScroll: { value: 0 },
+                },
+                vertexShader: portraitVertexShader,
+                fragmentShader: portraitFragmentShader,
+            });
+
+            const glowGeometry = new THREE.PlaneGeometry(1, 1, 1, 1);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: '#920110',
+                transparent: true,
+                opacity: 0.16,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending,
+            });
+
+            glow = new THREE.Mesh(glowGeometry, glowMaterial);
+            glow.position.z = -0.16;
+            mesh = new THREE.Mesh(geometry, material);
+            portraitGroup.add(glow, mesh);
+            resizeMesh();
+            render();
+        };
+
+        const loadResponsiveTexture = () => {
+            const nextImageSrc = getResponsiveImageSrc();
+            if (nextImageSrc === activeImageSrc) return;
+            activeImageSrc = nextImageSrc;
+
+            loader.load(
+                nextImageSrc,
+                (loadedTexture) => {
+                    if (disposed || nextImageSrc !== activeImageSrc) {
+                        loadedTexture.dispose();
+                        return;
+                    }
+
+                    const previousTexture = texture;
+                    texture = loadedTexture;
+                    texture.colorSpace = THREE.SRGBColorSpace;
+                    texture.minFilter = THREE.LinearFilter;
+                    texture.magFilter = THREE.LinearFilter;
+                    ensureMeshes(texture);
+                    previousTexture?.dispose();
+                },
+                undefined,
+                (error) => {
+                    console.error('[interactive-image-scene] Failed to load image', error);
+                }
+            );
+        };
+
+        loadResponsiveTexture();
+
+        const handleResponsiveResize = () => {
+            resize();
+            loadResponsiveTexture();
+        };
 
         resize();
         updateScroll();
-        window.addEventListener('resize', resize);
+        window.addEventListener('resize', handleResponsiveResize);
         window.addEventListener('scroll', updateScroll, { passive: true });
         window.addEventListener('pointermove', handlePointerMove, { passive: true });
 
@@ -360,7 +391,7 @@ export default function InteractiveImageScene({ imageSrc, className = '' }: Inte
 
         return () => {
             disposed = true;
-            window.removeEventListener('resize', resize);
+            window.removeEventListener('resize', handleResponsiveResize);
             window.removeEventListener('scroll', updateScroll);
             window.removeEventListener('pointermove', handlePointerMove);
             if (animationFrame) window.cancelAnimationFrame(animationFrame);
@@ -401,7 +432,7 @@ export default function InteractiveImageScene({ imageSrc, className = '' }: Inte
                 mount.removeChild(renderer.domElement);
             }
         };
-    }, [imageSrc]);
+    }, [imageSrc, mobileImageSrc]);
 
     return (
         <div
