@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/context/ProfileContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -29,6 +29,13 @@ export default function Navbar() {
     const { language } = useLanguage();
     const { t } = useTranslate(language);
     const pathname = usePathname();
+    const router = useRouter();
+
+    const handleProfileSelect = (choice: 'photography' | 'art') => {
+        setProfile(choice);
+        setMobileMenuOpen(false);
+        router.push(choice === 'photography' ? '/photography' : '/art');
+    };
 
     useEffect(() => {
         const handleScroll = () => {
@@ -216,7 +223,8 @@ export default function Navbar() {
                             {/* Profile Switcher Mobile */}
                             <div className="mb-4 flex max-w-full flex-wrap items-center justify-center gap-1 rounded-full glass px-2 py-1">
                                 <button
-                                    onClick={() => setProfile('photography')}
+                                    onClick={() => handleProfileSelect('photography')}
+                                    aria-pressed={profile === 'photography'}
                                     className={cn(
                                         "px-4 py-2 rounded-full text-[10px] tracking-widest uppercase transition-all duration-500 sm:px-6 sm:text-xs",
                                         profile === 'photography' ? "bg-foreground text-background" : "text-foreground/40"
@@ -225,7 +233,8 @@ export default function Navbar() {
                                     {t('common.photography')}
                                 </button>
                                 <button
-                                    onClick={() => setProfile('art')}
+                                    onClick={() => handleProfileSelect('art')}
+                                    aria-pressed={profile === 'art'}
                                     className={cn(
                                         "px-4 py-2 rounded-full text-[10px] tracking-widest uppercase transition-all duration-500 sm:px-6 sm:text-xs",
                                         profile === 'art' ? "bg-foreground text-background" : "text-foreground/40"

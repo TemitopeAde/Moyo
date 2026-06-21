@@ -20,11 +20,12 @@ export default function ProfileToggle() {
 
     return (
         <div className="flex w-full flex-col items-center gap-6 animate-fade-in sm:gap-8" style={{ animationDelay: '1s' }}>
-            <div className="relative isolate flex max-w-full flex-wrap justify-center gap-1 rounded-full border border-foreground/10 bg-foreground/5 p-1 backdrop-blur-md group">
+            <div className="relative isolate grid w-full max-w-[560px] grid-cols-2 gap-1 rounded-full border border-foreground/10 bg-foreground/5 p-1 backdrop-blur-md group">
 
                 <button
                     onClick={() => handleSelect('photography')}
-                    className={`relative z-10 rounded-full px-5 py-3 text-[11px] uppercase tracking-[0.14em] transition-colors duration-500 sm:px-8 sm:text-sm sm:tracking-[0.2em] ${profile === 'photography'
+                    aria-pressed={profile === 'photography'}
+                    className={`relative z-10 flex min-h-14 items-center justify-center rounded-full px-3 text-center text-[10px] uppercase tracking-[0.12em] transition-colors duration-500 sm:min-h-16 sm:px-8 sm:text-sm sm:tracking-[0.2em] ${profile === 'photography'
                             ? 'text-background font-medium'
                             : 'text-foreground/60 hover:text-foreground'
                         }`}
@@ -41,7 +42,8 @@ export default function ProfileToggle() {
 
                 <button
                     onClick={() => handleSelect('art')}
-                    className={`relative z-10 rounded-full px-5 py-3 text-[11px] uppercase tracking-[0.14em] transition-colors duration-500 sm:px-8 sm:text-sm sm:tracking-[0.2em] ${profile === 'art'
+                    aria-pressed={profile === 'art'}
+                    className={`relative z-10 flex min-h-14 items-center justify-center rounded-full px-3 text-center text-[10px] uppercase tracking-[0.12em] transition-colors duration-500 sm:min-h-16 sm:px-8 sm:text-sm sm:tracking-[0.2em] ${profile === 'art'
                             ? 'text-background font-medium'
                             : 'text-foreground/60 hover:text-foreground'
                         }`}
