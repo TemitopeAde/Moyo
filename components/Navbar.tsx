@@ -75,7 +75,7 @@ export default function Navbar() {
         <>
             <nav
                 className={cn(
-                    'fixed left-0 right-0 top-0 z-50 flex min-h-20 items-center justify-between gap-5 border-b px-4 backdrop-blur-xl transition-all duration-700 ease-in-out sm:px-6 md:min-h-24 md:px-8 xl:gap-10 xl:px-12',
+                    'fixed left-0 right-0 top-0 z-50 flex min-h-18 items-center justify-between gap-4 border-b px-4 backdrop-blur-xl transition-all duration-700 ease-in-out sm:min-h-20 sm:px-6 md:min-h-24 md:px-8 xl:gap-10 xl:px-12',
                     scrolled ? 'border-foreground/10 bg-background/85 shadow-[0_18px_60px_rgba(0,0,0,0.08)]' : 'border-transparent bg-background/20'
                 )}
             >
@@ -93,7 +93,7 @@ export default function Navbar() {
                             width={160}
                             height={160}
                             priority
-                            className="theme-logo h-10 w-10 object-contain transition-opacity duration-300 group-hover:opacity-80 sm:h-12 sm:w-12 md:h-14 md:w-14 lg:h-16 lg:w-16"
+                            className="theme-logo h-9 w-9 object-contain transition-opacity duration-300 group-hover:opacity-80 sm:h-12 sm:w-12 md:h-14 md:w-14 lg:h-16 lg:w-16"
                         />
                     </Link>
                 </motion.div>
@@ -176,24 +176,29 @@ export default function Navbar() {
                     </div>
                 </motion.div>
 
-                {/* Mobile Menu Toggle */}
-                <button
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="flex h-11 w-11 flex-col items-end justify-center gap-1.5 focus:outline-none group z-50 relative lg:hidden"
-                >
-                    <motion.div
-                        animate={mobileMenuOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
-                        className="w-8 h-[1px] bg-foreground group-hover:bg-accent transition-colors duration-300"
-                    />
-                    <motion.div
-                        animate={mobileMenuOpen ? { opacity: 0 } : { opacity: 1 }}
-                        className="w-5 h-[1px] bg-foreground group-hover:bg-accent transition-colors duration-300 self-end"
-                    />
-                    <motion.div
-                        animate={mobileMenuOpen ? { rotate: -45, y: -6, width: 32 } : { rotate: 0, y: 0, width: 20 }}
-                        className="w-5 h-[1px] bg-foreground group-hover:bg-accent transition-colors duration-300 self-end" // Adjusted initial width to match design
-                    />
-                </button>
+                <div className="ml-auto flex items-center gap-2 lg:hidden">
+                    <ThemeToggle className="h-11 w-11" />
+
+                    {/* Mobile Menu Toggle */}
+                    <button
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        className="group relative z-50 flex h-11 w-11 flex-col items-end justify-center gap-1.5 rounded-md border border-transparent transition-colors duration-300 hover:border-foreground/10 hover:bg-white/10 focus:outline-none"
+                        aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+                    >
+                        <motion.div
+                            animate={mobileMenuOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
+                            className="h-[1px] w-8 bg-foreground transition-colors duration-300 group-hover:bg-accent"
+                        />
+                        <motion.div
+                            animate={mobileMenuOpen ? { opacity: 0 } : { opacity: 1 }}
+                            className="h-[1px] w-5 self-end bg-foreground transition-colors duration-300 group-hover:bg-accent"
+                        />
+                        <motion.div
+                            animate={mobileMenuOpen ? { rotate: -45, y: -6, width: 32 } : { rotate: 0, y: 0, width: 20 }}
+                            className="h-[1px] w-5 self-end bg-foreground transition-colors duration-300 group-hover:bg-accent"
+                        />
+                    </button>
+                </div>
             </nav>
 
             {/* Mobile Menu Overlay */}

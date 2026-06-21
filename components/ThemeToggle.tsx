@@ -3,12 +3,13 @@
 import { useTheme } from 'next-themes';
 import { useSyncExternalStore } from 'react';
 import { Sun, Moon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const subscribe = () => () => undefined;
 const getMountedSnapshot = () => true;
 const getServerSnapshot = () => false;
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ className }: { className?: string }) {
     const { theme, setTheme } = useTheme();
     const mounted = useSyncExternalStore(subscribe, getMountedSnapshot, getServerSnapshot);
 
@@ -19,13 +20,16 @@ export default function ThemeToggle() {
     return (
         <button
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="group inline-flex h-12 w-12 items-center justify-center rounded-md border border-transparent transition-colors duration-300 hover:border-foreground/10 hover:bg-white/10"
+            className={cn(
+                "group inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-md border border-transparent transition-colors duration-300 hover:border-foreground/10 hover:bg-white/10",
+                className
+            )}
             aria-label="Toggle Theme"
         >
             {theme === 'dark' ? (
-                <Sun className="w-5 h-5 text-white/60 group-hover:text-accent transition-colors" />
+                <Sun className="h-5 w-5 text-foreground/60 transition-colors group-hover:text-accent" />
             ) : (
-                <Moon className="w-5 h-5 text-black/60 group-hover:text-accent transition-colors" />
+                <Moon className="h-5 w-5 text-foreground/60 transition-colors group-hover:text-accent" />
             )}
         </button>
     );

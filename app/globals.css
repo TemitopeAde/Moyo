@@ -284,7 +284,7 @@ h6 {
 }
 
 [data-theme='light'] .bg-black\/95 {
-  background-color: color-mix(in srgb, var(--background) 96%, transparent) !important;
+  background-color: color-mix(in srgb, var(--background) 90%, transparent) !important;
 }
 
 [data-theme='light'] .bg-black\/50,
