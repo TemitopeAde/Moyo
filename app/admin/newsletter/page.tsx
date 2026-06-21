@@ -20,9 +20,9 @@ type Count = { list_type: 'photography' | 'art'; count: number };
 type Notice = { text: string; type: 'success' | 'error' } | null;
 
 const label = 'text-[10px] uppercase tracking-widest text-white/40';
-const inputClass = 'w-full bg-white/5 border border-white/10 px-4 py-3 text-white focus:border-gold outline-none transition-colors';
+const inputClass = 'w-full bg-white/5 border border-white/10 px-4 py-3 text-white focus:border-accent outline-none transition-colors';
 const panelClass = 'bg-surface/30 border border-white/5 p-6 md:p-8 backdrop-blur-sm';
-const editorButtonClass = 'border border-white/10 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-gold hover:text-gold';
+const editorButtonClass = 'border border-white/10 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-accent hover:text-accent';
 
 function formatDate(value: string | null) {
   if (!value) return 'Never';
@@ -30,7 +30,7 @@ function formatDate(value: string | null) {
 }
 
 function audienceButtonClass(isActive: boolean) {
-  return 'border px-3 py-4 ' + (isActive ? 'border-gold text-gold' : 'border-white/10 text-white/50');
+  return 'border px-3 py-4 ' + (isActive ? 'border-accent text-accent' : 'border-white/10 text-white/50');
 }
 
 export default function NewsletterAdminPage() {
@@ -180,16 +180,16 @@ export default function NewsletterAdminPage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <Navbar />
-      <section className="container mx-auto px-6 pb-24 pt-40 md:px-12">
+      <section className="container mx-auto px-6 pb-24 pt-36 md:pt-52 md:px-12">
         <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="space-y-4">
-            <span className="text-gold text-[10px] uppercase tracking-[0.5em]">Newsletter Admin</span>
+            <span className="text-accent text-[10px] uppercase tracking-[0.5em]">Newsletter Admin</span>
             <h1 className="text-5xl font-heading italic text-white md:text-7xl">Send updates</h1>
             <p className="max-w-2xl text-sm leading-relaxed text-white/40">
               View active subscribers and send email campaigns to photography, fine art, or both lists.
             </p>
           </div>
-          <Link href="/admin" className="text-[10px] uppercase tracking-[0.35em] text-white/50 hover:text-gold">
+          <Link href="/admin" className="text-[10px] uppercase tracking-[0.35em] text-white/50 hover:text-accent">
             Back to admin
           </Link>
         </div>
@@ -197,7 +197,7 @@ export default function NewsletterAdminPage() {
         {!isAuthed ? (
           <form onSubmit={verifyAdminKey} className={panelClass + ' mx-auto max-w-md space-y-6'}>
             <div className="space-y-2 text-center">
-              <FiMail className="mx-auto text-2xl text-gold" />
+              <FiMail className="mx-auto text-2xl text-accent" />
               <h2 className="text-3xl font-heading italic text-white">Unlock newsletter tools</h2>
               <p className="text-sm text-white/45">Enter the admin password before viewing subscribers or sending campaigns.</p>
             </div>
@@ -212,7 +212,7 @@ export default function NewsletterAdminPage() {
             <button
               type="submit"
               disabled={authChecking}
-              className="w-full bg-gold py-4 text-[10px] font-bold uppercase tracking-[0.4em] text-black transition-colors hover:bg-white disabled:opacity-50"
+              className="w-full bg-accent py-4 text-[10px] font-bold uppercase tracking-[0.4em] text-black transition-colors hover:bg-white disabled:opacity-50"
             >
               {authChecking ? 'Checking...' : 'Unlock'}
             </button>
@@ -255,7 +255,7 @@ export default function NewsletterAdminPage() {
                   <div key={subscriber.id} className="border border-white/10 bg-white/[0.03] p-4 text-sm">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-white">{subscriber.email}</p>
-                      <span className="text-[10px] uppercase tracking-widest text-gold">{subscriber.list_type}</span>
+                      <span className="text-[10px] uppercase tracking-widest text-accent">{subscriber.list_type}</span>
                     </div>
                     <p className="mt-2 text-xs text-white/35">
                       Joined {formatDate(subscriber.subscribed_at)} - Last emailed {formatDate(subscriber.last_emailed_at)}
@@ -334,7 +334,7 @@ export default function NewsletterAdminPage() {
                       aria-label="Newsletter message"
                       onInput={syncEditorContent}
                       onBlur={syncEditorContent}
-                      className="min-h-[280px] px-4 py-4 text-sm leading-relaxed text-white outline-none [&_a]:text-gold [&_a]:underline [&_h2]:mb-4 [&_h2]:font-heading [&_h2]:text-3xl [&_h2]:font-normal [&_h2]:italic [&_li]:ml-5 [&_ol]:list-decimal [&_p]:mb-4 [&_ul]:list-disc"
+                      className="min-h-[280px] px-4 py-4 text-sm leading-relaxed text-white outline-none [&_a]:text-accent [&_a]:underline [&_h2]:mb-4 [&_h2]:font-heading [&_h2]:text-3xl [&_h2]:font-normal [&_h2]:italic [&_li]:ml-5 [&_ol]:list-decimal [&_p]:mb-4 [&_ul]:list-disc"
                     />
                   </div>
                 </div>
@@ -343,7 +343,7 @@ export default function NewsletterAdminPage() {
               <button
                 type="submit"
                 disabled={sending || subscribers.length === 0}
-                className="inline-flex w-full items-center justify-center gap-3 bg-gold py-4 text-[10px] font-bold uppercase tracking-[0.4em] text-black transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex w-full items-center justify-center gap-3 bg-accent py-4 text-[10px] font-bold uppercase tracking-[0.4em] text-black transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FiSend /> {sending ? 'Sending...' : 'Send to ' + subscribers.length}
               </button>

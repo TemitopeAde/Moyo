@@ -67,23 +67,23 @@ export default function NewsletterForm({ profileType }: NewsletterFormProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1 }}
-            className="max-w-xl w-full text-center space-y-12"
+            className="w-full max-w-xl space-y-9 px-6 text-center md:space-y-12 md:px-0"
         >
             <div className="space-y-4">
-                <span className="text-gold text-[10px] tracking-[0.5em] uppercase">{t('newsletter.title')}</span>
-                <h2 className="text-4xl md:text-6xl font-heading text-foreground">{title}</h2>
-                <p className="text-foreground/40 font-body tracking-wide leading-relaxed">
+                <span className="text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">{t('newsletter.title')}</span>
+                <h2 className="text-4xl font-heading text-foreground md:text-6xl">{title}</h2>
+                <p className="leading-relaxed tracking-wide text-foreground/40">
                     {description}
                 </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="relative group max-w-md mx-auto">
+            <form onSubmit={handleSubmit} className="relative mx-auto max-w-md group">
                 <input
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder={t('newsletter.placeholder')}
-                    className="w-full bg-transparent border-b border-foreground/20 py-4 text-center text-foreground text-[10px] tracking-[0.3em] font-medium focus:outline-none focus:border-gold transition-colors placeholder:text-foreground/20"
+                    className="w-full border-b border-foreground/20 bg-transparent py-4 text-center text-[10px] font-medium tracking-[0.18em] text-foreground transition-colors placeholder:text-foreground/20 focus:border-accent focus:outline-none sm:tracking-[0.3em]"
                     required
                 />
                 {error && (
@@ -94,13 +94,13 @@ export default function NewsletterForm({ profileType }: NewsletterFormProps) {
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="mt-12 w-full bg-foreground text-background text-[10px] tracking-[0.5em] uppercase py-5 font-bold hover:bg-gold transition-colors duration-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mt-10 w-full bg-foreground px-4 py-5 text-[10px] font-bold uppercase tracking-[0.26em] text-background transition-colors duration-500 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60 sm:mt-12 sm:tracking-[0.5em]"
                 >
                     {isSubmitting ? 'Subscribing...' : buttonText}
                 </button>
             </form>
 
-            <p className="text-[10px] text-foreground/20 tracking-widest uppercase">
+            <p className="text-[10px] uppercase tracking-widest text-foreground/20">
                 {t('newsletter.privacy')}
             </p>
 
@@ -112,7 +112,7 @@ export default function NewsletterForm({ profileType }: NewsletterFormProps) {
                         exit={{ opacity: 0, y: 16 }}
                         role="status"
                         aria-live="polite"
-                        className="fixed bottom-6 left-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 border border-gold/40 bg-background/95 px-5 py-4 text-center text-[10px] font-bold uppercase tracking-[0.28em] text-gold shadow-2xl backdrop-blur-md md:left-auto md:right-6 md:translate-x-0"
+                        className="fixed bottom-6 left-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 border border-accent/40 bg-background/95 px-5 py-4 text-center text-[10px] font-bold uppercase tracking-[0.28em] text-accent shadow-2xl backdrop-blur-md md:left-auto md:right-6 md:translate-x-0"
                     >
                         You have been subscribed.
                     </motion.div>

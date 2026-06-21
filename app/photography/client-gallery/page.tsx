@@ -128,7 +128,7 @@ export default function ClientGalleryPage() {
         <main className="bg-background min-h-screen flex flex-col">
             <Navbar />
 
-            <div className="flex-grow pt-40 container mx-auto px-6 md:px-12 pb-32">
+            <div className="flex-grow pt-36 md:pt-52 container mx-auto px-6 md:px-12 pb-32">
                 {!gallery ? (
                     <motion.div
                         initial={{ opacity: 0, scale: 0.98 }}
@@ -136,7 +136,7 @@ export default function ClientGalleryPage() {
                         className="max-w-md mx-auto py-20 bg-white/5 p-12 text-center space-y-8 backdrop-blur-sm border border-white/5"
                     >
                         <div className="space-y-4">
-                            <span className="text-gold text-[10px] tracking-[0.5em] uppercase">{t('clientGallery.privateAccess')}</span>
+                            <span className="text-accent text-[10px] tracking-[0.5em] uppercase">{t('clientGallery.privateAccess')}</span>
                             <h1 className="text-3xl font-heading text-white">{t('clientGallery.clientPortfolio')}</h1>
                             <p className="text-white/40 text-xs font-body tracking-wider leading-relaxed">
                                 {t('clientGallery.enterAccessCodeText')}
@@ -152,7 +152,7 @@ export default function ClientGalleryPage() {
                                     setAccessCode(event.target.value);
                                     setError('');
                                 }}
-                                className="w-full bg-white/5 border border-white/10 rounded-sm py-4 text-center text-white text-[10px] tracking-[0.5em] focus:outline-none focus:border-gold transition-colors placeholder:text-white/20"
+                                className="w-full bg-white/5 border border-white/10 rounded-sm py-4 text-center text-white text-[10px] tracking-[0.5em] focus:outline-none focus:border-accent transition-colors placeholder:text-white/20"
                             />
                             {error && (
                                 <p className="text-red-300 text-xs leading-relaxed">
@@ -162,7 +162,7 @@ export default function ClientGalleryPage() {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full bg-white text-black text-[10px] tracking-[0.4em] uppercase py-4 font-bold hover:bg-gold transition-colors duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full bg-white text-black text-[10px] tracking-[0.4em] uppercase py-4 font-bold hover:bg-accent transition-colors duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isLoading ? 'Checking...' : t('clientGallery.enterGallery')}
                             </button>
@@ -179,7 +179,7 @@ export default function ClientGalleryPage() {
                         className="space-y-16"
                     >
                         <div className="text-center space-y-4">
-                            <span className="text-gold text-[10px] tracking-[0.5em] uppercase">
+                            <span className="text-accent text-[10px] tracking-[0.5em] uppercase">
                                 {gallery.slug}
                             </span>
                             <h1 className="text-4xl md:text-6xl font-heading text-white italic">
@@ -205,7 +205,7 @@ export default function ClientGalleryPage() {
                                             <div
                                                 key={`${image}-${index}`}
                                                 className={`aspect-square relative group overflow-hidden border bg-neutral-900 transition-colors ${
-                                                    isSelected ? 'border-gold shadow-[0_0_0_1px_rgba(212,175,55,0.45)]' : 'border-white/5'
+                                                    isSelected ? 'border-accent shadow-[0_0_0_1px_rgba(146,1,16,0.45)]' : 'border-white/5'
                                                 }`}
                                             >
                                                 <button
@@ -228,7 +228,7 @@ export default function ClientGalleryPage() {
                                                 <div
                                                     className={`absolute left-3 top-3 z-20 rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.2em] transition-colors ${
                                                         isSelected
-                                                            ? 'border-gold bg-gold text-black'
+                                                            ? 'border-accent bg-accent text-black'
                                                             : 'border-white/20 bg-black/40 text-white/60'
                                                     }`}
                                                 >
@@ -239,7 +239,7 @@ export default function ClientGalleryPage() {
                                                     target="_blank"
                                                     rel="noreferrer"
                                                     onClick={(event) => event.stopPropagation()}
-                                                    className="absolute bottom-3 right-3 z-20 border border-white/20 bg-black/50 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-gold hover:text-gold"
+                                                    className="absolute bottom-3 right-3 z-20 border border-white/20 bg-black/50 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-accent hover:text-accent"
                                                 >
                                                     Preview
                                                 </a>
@@ -253,12 +253,12 @@ export default function ClientGalleryPage() {
                                         Select the images you want approved, then submit your selection to the studio.
                                     </p>
                                     {error && <p className="text-red-300 text-xs leading-relaxed">{error}</p>}
-                                    {approvalMessage && <p className="text-gold text-xs leading-relaxed">{approvalMessage}</p>}
+                                    {approvalMessage && <p className="text-accent text-xs leading-relaxed">{approvalMessage}</p>}
                                     <button
                                         type="button"
                                         onClick={approveSelection}
                                         disabled={selectedImages.length === 0 || isApproving}
-                                        className="w-full bg-white text-black text-[10px] tracking-[0.4em] uppercase py-4 font-bold hover:bg-gold transition-colors duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="w-full bg-white text-black text-[10px] tracking-[0.4em] uppercase py-4 font-bold hover:bg-accent transition-colors duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {isApproving ? 'Approving...' : t('clientGallery.approveSelection')}
                                     </button>
@@ -276,7 +276,7 @@ export default function ClientGalleryPage() {
                         <div className="flex flex-col items-center gap-8 py-12 border-t border-white/5">
                             <button
                                 onClick={resetGallery}
-                                className="px-12 py-4 border border-white/20 text-[10px] tracking-[0.4em] uppercase text-white hover:border-gold hover:text-gold transition-colors duration-500"
+                                className="px-12 py-4 border border-white/20 text-[10px] tracking-[0.4em] uppercase text-white hover:border-accent hover:text-accent transition-colors duration-500"
                             >
                                 Use Another Code
                             </button>

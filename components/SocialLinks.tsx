@@ -2,14 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FaInstagram, FaBehance, FaVimeoV, FaLinkedinIn } from 'react-icons/fa';
-
-const socialLinks = [
-    { name: 'Instagram', href: 'https://instagram.com/ijabikenmoyo', icon: <FaInstagram size={18} /> },
-    { name: 'Behance', href: 'https://behance.net/ijabikenmoyo', icon: <FaBehance size={18} /> },
-    { name: 'Vimeo', href: 'https://vimeo.com/ijabikenmoyo', icon: <FaVimeoV size={18} /> },
-    { name: 'LinkedIn', href: 'https://linkedin.com/in/ijabikenmoyo', icon: <FaLinkedinIn size={18} /> },
-];
+import { socialLinks } from '@/lib/socialLinks';
 
 export default function SocialLinks() {
     return (
@@ -24,7 +17,7 @@ export default function SocialLinks() {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 0.4, x: 0 }}
                         whileHover={{ opacity: 1, scale: 1.1 }}
-                        className="text-white hover:text-gold transition-colors"
+                        className="text-white hover:text-accent transition-colors"
                         aria-label={link.name}
                     >
                         {link.icon}

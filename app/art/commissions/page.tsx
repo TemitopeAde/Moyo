@@ -9,14 +9,14 @@ export default function ArtCommissionsPage() {
     return (
         <main className="bg-background min-h-screen">
             <Navbar />
-            <div className="pt-40 container mx-auto px-6 md:px-12 pb-32">
+            <div className="pt-36 md:pt-52 container mx-auto px-6 md:px-12 pb-32">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="max-w-4xl mx-auto space-y-24"
                 >
                     <header className="space-y-6 text-center">
-                        <span className="text-gold text-[10px] tracking-[0.5em] uppercase">Bespoke Creations</span>
+                        <span className="text-accent text-[10px] tracking-[0.5em] uppercase">Bespoke Creations</span>
                         <h1 className="text-5xl md:text-7xl font-heading text-white font-light italic">Art Commissions</h1>
                         <p className="text-white/50 font-body text-lg max-w-2xl mx-auto tracking-wide">
                             Collaborate on a unique piece of art tailored to your space or personal narrative.
@@ -41,7 +41,7 @@ export default function ArtCommissionsPage() {
                                     { step: "04", title: "Unveiling", desc: "Final presentation and documentation." }
                                 ].map((item) => (
                                     <li key={item.step} className="flex gap-6 border-b border-white/5 pb-6 last:border-0">
-                                        <span className="text-gold text-xs font-heading">{item.step}</span>
+                                        <span className="text-accent text-xs font-heading">{item.step}</span>
                                         <div className="space-y-1">
                                             <p className="text-white text-xs tracking-widest uppercase font-medium">{item.title}</p>
                                             <p className="text-white/30 text-[10px] tracking-wide">{item.desc}</p>
@@ -59,7 +59,7 @@ export default function ArtCommissionsPage() {
 
                     <div className="glass p-12 md:p-20 text-center space-y-12">
                         <h2 className="text-3xl font-heading text-white italic">Start a conversation.</h2>
-                        <button className="bg-white text-black px-12 py-5 text-[10px] tracking-[0.5em] uppercase font-bold hover:bg-gold transition-colors">
+                        <button className="bg-white text-black px-12 py-5 text-[10px] tracking-[0.5em] uppercase font-bold hover:bg-accent transition-colors">
                             Inquire Now
                         </button>
                     </div>

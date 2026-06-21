@@ -68,7 +68,7 @@ function wrapEmailHtml(contentHtml: string, previewText?: string) {
     '<body style="margin:0;background:#050505;color:#fafafa;font-family:Arial,sans-serif;">',
     '<div style="display:none;max-height:0;overflow:hidden;color:transparent;">' + escapeHtml(previewText || '') + '</div>',
     '<main style="max-width:640px;margin:0 auto;padding:44px 24px;">',
-    '<p style="margin:0 0 24px;color:#d4af37;font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Ijabiken Moyo</p>',
+    '<p style="margin:0 0 24px;color:#920110;font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Ijabiken Moyo</p>',
     '<div style="font-size:16px;color:#f5f5f5;line-height:1.7;">' + contentHtml + '</div>',
     '<hr style="border:none;border-top:1px solid rgba(255,255,255,0.12);margin:34px 0;" />',
     '<p style="margin:0;color:rgba(255,255,255,0.42);font-size:12px;line-height:1.6;">You are receiving this because you subscribed to Ijabiken Moyo updates.</p>',

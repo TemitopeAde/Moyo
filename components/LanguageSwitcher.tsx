@@ -11,6 +11,10 @@ const languages: { code: LanguageCode, name: string }[] = [
     { code: 'DE', name: 'German' },
     { code: 'PT', name: 'Portuguese' },
     { code: 'AR', name: 'Arabic' },
+    { code: 'ZH', name: 'Mandarin' },
+    { code: 'YO', name: 'Yoruba' },
+    { code: 'IG', name: 'Igbo' },
+    { code: 'HA', name: 'Hausa' },
 ];
 
 export default function LanguageSwitcher() {
@@ -33,7 +37,7 @@ export default function LanguageSwitcher() {
                         className="fixed inset-0 z-40"
                         onClick={() => setIsOpen(false)}
                     />
-                    <div className="absolute top-full right-0 mt-2 min-w-[140px] glass py-4 px-2 z-50 flex flex-col gap-1">
+                    <div className="absolute top-full right-0 mt-2 max-h-[70vh] min-w-[160px] overflow-y-auto glass py-4 px-2 z-50 flex flex-col gap-1">
                         {languages.map((lang) => (
                             <button
                                 key={lang.code}
@@ -43,7 +47,7 @@ export default function LanguageSwitcher() {
                                 }}
                                 className={cn(
                                     "text-left px-4 py-3 text-[10px] tracking-widest uppercase transition-colors rounded-sm",
-                                    language === lang.code ? "bg-white/10 text-gold" : "text-white/40 hover:text-white hover:bg-white/5"
+                                    language === lang.code ? "bg-white/10 text-accent" : "text-white/40 hover:text-white hover:bg-white/5"
                                 )}
                             >
                                 {lang.name}

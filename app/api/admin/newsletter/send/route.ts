@@ -74,8 +74,8 @@ export async function POST(req: NextRequest) {
   const htmlBody = formatBody(message);
   const html = `
     <div style="margin:0;background:#050505;color:#f7f7f7;font-family:Inter,Arial,sans-serif;padding:32px;">
-      <div style="max-width:640px;margin:0 auto;border:1px solid rgba(212,175,55,.35);padding:32px;">
-        <p style="margin:0 0 24px;color:#d4af37;font-size:11px;letter-spacing:.28em;text-transform:uppercase;">Ijabiken Moyo</p>
+      <div style="max-width:640px;margin:0 auto;border:1px solid rgba(146,1,16,.35);padding:32px;">
+        <p style="margin:0 0 24px;color:#920110;font-size:11px;letter-spacing:.28em;text-transform:uppercase;">Ijabiken Moyo</p>
         <h1 style="font-family:Georgia,serif;font-weight:400;font-style:italic;margin:0 0 18px;font-size:32px;color:#fff;">${escapeHtml(subject)}</h1>
         ${previewText ? `<p style="color:#aaa;margin:0 0 28px;line-height:1.7;">${escapeHtml(previewText)}</p>` : ''}
         <div style="color:#e8e8e8;line-height:1.75;font-size:15px;">${htmlBody}</div>

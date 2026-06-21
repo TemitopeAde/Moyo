@@ -54,11 +54,11 @@ export default function PhotographyGrid() {
         activeCategory === 'all' ? items : items.filter((item) => item.categorySlug === activeCategory);
 
     return (
-        <section id="photography" className="py-32 bg-background">
+        <section id="photography" className="bg-background py-24 md:py-32">
             <div className="container mx-auto px-6 md:px-12">
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-8">
+                <div className="mb-10 flex flex-col justify-between gap-6 md:mb-12 md:flex-row md:items-end md:gap-8">
                     <div className="space-y-4">
-                        <span className="text-gold text-[10px] tracking-[0.5em] uppercase block">{t('photography.selectedPortfolio')}</span>
+                        <span className="block text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">{t('photography.selectedPortfolio')}</span>
                         <h2 className="text-4xl md:text-6xl font-heading text-foreground font-light">
                             <span className="italic">{t('photography.visualProximity')}</span>
                         </h2>
@@ -68,14 +68,14 @@ export default function PhotographyGrid() {
                     </p>
                 </div>
 
-                <div className="mb-12 flex flex-wrap gap-3">
+                <div className="mb-10 flex flex-wrap gap-3 md:mb-12">
                     <button
                         type="button"
                         onClick={() => setActiveCategory('all')}
-                        className={`px-5 py-3 text-[10px] uppercase tracking-[0.3em] border transition-colors ${
+                        className={`px-4 py-3 text-[10px] uppercase tracking-[0.2em] border transition-colors sm:px-5 sm:tracking-[0.3em] ${
                             activeCategory === 'all'
-                                ? 'border-gold bg-gold text-black'
-                                : 'border-foreground/10 text-foreground/50 hover:border-gold hover:text-gold'
+                                ? 'border-accent bg-accent text-black'
+                                : 'border-foreground/10 text-foreground/50 hover:border-accent hover:text-accent'
                         }`}
                     >
                         All
@@ -85,10 +85,10 @@ export default function PhotographyGrid() {
                             key={category.id}
                             type="button"
                             onClick={() => setActiveCategory(category.slug)}
-                            className={`px-5 py-3 text-[10px] uppercase tracking-[0.3em] border transition-colors ${
+                            className={`px-4 py-3 text-[10px] uppercase tracking-[0.2em] border transition-colors sm:px-5 sm:tracking-[0.3em] ${
                                 activeCategory === category.slug
-                                    ? 'border-gold bg-gold text-black'
-                                    : 'border-foreground/10 text-foreground/50 hover:border-gold hover:text-gold'
+                                    ? 'border-accent bg-accent text-black'
+                                    : 'border-foreground/10 text-foreground/50 hover:border-accent hover:text-accent'
                             }`}
                         >
                             {category.name}
@@ -109,14 +109,14 @@ export default function PhotographyGrid() {
                 )}
 
                 {visibleItems.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-3 md:auto-rows-[minmax(280px,1fr)] gap-8">
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-3 md:auto-rows-[minmax(280px,1fr)] md:gap-8">
                     {visibleItems.map((item, index) => (
                         <motion.div
                             key={item.id}
                             initial={{ opacity: 0, y: 40 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             transition={{ duration: 1, delay: index * 0.1 }}
-                            className={`relative group min-h-[360px] overflow-hidden bg-surface ${item.span}`}
+                            className={`relative group min-h-[280px] overflow-hidden bg-surface sm:min-h-[340px] md:min-h-[360px] ${item.span}`}
                         >
                             <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-700 z-10" />
                             <div
@@ -127,7 +127,7 @@ export default function PhotographyGrid() {
                             />
 
                             <div className="absolute bottom-8 left-8 z-20 space-y-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                <p className="text-[10px] tracking-[0.3em] uppercase text-gold">{item.categoryName}</p>
+                                <p className="text-[10px] tracking-[0.3em] uppercase text-accent">{item.categoryName}</p>
                                 {item.title && <h3 className="text-xl font-heading text-white">{item.title}</h3>}
                             </div>
                         </motion.div>

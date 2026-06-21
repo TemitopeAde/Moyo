@@ -68,7 +68,7 @@ function createPointLayer(count: number, spread: number, depth: number, color: s
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const base = new THREE.Color(color);
-    const accent = new THREE.Color('#d4af37');
+    const accent = new THREE.Color('#920110');
 
     for (let i = 0; i < count; i += 1) {
         const x = (seededRandom(i + seedOffset) - 0.5) * spread;
@@ -160,7 +160,7 @@ function createLightStreaks() {
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
     const material = new THREE.LineBasicMaterial({
-        color: '#d4af37',
+        color: '#920110',
         transparent: true,
         opacity: 0.16,
         depthWrite: false,
@@ -328,7 +328,7 @@ export default function InteractiveImageScene({ imageSrc, className = '' }: Inte
 
                 const glowGeometry = new THREE.PlaneGeometry(1, 1, 1, 1);
                 const glowMaterial = new THREE.MeshBasicMaterial({
-                    color: '#d4af37',
+                    color: '#920110',
                     transparent: true,
                     opacity: 0.16,
                     depthWrite: false,

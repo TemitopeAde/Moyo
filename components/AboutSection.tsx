@@ -33,22 +33,22 @@ export default function AboutSection({ profileType }: AboutSectionProps) {
         : t('about.art.text2');
 
     return (
-        <section id="about" className="relative py-40 bg-background text-foreground overflow-hidden border-t border-foreground/5">
-            <div className="container mx-auto px-6 md:px-12 grid md:grid-cols-2 gap-24 items-center">
+        <section id="about" className="relative overflow-hidden border-t border-foreground/5 bg-background py-24 text-foreground md:py-32 lg:py-40">
+            <div className="container mx-auto grid items-center gap-14 px-6 md:grid-cols-2 md:px-12 lg:gap-24">
                 {/* Visual Element */}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 1.5, ease: 'easeOut' }}
-                    className="relative aspect-4/5 bg-surface group"
+                    className="relative mx-auto aspect-4/5 w-full max-w-sm bg-surface group md:max-w-none"
                 >
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-1000 z-10" />
                     <div
                         className="w-full h-full grayscale hover:grayscale-0 transition-all duration-1000 bg-cover bg-center"
                         style={{ backgroundImage: `url('${cmsAbout?.image || '/' + profileType + '_about.webp'}')` }}
                     />
-                    <div className="absolute -top-4 -left-4 w-12 h-12 border-t border-l border-gold/50" />
-                    <div className="absolute -bottom-4 -right-4 w-12 h-12 border-b border-r border-gold/50" />
+                    <div className="absolute -top-4 -left-4 w-12 h-12 border-t border-l border-accent/50" />
+                    <div className="absolute -bottom-4 -right-4 w-12 h-12 border-b border-r border-accent/50" />
                 </motion.div>
 
                 {/* Text Content */}
@@ -56,28 +56,28 @@ export default function AboutSection({ profileType }: AboutSectionProps) {
                     initial={{ opacity: 0, y: 50 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1, delay: 0.3 }}
-                    className="space-y-12"
+                    className="space-y-8 md:space-y-12"
                 >
                     <div className="space-y-4">
-                        <span className="text-gold text-[10px] tracking-[0.4em] uppercase">{t('common.practice')}</span>
-                        <h2 className="text-4xl md:text-6xl font-heading leading-tight">
+                        <span className="text-accent text-[10px] tracking-[0.28em] uppercase md:tracking-[0.4em]">{t('common.practice')}</span>
+                        <h2 className="text-4xl font-heading leading-tight md:text-6xl">
                             {headline}
                         </h2>
                     </div>
 
-                    <div className="space-y-8 max-w-lg">
-                        <p className="text-foreground/50 font-body leading-relaxed text-lg tracking-wide">
+                    <div className="max-w-lg space-y-6 md:space-y-8">
+                        <p className="text-base leading-relaxed tracking-wide text-foreground/50 md:text-lg">
                             {text1}
                         </p>
-                        <p className="text-foreground/50 font-body leading-relaxed text-lg tracking-wide">
+                        <p className="text-base leading-relaxed tracking-wide text-foreground/50 md:text-lg">
                             {text2}
                         </p>
                     </div>
 
-                    <div className="pt-8 border-t border-foreground/10 flex items-center justify-between">
+                    <div className="flex items-center justify-between border-t border-foreground/10 pt-8">
                         <div className="space-y-1">
                             <p className="text-[10px] tracking-widest text-foreground/30 uppercase">Ijabiken Moyo</p>
-                            <p className="text-[10px] tracking-widest text-gold uppercase underline underline-offset-8 cursor-pointer hover:text-foreground transition-colors">
+                            <p className="text-[10px] tracking-widest text-accent uppercase underline underline-offset-8 cursor-pointer hover:text-foreground transition-colors">
                                 {t('common.readFullBio')}
                             </p>
                         </div>

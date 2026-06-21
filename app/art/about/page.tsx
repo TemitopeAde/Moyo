@@ -9,19 +9,19 @@ export default function ArtAboutPage() {
     return (
         <main className="bg-background min-h-screen">
             <Navbar />
-            <div className="pt-40 container mx-auto px-6 md:px-12 pb-32">
-                <div className="grid lg:grid-cols-12 gap-20">
-                    <div className="lg:col-span-7 space-y-16">
+            <div className="container mx-auto px-6 pb-24 pt-36 md:px-12 md:pb-32 md:pt-52">
+                <div className="grid gap-14 lg:grid-cols-12 lg:gap-20">
+                    <div className="space-y-10 lg:col-span-7 lg:space-y-16">
                         <header className="space-y-6">
-                            <span className="text-gold text-[10px] tracking-[0.5em] uppercase">Biography</span>
-                            <h1 className="text-5xl md:text-8xl font-heading text-white italic">The Artist</h1>
+                            <span className="text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">Biography</span>
+                            <h1 className="text-5xl font-heading italic text-white md:text-8xl">The Artist</h1>
                         </header>
 
                         <motion.div
                             initial={{ opacity: 0 }}
                             whileInView={{ opacity: 1 }}
                             transition={{ duration: 1.5 }}
-                            className="space-y-12 text-lg md:text-xl text-white/60 font-body leading-relaxed max-w-2xl"
+                            className="max-w-2xl space-y-8 text-base leading-relaxed text-white/60 md:space-y-12 md:text-xl"
                         >
                             <p>
                                 Ijabiken Moyo’s fine art practice explores identity, memory, and human presence through form and symbolism. His works exist between personal history and shared experience, often referencing heritage, emotion, and quiet tension.
@@ -34,23 +34,23 @@ export default function ArtAboutPage() {
                             </p>
                         </motion.div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-16 pt-12 border-t border-white/5">
+                        <div className="grid grid-cols-1 gap-10 border-t border-white/5 pt-10 sm:grid-cols-3 md:gap-16 md:pt-12">
                             <div className="space-y-4">
-                                <span className="text-[10px] tracking-[0.4em] uppercase text-gold">Focus</span>
+                                <span className="text-[10px] tracking-[0.4em] uppercase text-accent">Focus</span>
                                 <p className="text-[10px] tracking-widest text-white/40 uppercase leading-relaxed">Identity<br />Memory<br />Presence</p>
                             </div>
                             <div className="space-y-4">
-                                <span className="text-[10px] tracking-[0.4em] uppercase text-gold">Mediums</span>
+                                <span className="text-[10px] tracking-[0.4em] uppercase text-accent">Mediums</span>
                                 <p className="text-[10px] tracking-widest text-white/40 uppercase leading-relaxed">Acrylic<br />Digital Composite<br />Textiles</p>
                             </div>
                             <div className="space-y-4">
-                                <span className="text-[10px] tracking-[0.4em] uppercase text-gold">Base</span>
+                                <span className="text-[10px] tracking-[0.4em] uppercase text-accent">Base</span>
                                 <p className="text-[10px] tracking-widest text-white/40 uppercase leading-relaxed">Amsterdam<br />London<br />Lagos</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="lg:col-span-5 space-y-12">
+                    <div className="space-y-8 lg:col-span-5 lg:space-y-12">
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}

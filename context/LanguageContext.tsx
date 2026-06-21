@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
-export type LanguageCode = 'EN' | 'FR' | 'ES' | 'DE' | 'PT' | 'AR';
+export type LanguageCode = 'EN' | 'FR' | 'ES' | 'DE' | 'PT' | 'AR' | 'ZH' | 'YO' | 'IG' | 'HA';
 
 interface LanguageContextType {
     language: LanguageCode;

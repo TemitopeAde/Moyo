@@ -67,7 +67,7 @@ type AdminSection = 'artwork' | 'catalog' | 'galleries' | 'content-contact' | 'o
 const sectionCard = 'bg-black/20 p-6 md:p-8 border border-white/10 space-y-6';
 const label = 'text-[10px] uppercase tracking-widest text-white/40';
 const inputClass =
-  'w-full rounded-sm bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-gold outline-none transition-colors';
+  'w-full rounded-sm bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-accent outline-none transition-colors';
 
 function AdminAccordionPanel({
   id,
@@ -89,7 +89,7 @@ function AdminAccordionPanel({
   const buttonId = `admin-panel-${id}-button`;
 
   return (
-    <div className={`border transition-colors ${isOpen ? 'border-gold/35 bg-gold/[0.03]' : 'border-white/10 bg-white/[0.02]'}`}>
+    <div className={`border transition-colors ${isOpen ? 'border-accent/35 bg-accent/[0.03]' : 'border-white/10 bg-white/[0.02]'}`}>
       <button
         type="button"
         id={buttonId}
@@ -99,7 +99,7 @@ function AdminAccordionPanel({
         className="flex w-full items-center justify-between gap-6 px-5 py-5 text-left transition-colors hover:bg-white/[0.04] md:px-7"
       >
         <span className="space-y-1">
-          <span className={`block font-heading text-2xl italic ${isOpen ? 'text-gold' : 'text-white'}`}>
+          <span className={`block font-heading text-2xl italic ${isOpen ? 'text-accent' : 'text-white'}`}>
             {title}
           </span>
           <span className="block text-[10px] uppercase tracking-[0.3em] text-white/35">
@@ -107,7 +107,7 @@ function AdminAccordionPanel({
           </span>
         </span>
         <FiChevronDown
-          className={`shrink-0 text-xl transition-transform duration-300 ${isOpen ? 'rotate-180 text-gold' : 'text-white/40'}`}
+          className={`shrink-0 text-xl transition-transform duration-300 ${isOpen ? 'rotate-180 text-accent' : 'text-white/40'}`}
           aria-hidden="true"
         />
       </button>
@@ -550,13 +550,13 @@ export default function AdminPage() {
       {!isAuthed && (
         <main className="min-h-screen bg-background text-foreground flex flex-col">
           <Navbar />
-          <section className="flex-1 flex items-center justify-center px-6">
+          <section className="flex-1 flex items-center justify-center px-6 pt-36 md:pt-52">
             <form
               onSubmit={handleAuthSubmit}
               className="w-full max-w-md space-y-6 bg-surface/40 border border-white/10 p-8 backdrop-blur-md"
             >
               <div className="space-y-2 text-center">
-                <p className="text-gold text-[10px] tracking-[0.5em] uppercase">Admin Access</p>
+                <p className="text-accent text-[10px] tracking-[0.5em] uppercase">Admin Access</p>
                 <h1 className="text-3xl font-heading italic text-white">Enter page password</h1>
                 <p className="text-white/50 text-sm">Required to unlock the control panel.</p>
               </div>
@@ -572,7 +572,7 @@ export default function AdminPage() {
               <button
                 type="submit"
                 disabled={authChecking}
-                className="w-full bg-gold text-black py-3 text-[11px] uppercase tracking-[0.4em] font-semibold disabled:opacity-50"
+                className="w-full bg-accent text-black py-3 text-[11px] uppercase tracking-[0.4em] font-semibold disabled:opacity-50"
               >
                 {authChecking ? 'Checking...' : 'Unlock'}
               </button>
@@ -596,9 +596,9 @@ export default function AdminPage() {
     <main className="bg-background min-h-screen text-foreground font-body">
       <Navbar />
 
-      <section className="pt-40 pb-20 container mx-auto px-6 md:px-12">
+      <section className="pt-36 md:pt-52 pb-20 container mx-auto px-6 md:px-12">
         <header className="mb-16 space-y-4">
-          <span className="text-gold text-[10px] tracking-[0.5em] uppercase">Control Panel</span>
+          <span className="text-accent text-[10px] tracking-[0.5em] uppercase">Control Panel</span>
           <h1 className="text-5xl md:text-7xl font-heading text-white italic">Admin</h1>
           <p className="text-white/40 max-w-2xl text-sm leading-relaxed">
             Manage artworks, galleries, site copy, contact, socials and orders. All changes persist to the database and
@@ -619,7 +619,7 @@ export default function AdminPage() {
             </span>
             <Link
               href="/admin/newsletter"
-              className="px-3 py-2 border border-gold/30 bg-gold/10 text-gold uppercase tracking-[0.25em] hover:border-gold hover:bg-gold hover:text-black transition-colors"
+              className="px-3 py-2 border border-accent/30 bg-accent/10 text-accent uppercase tracking-[0.25em] hover:border-accent hover:bg-accent hover:text-black transition-colors"
             >
               Newsletter Studio
             </Link>
@@ -717,8 +717,8 @@ export default function AdminPage() {
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                       accept="image/*"
                     />
-                    <div className="w-full bg-white/5 border-2 border-dashed border-white/10 p-6 flex flex-col items-center justify-center gap-3 group-hover:border-gold/50 transition-colors">
-                      <FiUpload className="text-xl text-white/20 group-hover:text-gold transition-colors" />
+                    <div className="w-full bg-white/5 border-2 border-dashed border-white/10 p-6 flex flex-col items-center justify-center gap-3 group-hover:border-accent/50 transition-colors">
+                      <FiUpload className="text-xl text-white/20 group-hover:text-accent transition-colors" />
                       <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
                         {selectedFile ? selectedFile.name : 'Choose File or Drag & Drop'}
                       </span>
@@ -763,14 +763,14 @@ export default function AdminPage() {
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="w-full bg-gold hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                  className="w-full bg-accent hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all flex items-center justify-center gap-4 disabled:opacity-50"
                 >
                   {uploading ? 'Uploading…' : 'Save Artwork'}
                 </button>
               </form>
             </div>
             <div className="space-y-4 max-h-[640px] overflow-y-auto pr-2">
-              <h3 className="text-[10px] uppercase tracking-[0.5em] text-gold">Existing</h3>
+              <h3 className="text-[10px] uppercase tracking-[0.5em] text-accent">Existing</h3>
               {artworks.map((art) => (
                 <div key={art.id} className="bg-surface/20 border border-white/5 p-4 flex gap-4 items-center group">
                   <div className="w-20 h-20 bg-neutral-950 overflow-hidden">
@@ -785,7 +785,7 @@ export default function AdminPage() {
                   <div className="flex items-center gap-2 text-[10px]">
                     <button
                       onClick={() => toggleArtwork(art.id, 'isFeatured', !art.is_featured)}
-                      className={`px-3 py-2 border ${art.is_featured ? 'border-gold text-gold' : 'border-white/10 text-white/60'}`}
+                      className={`px-3 py-2 border ${art.is_featured ? 'border-accent text-accent' : 'border-white/10 text-white/60'}`}
                     >
                       Featured
                     </button>
@@ -860,14 +860,14 @@ export default function AdminPage() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-gold hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all"
+                  className="w-full bg-accent hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all"
                 >
                   Create Category
                 </button>
               </form>
 
               <form className="pt-6 border-t border-white/5 space-y-4" onSubmit={createCatalogImage}>
-                <h3 className="text-[10px] uppercase tracking-[0.4em] text-gold">Add Image To Category</h3>
+                <h3 className="text-[10px] uppercase tracking-[0.4em] text-accent">Add Image To Category</h3>
                 <div className="space-y-2">
                   <label className={label}>Category</label>
                   <select
@@ -937,7 +937,7 @@ export default function AdminPage() {
             </div>
 
             <div className="space-y-4 max-h-[760px] overflow-y-auto pr-2">
-              <h3 className="text-[10px] uppercase tracking-[0.5em] text-gold">Catalog Categories</h3>
+              <h3 className="text-[10px] uppercase tracking-[0.5em] text-accent">Catalog Categories</h3>
               {catalogCategories.map((category) => (
                 <div key={category.id} className="bg-surface/20 border border-white/5 p-4 space-y-4">
                   <div className="flex items-start justify-between gap-4">
@@ -955,7 +955,7 @@ export default function AdminPage() {
                         type="button"
                         onClick={() => toggleCatalogCategory(category)}
                         className={`px-3 py-2 border text-[10px] uppercase tracking-[0.2em] ${
-                          category.is_active ? 'border-gold text-gold' : 'border-white/10 text-white/50'
+                          category.is_active ? 'border-accent text-accent' : 'border-white/10 text-white/50'
                         }`}
                       >
                         {category.is_active ? 'Active' : 'Hidden'}
@@ -1045,14 +1045,14 @@ export default function AdminPage() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-gold hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all"
+                  className="w-full bg-accent hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all"
                 >
                   Create Gallery
                 </button>
               </form>
             </div>
             <div className="space-y-4 max-h-[640px] overflow-y-auto pr-2">
-              <h3 className="text-[10px] uppercase tracking-[0.5em] text-gold">Existing</h3>
+              <h3 className="text-[10px] uppercase tracking-[0.5em] text-accent">Existing</h3>
               {galleries.map((gal) => (
                 <div key={gal.id} className="bg-surface/20 border border-white/5 p-4 space-y-2">
                   <div className="flex items-center justify-between">
@@ -1110,7 +1110,7 @@ export default function AdminPage() {
                           { images: gal.images.filter((i) => !gal.approved_images.includes(i)) }
                         )
                       }
-                      className="text-[10px] uppercase tracking-[0.3em] px-3 py-2 border border-gold text-gold"
+                      className="text-[10px] uppercase tracking-[0.3em] px-3 py-2 border border-accent text-accent"
                     >
                       Approve New Uploads
                     </button>
@@ -1162,7 +1162,7 @@ export default function AdminPage() {
               </div>
               <button
                 onClick={saveContent}
-                className="w-full bg-gold hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all"
+                className="w-full bg-accent hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all"
               >
                 Save Content
               </button>
@@ -1191,14 +1191,14 @@ export default function AdminPage() {
                 />
                 <button
                   onClick={saveContact}
-                  className="w-full bg-gold hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all"
+                  className="w-full bg-accent hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all"
                 >
                   Save Contact
                 </button>
               </div>
 
               <div className="pt-6 border-t border-white/5 space-y-3">
-                <h3 className="text-[10px] uppercase tracking-[0.4em] text-gold">Social Links</h3>
+                <h3 className="text-[10px] uppercase tracking-[0.4em] text-accent">Social Links</h3>
                 <div className="grid grid-cols-3 gap-3">
                   <input
                     className={inputClass}
@@ -1230,7 +1230,7 @@ export default function AdminPage() {
                     <div key={s.id} className="flex items-center justify-between border border-white/10 px-3 py-2 text-xs">
                       <span>{s.platform}</span>
                       <div className="flex items-center gap-2">
-                        <a href={s.url} className="text-gold underline" target="_blank" rel="noreferrer">
+                        <a href={s.url} className="text-accent underline" target="_blank" rel="noreferrer">
                           View
                         </a>
                         <button onClick={() => deleteSocial(s.id.toString())} className="text-red-400 hover:text-red-200">

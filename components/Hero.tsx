@@ -54,6 +54,7 @@ export default function Hero({ profileType }: HeroProps) {
     const parts = headline.split(',').map((part: string, i: number, arr: string[]) =>
         part + (i < arr.length - 1 ? ',' : '')
     );
+    const shouldStackHeadline = parts.length > 1;
 
     // Timing parameters according to Moreli animation analysis
     const isFirst = isInitialLoad === true;
@@ -65,7 +66,7 @@ export default function Hero({ profileType }: HeroProps) {
     if (isInitialLoad === null) return null;
 
     return (
-        <section className="relative h-[90vh] md:h-screen w-full overflow-hidden flex items-center justify-center p-6 prose-none">
+        <section className="relative min-h-[100svh] w-full overflow-hidden flex items-center justify-center px-5 pb-10 pt-32 sm:px-6 sm:pt-36 md:pt-40 lg:pt-44 prose-none">
             {/* Background Image: No parallax, only relax scale */}
             <div className="absolute inset-0 z-0 bg-background overflow-hidden">
                 <motion.div
@@ -91,28 +92,28 @@ export default function Hero({ profileType }: HeroProps) {
             </div>
 
             {/* Content */}
-            <div className="relative z-30 text-center max-w-5xl">
-                <div className="space-y-8">
+            <div className="relative z-30 mt-8 w-full max-w-5xl text-center md:mt-12">
+                <div className="space-y-6 md:space-y-8">
 
                     <div className="overflow-hidden">
                         <motion.p
                             initial={isFirst ? { y: "110%", opacity: 0 } : { y: 0, opacity: 1 }}
                             animate={{ y: "0%", opacity: 1 }}
                             transition={{ duration: durationText, delay: delayTextStart - 0.1, ease: [0.22, 1, 0.36, 1] }}
-                            className="text-[10px] md:text-xs tracking-[0.5em] uppercase text-gold"
+                            className="text-[9px] uppercase tracking-[0.34em] text-accent sm:text-[10px] md:text-xs md:tracking-[0.5em]"
                         >
                             {profileType}
                         </motion.p>
                     </div>
 
-                    <h2 className="text-4xl md:text-7xl lg:text-8xl font-heading text-foreground leading-[1.1] font-light">
+                    <h2 className="text-[clamp(2.35rem,12vw,4.6rem)] md:text-7xl lg:text-8xl font-heading text-foreground leading-[1.08] font-light">
                         {parts.map((p: string, i: number) => (
                             <MaskedLine
                                 key={i}
                                 delay={delayTextStart + i * staggerText}
                                 duration={durationText}
                             >
-                                <span className="block">{p}</span>
+                                <span className={shouldStackHeadline ? 'block' : 'inline-block max-w-full text-wrap'}>{p}</span>
                             </MaskedLine>
                         ))}
                     </h2>
@@ -121,15 +122,15 @@ export default function Hero({ profileType }: HeroProps) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.8, delay: delayTextStart + parts.length * staggerText + 0.2 }}
-                        className="flex flex-col items-center gap-10 pt-4"
+                        className="flex flex-col items-center gap-7 pt-2 md:gap-10 md:pt-4"
                     >
-                        <p className="text-sm md:text-lg text-foreground/50 font-body max-w-xl mx-auto tracking-wide">
+                        <p className="mx-auto max-w-xl text-sm leading-relaxed tracking-wide text-foreground/50 md:text-lg">
                             {subtext}
                         </p>
 
                         <Link
                             href={link}
-                            className="group relative inline-flex items-center gap-4 px-10 py-4 bg-foreground text-background text-xs tracking-[0.3em] uppercase font-medium hover:bg-gold transition-colors duration-500"
+                            className="group relative inline-flex max-w-full items-center justify-center gap-4 px-7 py-4 bg-foreground text-background text-[10px] tracking-[0.22em] uppercase font-medium hover:bg-accent transition-colors duration-500 sm:px-10 sm:text-xs sm:tracking-[0.3em]"
                         >
                             {cta}
                             <span className="transition-transform duration-500 group-hover:translate-x-2">→</span>

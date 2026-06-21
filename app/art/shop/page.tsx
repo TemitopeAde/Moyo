@@ -16,10 +16,10 @@ export default function ArtShopPage() {
     return (
         <main className="bg-background min-h-screen">
             <Navbar />
-            <div className="pt-40 container mx-auto px-6 md:px-12 pb-32">
+            <div className="pt-36 md:pt-52 container mx-auto px-6 md:px-12 pb-32">
                 <header className="mb-24 flex flex-col md:flex-row justify-between items-end gap-8">
                     <div className="space-y-4">
-                        <span className="text-gold text-[10px] tracking-[0.5em] uppercase">Editions</span>
+                        <span className="text-accent text-[10px] tracking-[0.5em] uppercase">Editions</span>
                         <h1 className="text-5xl md:text-8xl font-heading text-white italic leading-tight">Shop</h1>
                     </div>
                     <p className="text-white/40 text-[10px] tracking-[0.3em] uppercase max-w-[200px] border-l border-white/10 pl-6 pb-2">
@@ -48,7 +48,7 @@ export default function ArtShopPage() {
 
                             <div className="space-y-1">
                                 <div className="flex justify-between items-baseline">
-                                    <h3 className="text-sm font-heading text-white group-hover:text-gold transition-colors">{item.name}</h3>
+                                    <h3 className="text-sm font-heading text-white group-hover:text-accent transition-colors">{item.name}</h3>
                                     <span className="text-[10px] text-white/40">{item.price}</span>
                                 </div>
                                 <p className="text-[10px] tracking-[0.2em] uppercase text-white/20 font-body">{item.category}</p>

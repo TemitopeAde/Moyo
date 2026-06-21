@@ -26,9 +26,9 @@ export default function WorksPage() {
         <main className="bg-background min-h-screen">
             <Navbar />
 
-            <div className="pt-40 pb-20 container mx-auto px-6 md:px-12">
+            <div className="pt-36 md:pt-52 pb-20 container mx-auto px-6 md:px-12">
                 <header className="mb-24 space-y-4">
-                    <span className="text-gold text-[10px] tracking-[0.5em] uppercase">{t('artPage.collection')}</span>
+                    <span className="text-accent text-[10px] tracking-[0.5em] uppercase">{t('artPage.collection')}</span>
                     <h1 className="text-5xl md:text-7xl font-heading text-white italic">{t('artPage.selectedWorks')}</h1>
                     <p className="text-white/40 max-w-lg font-body text-sm leading-relaxed pt-4">
                         A comprehensive archive of works exploring themes of memory, identity, and the metaphysical.
@@ -55,7 +55,7 @@ export default function WorksPage() {
 
                             <div className="space-y-1">
                                 <div className="flex justify-between items-baseline">
-                                    <h3 className="text-xl font-heading text-white group-hover:text-gold transition-colors duration-300">{work.title}</h3>
+                                    <h3 className="text-xl font-heading text-white group-hover:text-accent transition-colors duration-300">{work.title}</h3>
                                     <span className="text-[10px] text-white/40 tracking-widest">${work.price}</span>
                                 </div>
                                 <div className="flex justify-between items-baseline">

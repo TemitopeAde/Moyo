@@ -50,14 +50,14 @@ export default function BookingsPage() {
     return (
         <main className="bg-background min-h-screen">
             <Navbar />
-            <div className="pt-40 container mx-auto px-6 md:px-12 pb-32">
+            <div className="pt-36 md:pt-52 container mx-auto px-6 md:px-12 pb-32">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="max-w-2xl mx-auto space-y-12"
                 >
                     <div className="space-y-4 text-center">
-                        <span className="text-gold text-[10px] tracking-[0.5em] uppercase">{t('bookingsPage.privateBooking')}</span>
+                        <span className="text-accent text-[10px] tracking-[0.5em] uppercase">{t('bookingsPage.privateBooking')}</span>
                         <h1 className="text-4xl md:text-6xl font-heading text-foreground">{t('bookingsPage.captureVision')}</h1>
                         <p className="text-foreground/50 font-body">
                             {t('bookingsPage.inquiryDescription')}
@@ -73,7 +73,7 @@ export default function BookingsPage() {
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     required
-                                    className="w-full bg-foreground/5 border-b border-foreground/10 py-3 text-foreground focus:outline-none focus:border-gold transition-colors"
+                                    className="w-full bg-foreground/5 border-b border-foreground/10 py-3 text-foreground focus:outline-none focus:border-accent transition-colors"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -83,7 +83,7 @@ export default function BookingsPage() {
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                     required
-                                    className="w-full bg-foreground/5 border-b border-foreground/10 py-3 text-foreground focus:outline-none focus:border-gold transition-colors"
+                                    className="w-full bg-foreground/5 border-b border-foreground/10 py-3 text-foreground focus:outline-none focus:border-accent transition-colors"
                                 />
                             </div>
                         </div>
@@ -93,7 +93,7 @@ export default function BookingsPage() {
                             <select
                                 value={formData.type}
                                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                className="w-full bg-foreground/5 border-b border-foreground/10 py-3 text-foreground/60 focus:outline-none focus:border-gold transition-colors appearance-none"
+                                className="w-full bg-foreground/5 border-b border-foreground/10 py-3 text-foreground/60 focus:outline-none focus:border-accent transition-colors appearance-none"
                             >
                                 <option value="Editorial">{t('categories.editorial')}</option>
                                 <option value="Portrait">{t('categories.portrait')}</option>
@@ -109,14 +109,14 @@ export default function BookingsPage() {
                                 value={formData.message}
                                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                                 required
-                                className="w-full bg-foreground/5 border-b border-foreground/10 py-3 text-foreground focus:outline-none focus:border-gold transition-colors"
+                                className="w-full bg-foreground/5 border-b border-foreground/10 py-3 text-foreground focus:outline-none focus:border-accent transition-colors"
                             />
                         </div>
 
                         <button
                             type="submit"
                             disabled={status === 'loading'}
-                            className="w-full bg-foreground text-background text-[10px] tracking-[0.4em] uppercase py-5 font-bold hover:bg-gold hover:text-background transition-colors disabled:opacity-50"
+                            className="w-full bg-foreground text-background text-[10px] tracking-[0.4em] uppercase py-5 font-bold hover:bg-accent hover:text-background transition-colors disabled:opacity-50"
                         >
                             {status === 'loading' ? 'Sending...' : t('booking.sendInquiry')}
                         </button>

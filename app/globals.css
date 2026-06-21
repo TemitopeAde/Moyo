@@ -5,7 +5,7 @@
   --background: #050505;
   --foreground: #fafafa;
   --muted: #888888;
-  --accent: #d4af37;
+  --accent: #920110;
   --surface: #111111;
   --border: #222222;
   
@@ -21,7 +21,7 @@
   --background: #ffffff;
   --foreground: #050505;
   --muted: #666666;
-  --accent: #d4af37;
+  --accent: #920110;
   --surface: #f5f5f5;
   --border: #e5e5e5;
 
@@ -107,7 +107,7 @@ body {
 .cosmic-film-grain {
   background-image:
     radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px),
-    radial-gradient(circle at 70% 60%, rgba(212, 175, 55, 0.045) 0 1px, transparent 1px),
+    radial-gradient(circle at 70% 60%, rgba(146, 1, 16, 0.045) 0 1px, transparent 1px),
     linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.035) 46%, transparent 54%);
   background-size: 17px 17px, 23px 23px, 100% 100%;
   opacity: 0.32;
@@ -156,14 +156,14 @@ body {
 .custom-cursor__halo {
   width: 34px;
   height: 34px;
-  border: 1px solid rgba(212, 175, 55, 0.72);
-  box-shadow: 0 0 24px rgba(212, 175, 55, 0.16);
+  border: 1px solid rgba(146, 1, 16, 0.72);
+  box-shadow: 0 0 24px rgba(146, 1, 16, 0.16);
 }
 
 .custom-cursor__stroke {
   width: 11px;
   height: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(146, 1, 16, 0.62);
   border-left-color: transparent;
   border-bottom-color: transparent;
   transform: translate(-50%, -50%) rotate(33deg);
@@ -173,13 +173,13 @@ body {
   width: 5px;
   height: 5px;
   background: var(--color-accent);
-  box-shadow: 0 0 18px rgba(212, 175, 55, 0.75);
+  box-shadow: 0 0 18px rgba(146, 1, 16, 0.75);
 }
 
 .custom-cursor.is-interactive .custom-cursor__halo {
   width: 52px;
   height: 52px;
-  border-color: rgba(255, 255, 255, 0.82);
+  border-color: rgba(146, 1, 16, 0.82);
 }
 
 .custom-cursor.is-interactive .custom-cursor__stroke {
@@ -230,18 +230,6 @@ h6 {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.text-gold {
-  color: var(--color-accent);
-}
-
-.bg-gold {
-  background-color: var(--color-accent);
-}
-
-.border-gold {
-  border-color: var(--color-accent);
 }
 
 /* Page Transitions */

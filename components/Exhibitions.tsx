@@ -16,13 +16,13 @@ export default function Exhibitions() {
     const { t } = useTranslate(language);
 
     return (
-        <section id="exhibitions" className="py-40 bg-background">
+        <section id="exhibitions" className="bg-background py-24 md:py-32 lg:py-40">
             <div className="container mx-auto px-6 md:px-12">
-                <div className="flex flex-col md:flex-row gap-20">
+                <div className="flex flex-col gap-12 md:flex-row md:gap-20">
                     {/* Header */}
                     <div className="md:w-1/3 space-y-6">
-                        <span className="text-gold text-[10px] tracking-[0.5em] uppercase block">{t('exhibitions.timeline')}</span>
-                        <h2 className="text-4xl md:text-6xl font-heading text-foreground font-light">
+                        <span className="block text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">{t('exhibitions.timeline')}</span>
+                        <h2 className="text-4xl font-heading font-light text-foreground md:text-6xl">
                             {/* Splitting for style if possible, or just rendering */}
                             <span className="italic">{t('exhibitions.selectedExhibitions')}</span>
                         </h2>
@@ -39,10 +39,10 @@ export default function Exhibitions() {
                                 initial={{ opacity: 0 }}
                                 whileInView={{ opacity: 1 }}
                                 transition={{ duration: 0.8, delay: index * 0.1 }}
-                                className="group relative flex items-center justify-between p-10 hover:bg-foreground/5 transition-all duration-500 cursor-default border-b border-foreground/5 last:border-0"
+                                className="group relative flex items-center justify-between border-b border-foreground/5 p-6 transition-all duration-500 last:border-0 hover:bg-foreground/5 md:p-10"
                             >
-                                <div className="flex gap-12 items-baseline">
-                                    <span className="text-sm font-heading text-foreground/20 group-hover:text-gold transition-colors duration-500">
+                                <div className="flex items-baseline gap-5 md:gap-12">
+                                    <span className="text-sm font-heading text-foreground/20 group-hover:text-accent transition-colors duration-500">
                                         {event.year}
                                     </span>
                                     <div className="space-y-1">

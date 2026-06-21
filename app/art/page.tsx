@@ -30,19 +30,19 @@ export default function FineArtPage() {
             <AboutSection profileType="art" />
 
             {/* Works Preview */}
-            <section className="py-40 bg-background border-t border-foreground/5">
+            <section className="border-t border-foreground/5 bg-background py-24 md:py-32 lg:py-40">
                 <div className="container mx-auto px-6 md:px-12">
-                    <header className="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
+                    <header className="mb-14 flex flex-col items-start justify-between gap-8 md:mb-24 md:flex-row md:items-end">
                         <div className="space-y-4">
-                            <span className="text-gold text-[10px] tracking-[0.5em] uppercase">{t('artPage.collection')}</span>
-                            <h2 className="text-5xl md:text-7xl font-heading text-foreground italic">{t('artPage.selectedWorks')}</h2>
+                            <span className="text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">{t('artPage.collection')}</span>
+                            <h2 className="text-4xl font-heading italic text-foreground sm:text-5xl md:text-7xl">{t('artPage.selectedWorks')}</h2>
                         </div>
-                        <Link href="/art/works" className="group flex items-center gap-4 text-[10px] tracking-[0.4em] uppercase text-foreground/40 hover:text-foreground transition-colors duration-500">
+                        <Link href="/art/works" className="group flex items-center gap-4 text-[10px] uppercase tracking-[0.24em] text-foreground/40 transition-colors duration-500 hover:text-foreground md:tracking-[0.4em]">
                             {t('artPage.viewArchive')} <span className="group-hover:translate-x-2 transition-transform rtl:group-hover:-translate-x-2 ">→</span>
                         </Link>
                     </header>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-12">
                         {[1, 2].map((i) => (
                             <div key={i} className="aspect-[4/3] bg-surface border border-foreground/5 relative overflow-hidden group">
                                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors z-10" />
@@ -56,22 +56,22 @@ export default function FineArtPage() {
             <Exhibitions />
 
             {/* CTA Section for Commissions/Shop */}
-            <section className="py-40 bg-foreground/5 border-y border-foreground/5">
-                <div className="container mx-auto px-6 md:px-12 grid md:grid-cols-2 gap-px bg-foreground/10">
-                    <Link href="/art/commissions" className="bg-background group p-20 flex flex-col items-center justify-center text-center space-y-8 hover:bg-surface transition-colors duration-700">
-                        <span className="text-gold text-[10px] tracking-[0.5em] uppercase">{t('artPage.customWork')}</span>
-                        <h3 className="text-4xl font-heading text-foreground italic">{t('artPage.artCommissions')}</h3>
+            <section className="border-y border-foreground/5 bg-foreground/5 py-24 md:py-32 lg:py-40">
+                <div className="container mx-auto grid gap-px bg-foreground/10 px-6 md:grid-cols-2 md:px-12">
+                    <Link href="/art/commissions" className="group flex flex-col items-center justify-center space-y-6 bg-background p-10 text-center transition-colors duration-700 hover:bg-surface sm:p-14 md:space-y-8 lg:p-20">
+                        <span className="text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">{t('artPage.customWork')}</span>
+                        <h3 className="text-3xl font-heading italic text-foreground md:text-4xl">{t('artPage.artCommissions')}</h3>
                         <p className="text-foreground/30 text-xs tracking-widest uppercase">{t('artPage.startDialogue')}</p>
                     </Link>
-                    <Link href="/art/shop" className="bg-background group p-20 flex flex-col items-center justify-center text-center space-y-8 hover:bg-surface transition-colors duration-700">
-                        <span className="text-gold text-[10px] tracking-[0.5em] uppercase">{t('artPage.editions')}</span>
-                        <h3 className="text-4xl font-heading text-foreground italic">{t('artPage.printShop')}</h3>
+                    <Link href="/art/shop" className="group flex flex-col items-center justify-center space-y-6 bg-background p-10 text-center transition-colors duration-700 hover:bg-surface sm:p-14 md:space-y-8 lg:p-20">
+                        <span className="text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">{t('artPage.editions')}</span>
+                        <h3 className="text-3xl font-heading italic text-foreground md:text-4xl">{t('artPage.printShop')}</h3>
                         <p className="text-foreground/30 text-xs tracking-widest uppercase">{t('artPage.exploreReleases')}</p>
                     </Link>
                 </div>
             </section>
 
-            <section className="py-40 bg-background flex flex-col items-center">
+            <section className="flex flex-col items-center bg-background py-24 md:py-32 lg:py-40">
                 <NewsletterForm profileType="art" />
             </section>
 

@@ -49,31 +49,31 @@ export default function BookingForm() {
     };
 
     return (
-        <section id="contact" className="py-40 bg-background border-t border-foreground/5">
+        <section id="contact" className="border-t border-foreground/5 bg-background py-24 md:py-32 lg:py-40">
             <div className="container mx-auto px-6 md:px-12 max-w-6xl">
-                <div className="lg:grid grid-cols-2 gap-24 items-start">
-                    <div className="mb-20 lg:mb-0 space-y-12">
+                <div className="grid gap-14 lg:grid-cols-2 lg:gap-24">
+                    <div className="space-y-8 lg:space-y-12">
                         <div className="space-y-4">
-                            <span className="text-gold text-[10px] tracking-[0.5em] uppercase block font-medium">
+                            <span className="block text-[10px] font-medium uppercase tracking-[0.3em] text-accent md:tracking-[0.5em]">
                                 {t('booking.collaboration')}
                             </span>
-                            <h2 className="text-5xl md:text-7xl font-heading text-foreground leading-tight font-light italic whitespace-pre-line">
+                            <h2 className="text-4xl font-heading font-light italic leading-tight text-foreground sm:text-5xl md:text-7xl">
                                 {t('booking.heading')}
                             </h2>
                         </div>
 
-                        <p className="text-foreground/40 font-body text-lg leading-relaxed max-w-md tracking-wide">
+                        <p className="max-w-md text-base leading-relaxed tracking-wide text-foreground/40 md:text-lg">
                             {t('booking.description')}
                         </p>
 
-                        <div className="space-y-6 pt-12 border-t border-foreground/5">
+                        <div className="space-y-6 border-t border-foreground/5 pt-8 md:pt-12">
                             <div className="space-y-2">
                                 <p className="text-[10px] tracking-[0.3em] uppercase text-foreground/20">{t('booking.email')}</p>
-                                <a href="mailto:studio@ijabikenmoyo.com" className="block text-2xl hover:text-gold transition-colors font-heading text-foreground underline underline-offset-8 decoration-white/10">studio@ijabikenmoyo.com</a>
+                                <a href="mailto:ijabkenm@gmail.com" className="block break-words font-heading text-xl text-foreground underline decoration-white/10 underline-offset-8 transition-colors hover:text-accent sm:text-2xl">ijabkenm@gmail.com</a>
                             </div>
                             <div className="space-y-2">
                                 <p className="text-[10px] tracking-[0.3em] uppercase text-foreground/20">{t('booking.studio')}</p>
-                                <span className="block text-sm text-foreground/40 font-body tracking-widest uppercase">+31 (0) 20 123 4567</span>
+                                <span className="block text-sm text-foreground/40 font-body tracking-widest uppercase">+2348148192201</span>
                             </div>
                         </div>
                     </div>
@@ -82,10 +82,10 @@ export default function BookingForm() {
                         initial={{ opacity: 0, x: 20 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 1 }}
-                        className="glass p-10 md:p-16 rounded-sm"
+                        className="glass rounded-sm p-6 sm:p-8 md:p-12 lg:p-16"
                     >
-                        <form onSubmit={handleSubmit} className="space-y-12">
-                            <div className="grid md:grid-cols-2 gap-12">
+                        <form onSubmit={handleSubmit} className="space-y-9 md:space-y-12">
+                            <div className="grid gap-8 md:grid-cols-2 md:gap-12">
                                 <div className="space-y-2 group">
                                     <label className="text-[10px] uppercase tracking-widest text-foreground/40 block">{t('booking.yourName')}</label>
                                     <input
@@ -93,7 +93,7 @@ export default function BookingForm() {
                                         value={formData.name}
                                         required
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full bg-transparent border-b border-foreground/10 py-3 text-foreground focus:outline-none focus:border-gold transition-colors font-body"
+                                        className="w-full bg-transparent border-b border-foreground/10 py-3 text-foreground focus:outline-none focus:border-accent transition-colors font-body"
                                     />
                                 </div>
                                 <div className="space-y-2 group">
@@ -103,7 +103,7 @@ export default function BookingForm() {
                                         value={formData.email}
                                         required
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full bg-transparent border-b border-foreground/10 py-3 text-foreground focus:outline-none focus:border-gold transition-colors font-body"
+                                        className="w-full bg-transparent border-b border-foreground/10 py-3 text-foreground focus:outline-none focus:border-accent transition-colors font-body"
                                     />
                                 </div>
                             </div>
@@ -116,8 +116,8 @@ export default function BookingForm() {
                                             key={service.id}
                                             type="button"
                                             onClick={() => setFormData({ ...formData, service: service.id })}
-                                            className={`px-6 py-2 border text-[10px] uppercase tracking-widest transition-all duration-500 rounded-full ${formData.service === service.id
-                                                ? 'border-gold text-gold bg-gold/5'
+                                            className={`px-4 py-2 border text-[10px] uppercase tracking-widest transition-all duration-500 rounded-full sm:px-6 ${formData.service === service.id
+                                                ? 'border-accent text-accent bg-accent/5'
                                                 : 'border-white/10 text-foreground/40 hover:border-foreground/30 hover:text-foreground'
                                                 }`}
                                         >
@@ -134,14 +134,14 @@ export default function BookingForm() {
                                     value={formData.message}
                                     required
                                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                                    className="w-full bg-transparent border-b border-white/10 py-3 text-foreground focus:outline-none focus:border-gold transition-colors font-body resize-none"
+                                    className="w-full bg-transparent border-b border-white/10 py-3 text-foreground focus:outline-none focus:border-accent transition-colors font-body resize-none"
                                 />
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={status === 'loading'}
-                                className="w-full py-5 bg-white text-background text-[10px] tracking-[0.5em] uppercase font-bold hover:bg-gold hover:text-background transition-colors duration-500 disabled:opacity-50"
+                                className="w-full bg-white px-4 py-5 text-[10px] font-bold uppercase tracking-[0.28em] text-background transition-colors duration-500 hover:bg-accent hover:text-background disabled:opacity-50 sm:tracking-[0.5em]"
                             >
                                 {status === 'loading' ? 'Sending...' : t('booking.sendInquiry')}
                             </button>
