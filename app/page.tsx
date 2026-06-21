@@ -32,13 +32,13 @@ export default function GlobalEntryPage() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.5, ease: [0.19, 1, 0.22, 1] }}
-          className="mb-12 space-y-7 sm:mb-16 sm:space-y-9 md:mb-20 md:space-y-10"
+          className="mb-12 flex w-full flex-col items-center space-y-7 text-center sm:mb-16 sm:space-y-9 md:mb-20 md:space-y-10"
         >
-          <h1 className="text-[clamp(3.5rem,18vw,8rem)] font-heading text-foreground leading-none tracking-tight md:text-9xl">
-            Ijabiken <span className="italic block font-light mt-2">Moyo</span>
+          <h1 className="max-w-[11ch] text-center font-body text-[clamp(2.75rem,11vw,7rem)] font-semibold uppercase leading-[0.95] tracking-[0.08em] text-foreground sm:tracking-[0.12em] md:max-w-none md:text-[clamp(4.5rem,10vw,8.5rem)]">
+            Ijabiken <span className="block">Moyo</span>
           </h1>
 
-          <div className="h-px w-24 bg-accent/50 mx-auto" />
+          <div className="mx-auto h-px w-24 bg-accent/50" />
 
           <p className="mx-auto max-w-2xl text-xs uppercase leading-loose tracking-[0.18em] text-foreground/50 sm:text-sm sm:tracking-[0.24em] md:text-lg md:tracking-[0.3em]">
             {t('home.tagline_part1')} <br className="hidden md:block" />
