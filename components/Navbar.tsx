@@ -136,7 +136,7 @@ export default function Navbar() {
                     initial={isInitialLoad ? { opacity: 0 } : false}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5, delay: isInitialLoad ? 1.0 : 0, staggerChildren: 0.1, ease: "easeOut" }}
-                    className="ml-auto hidden min-w-0 items-center gap-5 lg:flex xl:gap-7"
+                    className="ml-auto hidden min-w-0 items-center gap-5 lg:flex xl:gap-8"
                 >
                     <div className="flex min-w-0 items-center gap-3 text-[9px] font-body tracking-[0.12em] text-foreground/60 xl:gap-6 xl:text-[10px] xl:tracking-[0.2em]">
                         {links.map((link) => (
@@ -153,22 +153,22 @@ export default function Navbar() {
                         ))}
                     </div>
 
-                    <div className="h-8 w-px bg-foreground/10" />
+                    <div className="h-10 w-px shrink-0 bg-foreground/10" />
 
-                    <div className="flex items-center gap-2 xl:gap-4">
-                        <ThemeToggle />
-                        <LanguageSwitcher />
+                    <div className="flex items-center gap-2 xl:gap-3">
+                        <ThemeToggle className="h-14 w-14 rounded-lg border-foreground/10" />
+                        <LanguageSwitcher className="h-14 rounded-lg border-foreground/10 px-4 xl:px-5" />
                         {profile === 'photography' ? (
                             <Link
                                 href="/photography/bookings"
-                                className="inline-flex h-12 items-center justify-center rounded-md border border-foreground bg-foreground px-4 text-[9px] font-semibold uppercase tracking-[0.14em] text-background transition-all duration-300 hover:border-accent hover:bg-accent hover:text-background xl:h-14 xl:px-7 xl:text-[10px] xl:tracking-[0.2em]"
+                                className="inline-flex h-14 shrink-0 items-center justify-center rounded-lg border border-foreground bg-foreground px-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-background transition-all duration-300 hover:border-accent hover:bg-accent hover:text-background xl:px-7"
                             >
                                 {t('common.bookNow')}
                             </Link>
                         ) : (
                             <Link
                                 href="/art/newsletter"
-                                className="inline-flex h-12 items-center justify-center rounded-md border border-foreground/20 px-4 text-[9px] font-semibold uppercase tracking-[0.14em] text-foreground transition-all duration-300 hover:border-accent hover:text-accent xl:h-14 xl:px-7 xl:text-[10px] xl:tracking-[0.2em]"
+                                className="inline-flex h-14 shrink-0 items-center justify-center rounded-lg border border-foreground/20 px-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground transition-all duration-300 hover:border-accent hover:text-accent xl:px-7"
                             >
                                 {t('common.newsletter')}
                             </Link>

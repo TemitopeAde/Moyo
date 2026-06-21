@@ -17,7 +17,7 @@ const languages: { code: LanguageCode, name: string }[] = [
     { code: 'HA', name: 'Hausa' },
 ];
 
-export default function LanguageSwitcher() {
+export default function LanguageSwitcher({ className }: { className?: string }) {
     const { language, setLanguage } = useLanguage();
     const [isOpen, setIsOpen] = useState(false);
 
@@ -25,7 +25,10 @@ export default function LanguageSwitcher() {
         <div className="relative font-body">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-transparent px-3 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-foreground/10 hover:bg-white/10 hover:text-white"
+                className={cn(
+                    "inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md border border-transparent px-3 text-[10px] uppercase tracking-[0.2em] text-foreground/60 transition-colors hover:border-foreground/10 hover:bg-white/10 hover:text-foreground",
+                    className
+                )}
             >
                 {language}
                 <span className={cn("transition-transform duration-300", isOpen && "rotate-180")}>↓</span>
