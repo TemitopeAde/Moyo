@@ -4,6 +4,8 @@ import nodemailer from 'nodemailer';
 
 export const runtime = 'nodejs';
 
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'ijabkenm@gmail.com';
+
 function normalizeString(value: unknown) {
     return typeof value === 'string' ? value.trim() : '';
 }
@@ -52,7 +54,7 @@ export async function POST(req: Request) {
 
         const mailOptions = {
             from: emailUser,
-            to: 'moyoayaworan@gmail.com',
+            to: CONTACT_EMAIL,
             replyTo: email,
             subject: `New Booking Inquiry: ${type || 'General'} - ${name}`,
             text: `

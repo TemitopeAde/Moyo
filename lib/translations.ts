@@ -1501,17 +1501,17 @@ const translationFallbacks: Record<LanguageCode, keyof typeof localizedTranslati
 };
 
 export function useTranslate(lang: LanguageCode) {
-    const t = (path: string) => {
+    const t = (path: string): string => {
         const keys = path.split('.');
-        let result: any = localizedTranslations[translationFallbacks[lang]];
+        let result: unknown = localizedTranslations[translationFallbacks[lang]];
         for (const key of keys) {
-            if (result && result[key]) {
-                result = result[key];
+            if (result && typeof result === 'object' && key in result) {
+                result = (result as Record<string, unknown>)[key];
             } else {
                 return path;
             }
         }
-        return result;
+        return typeof result === 'string' ? result : path;
     };
 
     return { t };

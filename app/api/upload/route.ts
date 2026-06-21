@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
+import type { UploadApiResponse } from 'cloudinary';
 import { requireAdmin } from '@/lib/auth';
 
 cloudinary.config({
@@ -35,28 +36,30 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const upload = await new Promise((resolve, reject) => {
+    const upload = await new Promise<UploadApiResponse>((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         { folder: 'moyo-admin' },
         (error, result) => {
           if (error) {
             console.error('[upload] cloudinary error', error);
             reject(error);
-          } else {
+          } else if (result) {
             console.log('[upload] cloudinary result', {
-              assetId: (result as any)?.asset_id,
-              publicId: (result as any)?.public_id,
-              bytes: (result as any)?.bytes,
-              secureUrl: Boolean((result as any)?.secure_url),
+              assetId: result.asset_id,
+              publicId: result.public_id,
+              bytes: result.bytes,
+              secureUrl: Boolean(result.secure_url),
             });
             resolve(result);
+          } else {
+            reject(new Error('Cloudinary returned no upload result'));
           }
         }
       );
       stream.end(buffer);
     });
 
-    return NextResponse.json({ url: (upload as any).secure_url });
+    return NextResponse.json({ url: upload.secure_url });
   } catch (error) {
     console.error('[upload] Cloudinary upload failed', error);
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });

@@ -10,7 +10,6 @@ import Footer from '@/components/Footer';
 import { useProfile } from '@/context/ProfileContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
-import { motion } from 'framer-motion';
 import Link from 'next/link';
 
 export default function FineArtPage() {

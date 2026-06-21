@@ -2,6 +2,8 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'ijabkenm@gmail.com';
+
 export async function POST(req: Request) {
   try {
     const { userAgent, timestamp, path } = await req.json();
@@ -26,7 +28,7 @@ export async function POST(req: Request) {
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: 'moyoayaworan@gmail.com',
+      to: CONTACT_EMAIL,
       subject: `New Active Session Detected`,
       text: `
         A new user session has been active.

@@ -8,17 +8,26 @@ import { useProfile } from '@/context/ProfileContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 
+type Artwork = {
+    id: number;
+    title: string;
+    price: string | number;
+    image: string;
+    category: string;
+    is_available: boolean;
+};
+
 export default function WorksPage() {
     const { setProfile } = useProfile();
     const { language } = useLanguage();
     const { t } = useTranslate(language);
-    const [works, setWorks] = useState<any[]>([]);
+    const [works, setWorks] = useState<Artwork[]>([]);
 
     useEffect(() => {
         setProfile('art');
         fetch('/api/artworks')
             .then(res => res.json())
-            .then(data => setWorks(data.artworks || []))
+            .then((data: { artworks?: Artwork[] }) => setWorks(data.artworks || []))
             .catch(err => console.error('Failed to fetch works', err));
     }, [setProfile]);
 

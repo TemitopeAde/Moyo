@@ -25,7 +25,7 @@ export default function LanguageSwitcher() {
         <div className="relative font-body">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="text-[10px] tracking-[0.2em] uppercase text-white/60 hover:text-white transition-colors py-2 flex items-center gap-2"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-transparent px-3 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-foreground/10 hover:bg-white/10 hover:text-white"
             >
                 {language}
                 <span className={cn("transition-transform duration-300", isOpen && "rotate-180")}>↓</span>

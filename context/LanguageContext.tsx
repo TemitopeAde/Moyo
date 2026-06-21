@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export type LanguageCode = 'EN' | 'FR' | 'ES' | 'DE' | 'PT' | 'AR' | 'ZH' | 'YO' | 'IG' | 'HA';
+const LANGUAGE_CODES: LanguageCode[] = ['EN', 'FR', 'ES', 'DE', 'PT', 'AR', 'ZH', 'YO', 'IG', 'HA'];
 
 interface LanguageContextType {
     language: LanguageCode;
@@ -12,19 +13,20 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-    const [language, setLanguage] = useState<LanguageCode>('EN');
+    const [language, setLanguage] = useState<LanguageCode>(() => {
+        if (typeof window === 'undefined') return 'EN';
+        const saved = localStorage.getItem('moyo_lang');
+        return LANGUAGE_CODES.includes(saved as LanguageCode) ? (saved as LanguageCode) : 'EN';
+    });
 
-    // Persist language choice
     useEffect(() => {
-        const saved = localStorage.getItem('moyo_lang') as LanguageCode;
-        if (saved) setLanguage(saved);
-    }, []);
+        document.documentElement.dir = language === 'AR' ? 'rtl' : 'ltr';
+        document.documentElement.lang = language.toLowerCase();
+    }, [language]);
 
     const handleSetLanguage = (lang: LanguageCode) => {
         setLanguage(lang);
         localStorage.setItem('moyo_lang', lang);
-        document.documentElement.dir = lang === 'AR' ? 'rtl' : 'ltr';
-        document.documentElement.lang = lang.toLowerCase();
     };
 
     return (

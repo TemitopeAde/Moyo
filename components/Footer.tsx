@@ -21,7 +21,7 @@ export default function Footer() {
                                 alt="Ijabiken Moyo"
                                 width={160}
                                 height={160}
-                                className="h-14 w-14 object-contain transition-opacity duration-300 hover:opacity-80 md:h-[70px] md:w-[70px]"
+                                className="theme-logo h-14 w-14 object-contain transition-opacity duration-300 hover:opacity-80 md:h-[70px] md:w-[70px]"
                             />
                         </Link>
                         <p className="text-foreground/30 text-xs tracking-widest uppercase max-w-[200px] leading-relaxed whitespace-pre-line">

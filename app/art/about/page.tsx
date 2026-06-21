@@ -30,7 +30,7 @@ export default function ArtAboutPage() {
                                 Each piece is created as a standalone statement — meant to be lived with, not just observed. By abstracting the human form and focusing on textural narratives, Moyo invites viewers into a space of contemplation and introspection.
                             </p>
                             <p className="italic text-white">
-                                "Art is the physical manifestation of things unsaid. It is a bridge between the internal landscape and the external world."
+                                &ldquo;Art is the physical manifestation of things unsaid. It is a bridge between the internal landscape and the external world.&rdquo;
                             </p>
                         </motion.div>
 

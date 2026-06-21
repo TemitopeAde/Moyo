@@ -40,7 +40,7 @@ export default function PhotographyAboutPage() {
                             </p>
                             <div className="h-px w-20 bg-accent/50" />
                             <p className="italic text-white font-heading text-2xl">
-                                "Precision over volume. Emotion over perfection."
+                                &ldquo;Precision over volume. Emotion over perfection.&rdquo;
                             </p>
                         </div>
 

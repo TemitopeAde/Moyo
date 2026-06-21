@@ -22,7 +22,7 @@ export default function RootLayout({
       <body
         className="font-body antialiased bg-background text-foreground selection:bg-accent selection:text-background"
       >
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+        <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false}>
           <LanguageProvider>
             <ProfileProvider>
               <SessionTracker />

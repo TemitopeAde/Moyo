@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
 
+type ArtworkUpdateKey = 'title' | 'price' | 'image' | 'category' | 'isFeatured' | 'isAvailable';
+
 export async function GET() {
   const { rows } = await query('SELECT * FROM artworks ORDER BY created_at DESC');
   return NextResponse.json({ artworks: rows });
@@ -11,7 +13,7 @@ export async function POST(req: NextRequest) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
 
-  const body = await req.json();
+  const body = await req.json() as Record<string, unknown>;
   const { title, price, image, category, isFeatured, isAvailable } = body;
   const { rows } = await query(
     `INSERT INTO artworks (title, price, image, category, is_featured, is_available)
@@ -25,14 +27,14 @@ export async function PUT(req: NextRequest) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
 
-  const body = await req.json();
+  const body = await req.json() as Record<string, unknown>;
   const { id, ...updates } = body;
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
   const fields: string[] = [];
-  const values: any[] = [];
+  const values: unknown[] = [];
   let idx = 1;
-  for (const key of ['title', 'price', 'image', 'category', 'isFeatured', 'isAvailable'] as const) {
+  for (const key of ['title', 'price', 'image', 'category', 'isFeatured', 'isAvailable'] satisfies ArtworkUpdateKey[]) {
     if (key in updates) {
       const col = key === 'isFeatured' ? 'is_featured' : key === 'isAvailable' ? 'is_available' : key;
       fields.push(`${col} = $${idx}`);

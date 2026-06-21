@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useMemo, useState, ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 
 type ProfileType = 'photography' | 'art' | null;
@@ -13,28 +13,24 @@ interface ProfileContextType {
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
-export function ProfileProvider({ children }: { children: ReactNode }) {
-    const [profile, setProfileState] = useState<ProfileType>(null);
-    const pathname = usePathname();
+function getProfileFromPath(pathname: string): ProfileType {
+    if (pathname.startsWith('/photography')) return 'photography';
+    if (pathname.startsWith('/art')) return 'art';
+    return null;
+}
 
-    // Set profile based on URL on initial load and navigation
-    useEffect(() => {
-        if (pathname.startsWith('/photography')) {
-            setProfileState('photography');
-        } else if (pathname.startsWith('/art')) {
-            setProfileState('art');
-        } else if (pathname === '/') {
-            // Stay as null for the global entry page
-            setProfileState(null);
-        }
-    }, [pathname]);
+export function ProfileProvider({ children }: { children: ReactNode }) {
+    const [profileOverride, setProfileOverride] = useState<ProfileType>(null);
+    const pathname = usePathname();
+    const routeProfile = useMemo(() => getProfileFromPath(pathname), [pathname]);
+    const profile = routeProfile ?? profileOverride;
 
     const setProfile = (newProfile: ProfileType) => {
-        setProfileState(newProfile);
+        setProfileOverride(newProfile);
     };
 
     const toggleProfile = () => {
-        setProfileState((prev) => (prev === 'photography' ? 'art' : 'photography'));
+        setProfileOverride(profile === 'photography' ? 'art' : 'photography');
     };
 
     return (

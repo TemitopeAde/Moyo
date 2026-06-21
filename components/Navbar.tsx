@@ -16,7 +16,15 @@ import { socialLinks } from '@/lib/socialLinks';
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [isInitialLoad, setIsInitialLoad] = useState<boolean | null>(null);
+    const [isInitialLoad] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        const played = sessionStorage.getItem('moreli_nav_played');
+        if (!played) {
+            sessionStorage.setItem('moreli_nav_played', 'true');
+            return true;
+        }
+        return false;
+    });
     const { profile, setProfile } = useProfile(); // We need setProfile for the mobile switcher
     const { language } = useLanguage();
     const { t } = useTranslate(language);
@@ -31,19 +39,10 @@ export default function Navbar() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    useEffect(() => {
-        const played = sessionStorage.getItem('moreli_nav_played');
-        if (!played) {
-            setIsInitialLoad(true);
-            sessionStorage.setItem('moreli_nav_played', 'true');
-        } else {
-            setIsInitialLoad(false);
-        }
-    }, []);
-
     // Close mobile menu on route change
     useEffect(() => {
-        setMobileMenuOpen(false);
+        const timeout = window.setTimeout(() => setMobileMenuOpen(false), 0);
+        return () => window.clearTimeout(timeout);
     }, [pathname]);
 
     // Lock body scroll when menu is open
@@ -76,8 +75,8 @@ export default function Navbar() {
         <>
             <nav
                 className={cn(
-                    'fixed top-0 left-0 right-0 z-50 transition-all duration-700 ease-in-out px-4 py-4 sm:px-6 md:px-8 lg:px-12 flex justify-between items-center gap-6 lg:gap-10',
-                    scrolled ? 'bg-background/80 backdrop-blur-xl py-3 border-b border-foreground/5' : 'bg-transparent md:py-6'
+                    'fixed left-0 right-0 top-0 z-50 flex min-h-20 items-center justify-between gap-5 border-b px-4 backdrop-blur-xl transition-all duration-700 ease-in-out sm:px-6 md:min-h-24 md:px-8 xl:gap-10 xl:px-12',
+                    scrolled ? 'border-foreground/10 bg-background/85 shadow-[0_18px_60px_rgba(0,0,0,0.08)]' : 'border-transparent bg-background/20'
                 )}
             >
                 {/* Brand */}
@@ -94,7 +93,7 @@ export default function Navbar() {
                             width={160}
                             height={160}
                             priority
-                            className="h-12 w-12 object-contain transition-opacity duration-300 group-hover:opacity-80 sm:h-14 sm:w-14 md:h-16 md:w-16 lg:h-[77px] lg:w-[77px]"
+                            className="theme-logo h-10 w-10 object-contain transition-opacity duration-300 group-hover:opacity-80 sm:h-12 sm:w-12 md:h-14 md:w-14 lg:h-16 lg:w-16"
                         />
                     </Link>
                 </motion.div>
@@ -137,9 +136,9 @@ export default function Navbar() {
                     initial={isInitialLoad ? { opacity: 0 } : false}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5, delay: isInitialLoad ? 1.0 : 0, staggerChildren: 0.1, ease: "easeOut" }}
-                    className="ml-auto hidden md:flex min-w-0 items-center gap-5 lg:gap-8"
+                    className="ml-auto hidden min-w-0 items-center gap-5 lg:flex xl:gap-7"
                 >
-                    <div className="flex min-w-0 items-center gap-4 text-[9px] font-body tracking-[0.16em] text-foreground/60 lg:gap-7 lg:text-[10px] lg:tracking-[0.2em]">
+                    <div className="flex min-w-0 items-center gap-3 text-[9px] font-body tracking-[0.12em] text-foreground/60 xl:gap-6 xl:text-[10px] xl:tracking-[0.2em]">
                         {links.map((link) => (
                             <Link
                                 key={link.name}
@@ -154,22 +153,22 @@ export default function Navbar() {
                         ))}
                     </div>
 
-                    <div className="h-4 w-[1px] bg-foreground/10" />
+                    <div className="h-8 w-px bg-foreground/10" />
 
-                    <div className="flex items-center gap-4 lg:gap-6">
+                    <div className="flex items-center gap-2 xl:gap-4">
                         <ThemeToggle />
                         <LanguageSwitcher />
                         {profile === 'photography' ? (
                             <Link
                                 href="/photography/bookings"
-                                className="bg-foreground text-background text-[9px] tracking-[0.16em] font-medium px-4 py-2.5 rounded-sm hover:bg-accent hover:text-background transition-all duration-300 uppercase lg:px-6 lg:text-[10px] lg:tracking-[0.2em]"
+                                className="inline-flex h-12 items-center justify-center rounded-md border border-foreground bg-foreground px-4 text-[9px] font-semibold uppercase tracking-[0.14em] text-background transition-all duration-300 hover:border-accent hover:bg-accent hover:text-background xl:h-14 xl:px-7 xl:text-[10px] xl:tracking-[0.2em]"
                             >
                                 {t('common.bookNow')}
                             </Link>
                         ) : (
                             <Link
                                 href="/art/newsletter"
-                                className="border border-foreground/20 text-foreground text-[9px] tracking-[0.16em] font-medium px-4 py-2.5 rounded-sm hover:border-accent hover:text-accent transition-all duration-300 uppercase lg:px-6 lg:text-[10px] lg:tracking-[0.2em]"
+                                className="inline-flex h-12 items-center justify-center rounded-md border border-foreground/20 px-4 text-[9px] font-semibold uppercase tracking-[0.14em] text-foreground transition-all duration-300 hover:border-accent hover:text-accent xl:h-14 xl:px-7 xl:text-[10px] xl:tracking-[0.2em]"
                             >
                                 {t('common.newsletter')}
                             </Link>
@@ -180,7 +179,7 @@ export default function Navbar() {
                 {/* Mobile Menu Toggle */}
                 <button
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="md:hidden flex h-11 w-11 flex-col items-end justify-center gap-1.5 focus:outline-none group z-50 relative"
+                    className="flex h-11 w-11 flex-col items-end justify-center gap-1.5 focus:outline-none group z-50 relative lg:hidden"
                 >
                     <motion.div
                         animate={mobileMenuOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
@@ -205,7 +204,7 @@ export default function Navbar() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: '-100%' }}
                         transition={{ duration: 0.5, ease: [0.19, 1, 0.22, 1] }}
-                        className="fixed inset-0 z-40 bg-black/95 backdrop-blur-3xl md:hidden overflow-y-auto"
+                        className="fixed inset-0 z-40 bg-black/95 backdrop-blur-3xl lg:hidden overflow-y-auto"
                     >
                         <div className="flex min-h-screen flex-col items-center justify-center space-y-10 px-5 py-28 sm:p-8">
 

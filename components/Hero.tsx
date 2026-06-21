@@ -20,17 +20,15 @@ export default function Hero({ profileType }: HeroProps) {
     const { t } = useTranslate(language);
     const [cmsHero, setCmsHero] = useState<{ heroText: string; heroImage: string } | null>(null);
 
-    const [isInitialLoad, setIsInitialLoad] = useState<boolean | null>(null);
-
-    useEffect(() => {
+    const [isInitialLoad] = useState(() => {
+        if (typeof window === 'undefined') return false;
         const played = sessionStorage.getItem('moreli_intro_played');
         if (!played) {
-            setIsInitialLoad(true);
             sessionStorage.setItem('moreli_intro_played', 'true');
-        } else {
-            setIsInitialLoad(false);
+            return true;
         }
-    }, []);
+        return false;
+    });
 
     useEffect(() => {
         fetch('/api/content')
@@ -61,9 +59,6 @@ export default function Hero({ profileType }: HeroProps) {
     const durationText = isFirst ? 0.7 : 0.5;
     const delayTextStart = isFirst ? 0.35 : 0.1;
     const staggerText = isFirst ? 0.08 : 0.05;
-
-    // Do not render anything until we know if it's initial load, to prevent flash
-    if (isInitialLoad === null) return null;
 
     return (
         <section className="relative min-h-[100svh] w-full overflow-hidden flex items-center justify-center px-5 pb-10 pt-32 sm:px-6 sm:pt-36 md:pt-40 lg:pt-44 prose-none">
