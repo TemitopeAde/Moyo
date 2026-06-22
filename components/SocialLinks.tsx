@@ -2,14 +2,9 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { usePathname } from 'next/navigation';
 import { socialLinks } from '@/lib/socialLinks';
 
 export default function SocialLinks() {
-    const pathname = usePathname();
-
-    if (pathname === '/') return null;
-
     return (
         <div className="fixed bottom-12 right-12 z-[100] flex flex-col items-center gap-8 mix-blend-difference hidden md:flex">
             <div className="flex flex-col gap-6">
