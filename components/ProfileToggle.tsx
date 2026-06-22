@@ -20,12 +20,12 @@ export default function ProfileToggle() {
 
     return (
         <div className="flex w-full flex-col items-center gap-5 animate-fade-in sm:gap-6" style={{ animationDelay: '1s' }}>
-            <div className="entry-selector-frost relative isolate grid w-full max-w-[460px] grid-cols-2 gap-1 rounded-full p-1.5 group">
+            <div className="entry-selector-frost relative isolate grid w-full max-w-[460px] grid-cols-2 gap-1 rounded-full p-1.5 group md:max-w-[420px] md:p-1">
 
                 <button
                     onClick={() => handleSelect('photography')}
                     aria-pressed={profile === 'photography'}
-                    className={`relative z-10 flex min-h-12 items-center justify-center rounded-full px-3 text-center text-[10px] uppercase tracking-[0.14em] transition-colors duration-500 sm:min-h-14 sm:px-6 sm:text-xs sm:tracking-[0.22em] ${profile === 'photography'
+                    className={`relative z-10 flex min-h-12 items-center justify-center rounded-full px-3 text-center text-[10px] uppercase tracking-[0.14em] transition-colors duration-500 sm:min-h-14 sm:px-6 sm:text-xs sm:tracking-[0.22em] md:min-h-11 md:px-5 md:text-[10px] ${profile === 'photography'
                             ? 'text-background font-medium'
                             : 'text-foreground/60 hover:text-foreground'
                         }`}
@@ -43,7 +43,7 @@ export default function ProfileToggle() {
                 <button
                     onClick={() => handleSelect('art')}
                     aria-pressed={profile === 'art'}
-                    className={`relative z-10 flex min-h-12 items-center justify-center rounded-full px-3 text-center text-[10px] uppercase tracking-[0.14em] transition-colors duration-500 sm:min-h-14 sm:px-6 sm:text-xs sm:tracking-[0.22em] ${profile === 'art'
+                    className={`relative z-10 flex min-h-12 items-center justify-center rounded-full px-3 text-center text-[10px] uppercase tracking-[0.14em] transition-colors duration-500 sm:min-h-14 sm:px-6 sm:text-xs sm:tracking-[0.22em] md:min-h-11 md:px-5 md:text-[10px] ${profile === 'art'
                             ? 'text-background font-medium'
                             : 'text-foreground/60 hover:text-foreground'
                         }`}
