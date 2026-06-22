@@ -67,6 +67,7 @@ type Contact = { phone: string; email: string; address: string };
 type Social = { id: number; platform: string; url: string; icon?: string };
 type Order = { id: number; items: unknown[]; total_price: number; status: string; customer_email: string };
 type AdminSection = 'artwork' | 'catalog' | 'galleries' | 'content-contact' | 'orders';
+type UploadBatchResult = { urls: string[]; failedFiles: File[] };
 
 const sectionCard = 'bg-black/20 p-6 md:p-8 border border-white/10 space-y-6';
 const label = 'text-[10px] uppercase tracking-widest text-white/40';
@@ -141,7 +142,7 @@ function AdminAccordionPanel({
 export default function AdminPage() {
   const [adminKey, setAdminKey] = useState('');
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingTargets, setUploadingTargets] = useState<Record<string, boolean>>({});
   const [openAdminSection, setOpenAdminSection] = useState<AdminSection>('artwork');
 
   const [artworks, setArtworks] = useState<Artwork[]>([]);
@@ -192,6 +193,18 @@ export default function AdminPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [catalogImagePreview, setCatalogImagePreview] = useState<string | null>(null);
   const catalogImageInputRef = useRef<HTMLInputElement | null>(null);
+  const isUploading = (target: string) => Boolean(uploadingTargets[target]);
+  const setTargetUploading = (target: string, value: boolean) => {
+    setUploadingTargets((prev) => {
+      const next = { ...prev };
+      if (value) {
+        next[target] = true;
+      } else {
+        delete next[target];
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     localStorage.removeItem('moyo-admin-key');
@@ -314,22 +327,36 @@ export default function AdminPage() {
     throw new Error(data.error || 'Upload failed');
   };
 
-  const uploadFiles = async (files: File[]) => {
-    if (!files.length) return [];
-    setUploading(true);
+  const uploadFiles = async (files: File[], target = 'upload'): Promise<UploadBatchResult> => {
+    if (!files.length) return { urls: [], failedFiles: [] };
+    setTargetUploading(target, true);
     try {
-      return await Promise.all(files.map((file) => uploadSingleFile(file)));
-    } catch (error) {
-      console.error('[admin] upload error', error);
-      setMessage({ text: (error as Error).message, type: 'error' });
-      return [];
+      const results = await Promise.allSettled(files.map((file) => uploadSingleFile(file)));
+      const urls = results
+        .filter((result): result is PromiseFulfilledResult<string> => result.status === 'fulfilled')
+        .map((result) => result.value);
+      const failedFiles = files.filter((_, index) => results[index].status === 'rejected');
+      const failedCount = failedFiles.length;
+
+      if (failedCount > 0) {
+        const firstFailure = results.find(
+          (result): result is PromiseRejectedResult => result.status === 'rejected'
+        );
+        console.error('[admin] upload batch failed', firstFailure?.reason);
+        setMessage({
+          text: `${failedCount} ${failedCount === 1 ? 'file failed' : 'files failed'} to upload`,
+          type: 'error',
+        });
+      }
+
+      return { urls, failedFiles };
     } finally {
-      setUploading(false);
+      setTargetUploading(target, false);
     }
   };
 
-  const handleUpload = async (file: File) => {
-    const urls = await uploadFiles([file]);
+  const handleUpload = async (file: File, target?: string) => {
+    const { urls } = await uploadFiles([file], target);
     return urls[0] || null;
   };
 
@@ -348,7 +375,7 @@ export default function AdminPage() {
       setMessage({ text: 'Add admin password first', type: 'error' });
       return;
     }
-    const url = await handleUpload(file);
+    const url = await handleUpload(file, 'artwork-image');
     if (url) {
       setArtForm((prev) => ({ ...prev, image: url }));
       setImagePreview(url);
@@ -384,7 +411,7 @@ export default function AdminPage() {
       return;
     }
 
-    const url = await handleUpload(file);
+    const url = await handleUpload(file, 'catalog-image');
     if (url) {
       setCatalogImageForm((prev) => ({ ...prev, image_url: url }));
       setCatalogImagePreview(url);
@@ -399,7 +426,7 @@ export default function AdminPage() {
 
     let imageUrl = artForm.image;
     if (selectedFile && !imageUrl) {
-      const url = await handleUpload(selectedFile);
+      const url = await handleUpload(selectedFile, 'artwork-image');
       if (!url) return;
       imageUrl = url;
     }
@@ -455,38 +482,56 @@ export default function AdminPage() {
   };
 
   const updateGallery = async (id: string, action: string, payload?: Record<string, unknown>) => {
-    const res = await fetch('/api/galleries', {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify({ id, action, payload }),
-    });
-    const data = await res.json();
-    if (res.ok) {
+    try {
+      const res = await fetch('/api/galleries', {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({ id, action, payload }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.gallery) {
+        setMessage({ text: data.error || 'Unable to update gallery', type: 'error' });
+        return null;
+      }
+
       setGalleries((prev) => prev.map((g) => (g.id === Number(id) ? data.gallery : g)));
       setGalleryPaymentUrls((prev) => ({ ...prev, [id]: data.gallery.payment_url || '' }));
-    } else {
-      setMessage({ text: data.error || 'Unable to update gallery', type: 'error' });
+      return data.gallery as Gallery;
+    } catch (error) {
+      console.error('[admin] gallery update error', error);
+      setMessage({ text: 'Unable to update gallery', type: 'error' });
+      return null;
     }
   };
 
   const uploadGalleryImage = async (id: number) => {
     const files = galleryUploads[id] || [];
     if (!files.length) return setMessage({ text: 'Choose client media files first', type: 'error' });
-    const urls = await uploadFiles(files);
+    const target = `gallery-${id}-media`;
+    const { urls, failedFiles } = await uploadFiles(files, target);
     if (!urls.length) return;
-    await updateGallery(id.toString(), 'addImages', { images: urls });
-    setGalleryUploads((prev) => ({ ...prev, [id]: [] }));
-    setMessage({ text: `${urls.length} client media ${urls.length === 1 ? 'file' : 'files'} uploaded`, type: 'success' });
+    const updatedGallery = await updateGallery(id.toString(), 'addImages', { images: urls });
+    if (!updatedGallery) return;
+    setGalleryUploads((prev) => ({ ...prev, [id]: failedFiles }));
+    setMessage({
+      text: `${urls.length} client media ${urls.length === 1 ? 'file' : 'files'} uploaded${failedFiles.length ? `, ${failedFiles.length} failed` : ''}`,
+      type: failedFiles.length ? 'error' : 'success',
+    });
   };
 
   const uploadFinishedGalleryImage = async (id: number) => {
     const files = finishedGalleryUploads[id] || [];
     if (!files.length) return setMessage({ text: 'Choose finished work files first', type: 'error' });
-    const urls = await uploadFiles(files);
+    const target = `gallery-${id}-finished`;
+    const { urls, failedFiles } = await uploadFiles(files, target);
     if (!urls.length) return;
-    await updateGallery(id.toString(), 'addFinishedImages', { images: urls });
-    setFinishedGalleryUploads((prev) => ({ ...prev, [id]: [] }));
-    setMessage({ text: `${urls.length} finished work ${urls.length === 1 ? 'file' : 'files'} uploaded`, type: 'success' });
+    const updatedGallery = await updateGallery(id.toString(), 'addFinishedImages', { images: urls });
+    if (!updatedGallery) return;
+    setFinishedGalleryUploads((prev) => ({ ...prev, [id]: failedFiles }));
+    setMessage({
+      text: `${urls.length} finished work ${urls.length === 1 ? 'file' : 'files'} uploaded${failedFiles.length ? `, ${failedFiles.length} failed` : ''}`,
+      type: failedFiles.length ? 'error' : 'success',
+    });
   };
 
   const saveGalleryPayment = async (gallery: Gallery, paymentVerified = gallery.payment_verified) => {
@@ -550,7 +595,7 @@ export default function AdminPage() {
 
     let imageUrl = catalogImageForm.image_url;
     if (catalogImageFile) {
-      const uploadedUrl = await handleUpload(catalogImageFile);
+      const uploadedUrl = await handleUpload(catalogImageFile, 'catalog-image');
       if (!uploadedUrl) return;
       imageUrl = uploadedUrl;
     }
@@ -859,10 +904,10 @@ export default function AdminPage() {
                 </div>
                 <button
                   type="submit"
-                  disabled={uploading}
+                  disabled={isUploading('artwork-image')}
                   className="w-full bg-accent hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all flex items-center justify-center gap-4 disabled:opacity-50"
                 >
-                  {uploading ? 'Uploading…' : 'Save Artwork'}
+                  {isUploading('artwork-image') ? 'Uploading...' : 'Save Artwork'}
                 </button>
               </form>
             </div>
@@ -1020,12 +1065,12 @@ export default function AdminPage() {
                   <button
                     type="button"
                     onClick={() => catalogImageInputRef.current?.click()}
-                    disabled={uploading}
+                    disabled={isUploading('catalog-image')}
                     className="flex w-full flex-col items-center justify-center gap-3 rounded-sm border-2 border-dashed border-white/10 bg-white/[0.04] p-6 text-center transition-colors hover:border-accent/50 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <FiUpload className="text-xl text-white/25" aria-hidden="true" />
                     <span className="text-[10px] uppercase tracking-[0.24em] text-white/45">
-                      {uploading ? 'Uploading from device...' : catalogImageFile ? catalogImageFile.name : 'Upload from this device'}
+                      {isUploading('catalog-image') ? 'Uploading from device...' : catalogImageFile ? catalogImageFile.name : 'Upload from this device'}
                     </span>
                     <span className="text-xs text-white/30">Desktop, phone gallery, or camera roll</span>
                   </button>
@@ -1049,10 +1094,10 @@ export default function AdminPage() {
                 </div>
                 <button
                   type="submit"
-                  disabled={uploading}
+                  disabled={isUploading('catalog-image')}
                   className="w-full bg-white/10 hover:bg-white/20 text-white py-3 text-[10px] uppercase tracking-[0.3em] disabled:opacity-50"
                 >
-                  {uploading ? 'Uploading...' : 'Add Catalog Image'}
+                  {isUploading('catalog-image') ? 'Uploading...' : 'Add Catalog Image'}
                 </button>
               </form>
             </div>
@@ -1225,6 +1270,7 @@ export default function AdminPage() {
                         type="file"
                         accept={mediaAccept}
                         multiple
+                        disabled={isUploading(`gallery-${gal.id}-media`)}
                         onChange={(e) =>
                           setGalleryUploads((prev) => ({ ...prev, [gal.id]: Array.from(e.target.files || []) }))
                         }
@@ -1234,11 +1280,11 @@ export default function AdminPage() {
                     </label>
                     <button
                       type="button"
-                      disabled={uploading || !(galleryUploads[gal.id]?.length)}
+                      disabled={isUploading(`gallery-${gal.id}-media`) || !(galleryUploads[gal.id]?.length)}
                       onClick={() => uploadGalleryImage(gal.id)}
                       className="px-4 py-3 border border-white/10 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      {uploading ? 'Uploading...' : 'Upload Media'}
+                      {isUploading(`gallery-${gal.id}-media`) ? 'Uploading...' : 'Upload Media'}
                     </button>
                   </div>
                   {gal.images.length > gal.approved_images.length && (
@@ -1262,6 +1308,7 @@ export default function AdminPage() {
                           type="file"
                           accept={mediaAccept}
                           multiple
+                          disabled={isUploading(`gallery-${gal.id}-finished`)}
                           onChange={(e) =>
                             setFinishedGalleryUploads((prev) => ({ ...prev, [gal.id]: Array.from(e.target.files || []) }))
                           }
@@ -1271,11 +1318,11 @@ export default function AdminPage() {
                       </label>
                       <button
                         type="button"
-                        disabled={uploading || !(finishedGalleryUploads[gal.id]?.length)}
+                        disabled={isUploading(`gallery-${gal.id}-finished`) || !(finishedGalleryUploads[gal.id]?.length)}
                         onClick={() => uploadFinishedGalleryImage(gal.id)}
                         className="px-4 py-3 border border-white/10 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
                       >
-                        {uploading ? 'Uploading...' : 'Upload Finished'}
+                        {isUploading(`gallery-${gal.id}-finished`) ? 'Uploading...' : 'Upload Finished'}
                       </button>
                     </div>
                     {gal.finished_images?.length > 0 && (

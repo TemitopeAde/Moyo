@@ -19,6 +19,7 @@ cloudinary.config({
 
 function safeFileName(name: string) {
   const ext = path.extname(name).toLowerCase();
+  const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const base = path
     .basename(name, ext)
     .toLowerCase()
@@ -26,7 +27,7 @@ function safeFileName(name: string) {
     .replace(/^-+|-+$/g, '')
     .slice(0, 60);
 
-  return `${Date.now()}-${base || 'upload'}${ext || '.jpg'}`;
+  return `${unique}-${base || 'upload'}${ext || '.jpg'}`;
 }
 
 async function saveLocalUpload(file: File, buffer: Buffer) {
