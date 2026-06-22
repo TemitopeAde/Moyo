@@ -189,7 +189,7 @@ export default function Navbar() {
                     {/* Mobile Menu Toggle */}
                     <button
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="field-frost group relative z-50 flex h-11 w-11 flex-col items-end justify-center gap-1.5 rounded-md transition-colors duration-300 focus:outline-none"
+                        className="group relative z-50 flex h-11 w-11 flex-col items-end justify-center gap-1.5 rounded-md border border-transparent transition-colors duration-300 hover:border-foreground/10 hover:bg-white/10 focus:outline-none"
                         aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
                     >
                         <motion.div
