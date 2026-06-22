@@ -72,6 +72,7 @@ const sectionCard = 'bg-black/20 p-6 md:p-8 border border-white/10 space-y-6';
 const label = 'text-[10px] uppercase tracking-widest text-white/40';
 const inputClass =
   'w-full rounded-sm bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-accent outline-none transition-colors';
+const mediaAccept = 'image/*,video/*';
 
 function AdminAccordionPanel({
   id,
@@ -1222,14 +1223,14 @@ export default function AdminPage() {
                     <label className="relative block cursor-pointer border border-dashed border-white/10 bg-white/[0.03] px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-white/45 transition-colors hover:border-accent/50">
                       <input
                         type="file"
-                        accept="image/*"
+                        accept={mediaAccept}
                         multiple
                         onChange={(e) =>
                           setGalleryUploads((prev) => ({ ...prev, [gal.id]: Array.from(e.target.files || []) }))
                         }
                         className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                       />
-                      {getSelectedFileLabel(galleryUploads[gal.id], 'Choose client media')}
+                      {getSelectedFileLabel(galleryUploads[gal.id], 'Choose client media files')}
                     </label>
                     <button
                       type="button"
@@ -1259,14 +1260,14 @@ export default function AdminPage() {
                       <label className="relative block cursor-pointer border border-dashed border-white/10 bg-white/[0.03] px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-white/45 transition-colors hover:border-accent/50">
                         <input
                           type="file"
-                          accept="image/*"
+                          accept={mediaAccept}
                           multiple
                           onChange={(e) =>
                             setFinishedGalleryUploads((prev) => ({ ...prev, [gal.id]: Array.from(e.target.files || []) }))
                           }
                           className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                         />
-                        {getSelectedFileLabel(finishedGalleryUploads[gal.id], 'Choose finished work')}
+                        {getSelectedFileLabel(finishedGalleryUploads[gal.id], 'Choose finished work files')}
                       </label>
                       <button
                         type="button"

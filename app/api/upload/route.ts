@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
 
     const upload = await new Promise<UploadApiResponse>((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        { folder: 'moyo-admin' },
+        { folder: 'moyo-admin', resource_type: 'auto' },
         (error, result) => {
           if (error) {
             console.error('[upload] cloudinary error', error);
