@@ -55,8 +55,8 @@ export default function ArtAboutPage() {
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ duration: 2, ease: "easeOut" }}
-                            className="aspect-[3/4] bg-neutral-900 border border-white/5 grayscale hover:grayscale-0 transition-all duration-1000"
-                            style={{ backgroundImage: "url('/profile-portrait.jpg')", backgroundSize: 'cover', backgroundPosition: 'center' }}
+                            className="aspect-[3/4] overflow-hidden border border-white/5 bg-neutral-900 bg-cover bg-center bg-no-repeat"
+                            style={{ backgroundImage: "url('/profile-portrait.jpg')" }}
                         />
                         <div className="space-y-2">
                             <p className="text-[10px] tracking-[0.5em] uppercase text-white/20">Studio Portrait, 2026</p>

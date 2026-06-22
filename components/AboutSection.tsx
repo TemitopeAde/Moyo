@@ -40,15 +40,13 @@ export default function AboutSection({ profileType }: AboutSectionProps) {
                     initial={{ opacity: 0, scale: 0.95 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 1.5, ease: 'easeOut' }}
-                    className="relative mx-auto aspect-4/5 w-full max-w-sm bg-surface group md:max-w-none"
+                    className="relative mx-auto aspect-4/5 w-full max-w-sm overflow-hidden border border-foreground/5 bg-surface md:max-w-none"
                 >
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-1000 z-10" />
+                    <div className="absolute inset-0 bg-black/10 z-10" />
                     <div
-                        className="w-full h-full grayscale hover:grayscale-0 transition-all duration-1000 bg-cover bg-center"
+                        className="h-full w-full bg-cover bg-center bg-no-repeat"
                         style={{ backgroundImage: `url('${cmsAbout?.image || '/profile-portrait.jpg'}')` }}
                     />
-                    <div className="absolute -top-4 -left-4 w-12 h-12 border-t border-l border-accent/50" />
-                    <div className="absolute -bottom-4 -right-4 w-12 h-12 border-b border-r border-accent/50" />
                 </motion.div>
 
                 {/* Text Content */}
