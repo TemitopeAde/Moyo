@@ -6,25 +6,25 @@ import { socialLinks } from '@/lib/socialLinks';
 
 export default function SocialLinks() {
     return (
-        <div className="fixed bottom-12 right-12 z-[100] flex flex-col items-center gap-8 mix-blend-difference hidden md:flex">
-            <div className="flex flex-col gap-6">
+        <div className="fixed inset-x-0 bottom-5 z-[100] flex justify-center px-5 mix-blend-difference md:inset-x-auto md:bottom-12 md:right-12 md:px-0">
+            <div className="flex items-center gap-6 rounded-full border border-white/10 bg-black/10 px-5 py-3 backdrop-blur-xl md:flex-col md:gap-6 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
                 {socialLinks.map((link) => (
                     <motion.a
                         key={link.name}
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 0.4, x: 0 }}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 0.45, y: 0 }}
                         whileHover={{ opacity: 1, scale: 1.1 }}
-                        className="text-white hover:text-accent transition-colors"
+                        className="text-sm text-white transition-colors hover:text-accent md:text-base"
                         aria-label={link.name}
                     >
                         {link.icon}
                     </motion.a>
                 ))}
+                <div className="hidden h-24 w-px bg-white/20 md:block" />
             </div>
-            <div className="h-24 w-[1px] bg-white/20" />
         </div>
     );
 }
