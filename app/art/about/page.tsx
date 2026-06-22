@@ -24,13 +24,13 @@ export default function ArtAboutPage() {
                             className="max-w-2xl space-y-8 text-base leading-relaxed text-white/60 md:space-y-12 md:text-xl"
                         >
                             <p>
-                                Ijabiken Moyo’s fine art practice explores identity, memory, and human presence through form and symbolism. His works exist between personal history and shared experience, often referencing heritage, emotion, and quiet tension.
+                                Ijabiken Moyosoreoluwa is a Lagos-based contemporary photographer and visual artist whose work seamlessly bridges commercial excellence and fine art.
                             </p>
                             <p>
-                                Each piece is created as a standalone statement — meant to be lived with, not just observed. By abstracting the human form and focusing on textural narratives, Moyo invites viewers into a space of contemplation and introspection.
+                                Formally trained with an HND in Painting and an ND in General Arts, Moyosoreoluwa uses his background in classical art to elevate modern digital photography. His primary expertise lies in portraiture and conceptual photography, defined by rich storytelling and meticulous composition.
                             </p>
-                            <p className="italic text-white">
-                                &ldquo;Art is the physical manifestation of things unsaid. It is a bridge between the internal landscape and the external world.&rdquo;
+                            <p>
+                                This unique artistic perspective extends into his commercial practice, where he documents weddings, corporate events, and creative projects with an editorial edge. Moyosoreoluwa’s ability to blend traditional artistic principles with contemporary digital media makes him a highly sought-after visual storyteller for both private clients and creative brands.
                             </p>
                         </motion.div>
 

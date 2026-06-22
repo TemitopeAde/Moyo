@@ -33,14 +33,14 @@ export default function PhotographyAboutPage() {
 
                         <div className="space-y-8 text-base leading-relaxed text-white/50 md:space-y-12 md:text-xl">
                             <p>
-                                Ijabiken Moyo is a photographer focused on creating images that feel intentional, timeless, and emotionally grounded. His work balances precision and intuition — capturing people, moments, and narratives with clarity and restraint.
+                                Ijabiken Moyosoreoluwa is a Lagos-based contemporary photographer and visual artist whose work seamlessly bridges commercial excellence and fine art.
                             </p>
                             <p>
-                                Each project is approached with respect for the subject and an understanding that strong images are built, not rushed. For Moyo, the camera is a tool for subtraction, removing the noise of the world to reveal the quiet truth of the subject.
+                                Formally trained with an HND in Painting and an ND in General Arts, Moyosoreoluwa uses his background in classical art to elevate modern digital photography. His primary expertise lies in portraiture and conceptual photography, defined by rich storytelling and meticulous composition.
                             </p>
                             <div className="h-px w-20 bg-accent/50" />
-                            <p className="italic text-white font-heading text-2xl">
-                                &ldquo;Precision over volume. Emotion over perfection.&rdquo;
+                            <p>
+                                This unique artistic perspective extends into his commercial practice, where he documents weddings, corporate events, and creative projects with an editorial edge. Moyosoreoluwa’s ability to blend traditional artistic principles with contemporary digital media makes him a highly sought-after visual storyteller for both private clients and creative brands.
                             </p>
                         </div>
 

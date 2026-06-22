@@ -8,6 +8,12 @@ interface AboutSectionProps {
     profileType: 'photography' | 'art';
 }
 
+const profileBio = [
+    "Ijabiken Moyosoreoluwa is a Lagos-based contemporary photographer and visual artist whose work seamlessly bridges commercial excellence and fine art.",
+    "Formally trained with an HND in Painting and an ND in General Arts, Moyosoreoluwa uses his background in classical art to elevate modern digital photography. His primary expertise lies in portraiture and conceptual photography, defined by rich storytelling and meticulous composition.",
+    "This unique artistic perspective extends into his commercial practice, where he documents weddings, corporate events, and creative projects with an editorial edge. Moyosoreoluwa’s ability to blend traditional artistic principles with contemporary digital media makes him a highly sought-after visual storyteller for both private clients and creative brands.",
+];
+
 export default function AboutSection({ profileType }: AboutSectionProps) {
     const { language } = useLanguage();
     const { t } = useTranslate(language);
@@ -24,13 +30,7 @@ export default function AboutSection({ profileType }: AboutSectionProps) {
         ? t('about.photography.headline')
         : t('about.art.headline');
 
-    const text1 = cmsAbout?.text || (profileType === 'photography'
-        ? t('about.photography.text1')
-        : t('about.art.text1'));
-
-    const text2 = profileType === 'photography'
-        ? t('about.photography.text2')
-        : t('about.art.text2');
+    const bioParagraphs = cmsAbout?.text ? [cmsAbout.text] : profileBio;
 
     return (
         <section id="about" className="relative overflow-hidden border-t border-foreground/5 bg-background py-24 text-foreground md:py-32 lg:py-40">
@@ -64,12 +64,11 @@ export default function AboutSection({ profileType }: AboutSectionProps) {
                     </div>
 
                     <div className="max-w-lg space-y-6 md:space-y-8">
-                        <p className="text-base leading-relaxed tracking-wide text-foreground/50 md:text-lg">
-                            {text1}
-                        </p>
-                        <p className="text-base leading-relaxed tracking-wide text-foreground/50 md:text-lg">
-                            {text2}
-                        </p>
+                        {bioParagraphs.map((paragraph) => (
+                            <p key={paragraph} className="text-base leading-relaxed tracking-wide text-foreground/50 md:text-lg">
+                                {paragraph}
+                            </p>
+                        ))}
                     </div>
 
                     <div className="flex items-center justify-between border-t border-foreground/10 pt-8">
