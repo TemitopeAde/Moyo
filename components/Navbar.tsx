@@ -183,8 +183,9 @@ export default function Navbar() {
                     </div>
                 </motion.div>
 
-                <div className="ml-auto flex items-center gap-2 lg:hidden">
+                <div className="ml-auto flex items-center gap-1.5 sm:gap-2 lg:hidden">
                     <ThemeToggle className="h-11 w-11" />
+                    <LanguageSwitcher className="h-11 px-3" />
 
                     {/* Mobile Menu Toggle */}
                     <button
@@ -269,7 +270,6 @@ export default function Navbar() {
                             <div className="flex flex-col items-center gap-8">
                                 <div className="flex items-center gap-4">
                                     <ThemeToggle />
-                                    <LanguageSwitcher />
                                 </div>
 
                                 <div className="flex gap-8 text-foreground/40">
