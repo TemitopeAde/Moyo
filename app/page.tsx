@@ -13,7 +13,7 @@ export default function GlobalEntryPage() {
   const { t } = useTranslate(language);
 
   return (
-    <main className="relative flex min-h-[100svh] w-full flex-col items-center justify-start overflow-hidden bg-background px-5 pb-20 pt-28 text-center selection:bg-accent selection:text-black sm:px-6 sm:pt-32 md:pt-36 lg:pt-40">
+    <main className="relative flex min-h-[100svh] w-full flex-col items-center justify-start overflow-hidden bg-background px-5 pb-16 pt-24 text-center selection:bg-accent selection:text-black sm:px-6 sm:pt-28 md:pt-28 lg:pt-28">
       {/* Cinematic Background Layer */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <InteractiveImageScene
@@ -33,21 +33,26 @@ export default function GlobalEntryPage() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.5, ease: [0.19, 1, 0.22, 1] }}
-          className="mb-12 flex w-full flex-col items-center space-y-5 text-center sm:mb-16 sm:space-y-6 md:mb-20 md:space-y-7"
+          className="flex w-full flex-col items-center space-y-4 text-center sm:space-y-5 md:space-y-6"
         >
-          <h1 className="w-full whitespace-nowrap text-center font-body text-[clamp(1.85rem,6vw,5rem)] font-semibold uppercase leading-none tracking-[0.1em] text-foreground sm:tracking-[0.16em]">
+          <h1
+            className="w-full whitespace-nowrap text-center text-[clamp(1.65rem,5vw,4.15rem)] font-semibold uppercase leading-none tracking-[0.16em] text-foreground sm:tracking-[0.2em]"
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
             Ijabiken Moyo
           </h1>
 
-          <p className="mx-auto max-w-3xl text-[10px] uppercase leading-loose tracking-[0.2em] text-foreground/55 sm:text-xs sm:tracking-[0.28em] md:text-sm md:tracking-[0.42em]">
+          <p className="mx-auto max-w-3xl text-[9px] uppercase leading-loose tracking-[0.2em] text-foreground/50 sm:text-[10px] sm:tracking-[0.3em] md:text-xs md:tracking-[0.4em]">
             {t('home.tagline_part1')} <br className="hidden md:block" />
             <span className="text-foreground">{t('common.photography')}</span> {t('home.tagline_part2')} <span className="text-foreground">{t('common.fineArt')}</span>.
           </p>
 
-          <div className="mx-auto h-px w-24 bg-accent/50" />
+          <div className="mx-auto h-px w-20 bg-accent/50" />
         </motion.div>
 
-        <ProfileToggle />
+        <div className="mt-[clamp(11rem,31vh,21rem)] w-full">
+          <ProfileToggle />
+        </div>
       </div>
 
       {/* Floating Info */}
@@ -55,7 +60,7 @@ export default function GlobalEntryPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 2, duration: 1 }}
-        className="absolute bottom-12 left-12 text-left hidden md:block"
+        className="absolute bottom-8 left-10 text-left hidden md:block"
       >
         <p className="text-[9px] tracking-[0.5em] uppercase text-foreground/20 mb-2 font-medium">{t('home.philosophy')}</p>
         <p className="text-[10px] tracking-[0.3em] uppercase text-foreground/40 italic">{t('home.philosophyText')}</p>
@@ -65,14 +70,14 @@ export default function GlobalEntryPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 2.2, duration: 1 }}
-        className="absolute bottom-12 right-12 text-right hidden md:block"
+        className="absolute bottom-8 right-10 text-right hidden md:block"
       >
         <p className="text-[9px] tracking-[0.5em] uppercase text-foreground/20 mb-2 font-medium">{t('home.location')}</p>
         <p className="text-[10px] tracking-[0.3em] uppercase text-foreground/40">{t('home.locationText')}</p>
       </motion.div>
 
       {/* Audio/Status Indicator (Faux) */}
-      <div className="absolute right-5 top-5 flex items-center gap-3 sm:right-8 sm:top-8 md:right-12 md:top-12">
+      <div className="absolute right-5 top-5 flex items-center gap-3 sm:right-8 sm:top-8 md:right-10 md:top-8">
         <div className="flex gap-1 items-end h-3">
           {[0.4, 0.7, 0.3, 0.9].map((h, i) => (
             <motion.div
