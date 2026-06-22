@@ -13,7 +13,7 @@ export default function GlobalEntryPage() {
   const { t } = useTranslate(language);
 
   return (
-    <main className="relative flex min-h-[100svh] w-full flex-col items-center justify-center overflow-hidden bg-background px-5 py-24 text-center selection:bg-accent selection:text-black sm:px-6">
+    <main className="relative flex min-h-[100svh] w-full flex-col items-center justify-start overflow-hidden bg-background px-5 pb-20 pt-28 text-center selection:bg-accent selection:text-black sm:px-6 sm:pt-32 md:pt-36 lg:pt-40">
       {/* Cinematic Background Layer */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <InteractiveImageScene
@@ -28,23 +28,23 @@ export default function GlobalEntryPage() {
       </div>
 
       {/* Content Container */}
-      <div className="relative z-20 flex w-full max-w-4xl flex-col items-center">
+      <div className="relative z-20 flex w-full max-w-5xl flex-col items-center">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.5, ease: [0.19, 1, 0.22, 1] }}
-          className="mb-12 flex w-full flex-col items-center space-y-7 text-center sm:mb-16 sm:space-y-9 md:mb-20 md:space-y-10"
+          className="mb-12 flex w-full flex-col items-center space-y-5 text-center sm:mb-16 sm:space-y-6 md:mb-20 md:space-y-7"
         >
-          <h1 className="max-w-[11ch] text-center font-body text-[clamp(2.75rem,11vw,7rem)] font-semibold uppercase leading-[0.95] tracking-[0.08em] text-foreground sm:tracking-[0.12em] md:max-w-none md:text-[clamp(4.5rem,10vw,8.5rem)]">
-            Ijabiken <span className="block">Moyo</span>
+          <h1 className="w-full whitespace-nowrap text-center font-body text-[clamp(1.85rem,6vw,5rem)] font-semibold uppercase leading-none tracking-[0.1em] text-foreground sm:tracking-[0.16em]">
+            Ijabiken Moyo
           </h1>
 
-          <div className="mx-auto h-px w-24 bg-accent/50" />
-
-          <p className="mx-auto max-w-2xl text-xs uppercase leading-loose tracking-[0.18em] text-foreground/50 sm:text-sm sm:tracking-[0.24em] md:text-lg md:tracking-[0.3em]">
+          <p className="mx-auto max-w-3xl text-[10px] uppercase leading-loose tracking-[0.2em] text-foreground/55 sm:text-xs sm:tracking-[0.28em] md:text-sm md:tracking-[0.42em]">
             {t('home.tagline_part1')} <br className="hidden md:block" />
             <span className="text-foreground">{t('common.photography')}</span> {t('home.tagline_part2')} <span className="text-foreground">{t('common.fineArt')}</span>.
           </p>
+
+          <div className="mx-auto h-px w-24 bg-accent/50" />
         </motion.div>
 
         <ProfileToggle />
