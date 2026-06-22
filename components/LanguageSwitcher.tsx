@@ -26,7 +26,7 @@ export default function LanguageSwitcher({ className }: { className?: string }) 
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
-                    "inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md border border-transparent px-3 text-[10px] uppercase tracking-[0.2em] text-foreground/60 transition-colors hover:border-foreground/10 hover:bg-white/10 hover:text-foreground",
+                    "field-frost inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md px-3 text-[10px] uppercase tracking-[0.2em] text-foreground/60 transition-colors hover:text-foreground",
                     className
                 )}
             >
@@ -40,7 +40,7 @@ export default function LanguageSwitcher({ className }: { className?: string }) 
                         className="fixed inset-0 z-40"
                         onClick={() => setIsOpen(false)}
                     />
-                    <div className="absolute top-full right-0 mt-2 max-h-[70vh] min-w-[160px] overflow-y-auto glass py-4 px-2 z-50 flex flex-col gap-1">
+                    <div className="absolute top-full right-0 mt-2 max-h-[70vh] min-w-[160px] overflow-y-auto glass rounded-md py-4 px-2 z-50 flex flex-col gap-1">
                         {languages.map((lang) => (
                             <button
                                 key={lang.code}
@@ -50,7 +50,7 @@ export default function LanguageSwitcher({ className }: { className?: string }) 
                                 }}
                                 className={cn(
                                     "text-left px-4 py-3 text-[10px] tracking-widest uppercase transition-colors rounded-sm",
-                                    language === lang.code ? "bg-white/10 text-accent" : "text-white/40 hover:text-white hover:bg-white/5"
+                                    language === lang.code ? "field-frost text-accent" : "text-foreground/45 hover:text-foreground hover:bg-foreground/5"
                                 )}
                             >
                                 {lang.name}

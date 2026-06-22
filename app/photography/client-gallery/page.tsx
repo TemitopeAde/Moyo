@@ -133,7 +133,7 @@ export default function ClientGalleryPage() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="max-w-md mx-auto py-20 bg-white/5 p-12 text-center space-y-8 backdrop-blur-sm border border-white/5"
+                        className="glass max-w-md mx-auto py-20 p-8 text-center space-y-8 sm:p-12"
                     >
                         <div className="space-y-4">
                             <span className="text-accent text-[10px] tracking-[0.5em] uppercase">{t('clientGallery.privateAccess')}</span>
@@ -152,7 +152,7 @@ export default function ClientGalleryPage() {
                                     setAccessCode(event.target.value);
                                     setError('');
                                 }}
-                                className="w-full bg-white/5 border border-white/10 rounded-sm py-4 text-center text-white text-[10px] tracking-[0.5em] focus:outline-none focus:border-accent transition-colors placeholder:text-white/20"
+                                className="field-frost w-full rounded-md px-4 py-4 text-center text-white text-[10px] tracking-[0.36em] outline-none transition-colors placeholder:text-white/20 sm:tracking-[0.5em]"
                             />
                             {error && (
                                 <p className="text-red-300 text-xs leading-relaxed">
@@ -248,7 +248,7 @@ export default function ClientGalleryPage() {
                                     })}
                                 </div>
 
-                                <div className="mx-auto max-w-2xl border border-white/10 bg-white/5 p-6 text-center space-y-4">
+                                <div className="glass mx-auto max-w-2xl p-6 text-center space-y-4">
                                     <p className="text-white/45 text-sm">
                                         Select the images you want approved, then submit your selection to the studio.
                                     </p>
@@ -265,7 +265,7 @@ export default function ClientGalleryPage() {
                                 </div>
                             </>
                         ) : (
-                            <div className="max-w-xl mx-auto text-center border border-white/10 bg-white/5 p-10 space-y-3">
+                            <div className="glass max-w-xl mx-auto text-center p-10 space-y-3">
                                 <h2 className="text-2xl font-heading text-white italic">No images uploaded yet</h2>
                                 <p className="text-white/40 text-sm leading-relaxed">
                                     This gallery is open, but the studio has not added images to it yet.

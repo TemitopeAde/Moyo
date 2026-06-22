@@ -83,7 +83,7 @@ export default function NewsletterForm({ profileType }: NewsletterFormProps) {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder={t('newsletter.placeholder')}
-                    className="w-full border-b border-foreground/20 bg-transparent py-4 text-center text-[10px] font-medium tracking-[0.18em] text-foreground transition-colors placeholder:text-foreground/20 focus:border-accent focus:outline-none sm:tracking-[0.3em]"
+                    className="field-frost w-full rounded-md px-4 py-4 text-center text-[10px] font-medium tracking-[0.18em] text-foreground outline-none transition-colors placeholder:text-foreground/25 sm:tracking-[0.3em]"
                     required
                 />
                 {error && (

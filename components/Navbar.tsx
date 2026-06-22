@@ -110,7 +110,7 @@ export default function Navbar() {
                     initial={isInitialLoad ? { opacity: 0 } : false}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5, delay: isInitialLoad ? 0.9 : 0, ease: "easeOut" }}
-                    className="hidden xl:flex items-center glass rounded-full px-2 py-1 gap-1"
+                    className="entry-selector-frost hidden items-center rounded-full px-2 py-1 gap-1 xl:flex"
                 >
                     <Link
                         href="/photography"
@@ -189,7 +189,7 @@ export default function Navbar() {
                     {/* Mobile Menu Toggle */}
                     <button
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="group relative z-50 flex h-11 w-11 flex-col items-end justify-center gap-1.5 rounded-md border border-transparent transition-colors duration-300 hover:border-foreground/10 hover:bg-white/10 focus:outline-none"
+                        className="field-frost group relative z-50 flex h-11 w-11 flex-col items-end justify-center gap-1.5 rounded-md transition-colors duration-300 focus:outline-none"
                         aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
                     >
                         <motion.div
@@ -221,7 +221,7 @@ export default function Navbar() {
                         <div className="flex min-h-screen flex-col items-center justify-center space-y-10 px-5 py-28 sm:p-8">
 
                             {/* Profile Switcher Mobile */}
-                            <div className="mb-4 flex max-w-full flex-wrap items-center justify-center gap-1 rounded-full glass px-2 py-1">
+                            <div className="entry-selector-frost mb-4 flex max-w-full flex-wrap items-center justify-center gap-1 rounded-full px-2 py-1">
                                 <button
                                     onClick={() => handleProfileSelect('photography')}
                                     aria-pressed={profile === 'photography'}

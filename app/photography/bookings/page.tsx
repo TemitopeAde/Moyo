@@ -64,36 +64,36 @@ export default function BookingsPage() {
                         </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-8 glass p-10 rounded-sm">
+                    <form onSubmit={handleSubmit} className="space-y-8 glass p-6 rounded-sm sm:p-10">
                         <div className="grid md:grid-cols-2 gap-8">
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 <label className="text-[10px] uppercase tracking-widest text-foreground/40">{t('booking.yourName')}</label>
                                 <input
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                     required
-                                    className="w-full bg-foreground/5 border-b border-foreground/10 py-3 text-foreground focus:outline-none focus:border-accent transition-colors"
+                                    className="field-frost w-full rounded-md px-4 py-3 text-foreground outline-none transition-colors"
                                 />
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 <label className="text-[10px] uppercase tracking-widest text-foreground/40">{t('booking.emailAddress')}</label>
                                 <input
                                     type="email"
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                     required
-                                    className="w-full bg-foreground/5 border-b border-foreground/10 py-3 text-foreground focus:outline-none focus:border-accent transition-colors"
+                                    className="field-frost w-full rounded-md px-4 py-3 text-foreground outline-none transition-colors"
                                 />
                             </div>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             <label className="text-[10px] uppercase tracking-widest text-foreground/40">{t('bookingsPage.projectType')}</label>
                             <select
                                 value={formData.type}
                                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                className="w-full bg-foreground/5 border-b border-foreground/10 py-3 text-foreground/60 focus:outline-none focus:border-accent transition-colors appearance-none"
+                                className="field-frost w-full rounded-md px-4 py-3 text-foreground/70 outline-none transition-colors appearance-none"
                             >
                                 <option value="Editorial">{t('categories.editorial')}</option>
                                 <option value="Portrait">{t('categories.portrait')}</option>
@@ -102,14 +102,14 @@ export default function BookingsPage() {
                             </select>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             <label className="text-[10px] uppercase tracking-widest text-foreground/40">{t('bookingsPage.message')}</label>
                             <textarea
                                 rows={4}
                                 value={formData.message}
                                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                                 required
-                                className="w-full bg-foreground/5 border-b border-foreground/10 py-3 text-foreground focus:outline-none focus:border-accent transition-colors"
+                                className="field-frost w-full rounded-md px-4 py-3 text-foreground outline-none transition-colors"
                             />
                         </div>
 
