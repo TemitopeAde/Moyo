@@ -13,17 +13,17 @@ export default function GlobalEntryPage() {
   const { t } = useTranslate(language);
 
   return (
-    <main className="relative flex min-h-[100svh] w-full flex-col items-center justify-start overflow-hidden bg-background px-5 pb-16 pt-[38svh] text-center selection:bg-accent selection:text-black sm:px-6 sm:pt-[39svh] md:pt-[38svh] lg:pt-[38svh] xl:pt-[37svh]">
+    <main className="relative flex min-h-[100svh] w-full flex-col items-center justify-start overflow-hidden bg-background px-5 pb-16 pt-[48svh] text-center selection:bg-accent selection:text-black sm:px-6 sm:pt-[47svh] md:pt-[44svh] lg:pt-[43svh] xl:pt-[42svh]">
       {/* Cinematic Background Layer */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <InteractiveImageScene
           imageSrc="/homepage-desktop.jpg"
           mobileImageSrc="/homepage-mobile.jpg"
-          className="z-0 opacity-75 grayscale"
+          className="z-0 opacity-55 grayscale"
         />
         <ThreeAtmosphere preset="entry" className="z-10 opacity-80 mix-blend-screen" />
-        <div className="absolute inset-0 bg-linear-to-b from-background/75 via-background/35 to-background/95 z-20" />
-        <div className="absolute inset-0 bg-radial-[at_50%_45%] from-transparent via-background/20 to-background/80 z-20" />
+        <div className="absolute inset-0 bg-linear-to-b from-background/80 via-background/45 to-background/95 z-20" />
+        <div className="absolute inset-0 bg-radial-[at_50%_45%] from-transparent via-background/35 to-background/85 z-20" />
         <div className="cosmic-film-grain pointer-events-none absolute inset-0 z-20" />
       </div>
 
@@ -33,7 +33,7 @@ export default function GlobalEntryPage() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.5, ease: [0.19, 1, 0.22, 1] }}
-          className="flex w-full flex-col items-center space-y-4 text-center sm:space-y-5 md:space-y-6"
+          className="flex w-full flex-col items-center space-y-2 text-center sm:space-y-3"
         >
           <h1
             className="w-full whitespace-nowrap text-center text-[clamp(1.65rem,5vw,4.15rem)] font-semibold uppercase leading-none tracking-[0.16em] text-foreground sm:tracking-[0.2em]"
@@ -42,15 +42,15 @@ export default function GlobalEntryPage() {
             Ijabiken Moyo
           </h1>
 
-          <p className="mx-auto max-w-3xl text-[9px] uppercase leading-loose tracking-[0.2em] text-foreground/50 sm:text-[10px] sm:tracking-[0.3em] md:text-xs md:tracking-[0.4em]">
+          <p className="mx-auto max-w-3xl text-[9px] uppercase leading-relaxed tracking-[0.18em] text-foreground/60 sm:text-[10px] sm:tracking-[0.28em] md:text-xs md:tracking-[0.36em]">
             {t('home.tagline_part1')} <br className="hidden md:block" />
             <span className="text-foreground">{t('common.photography')}</span> {t('home.tagline_part2')} <span className="text-foreground">{t('common.fineArt')}</span>.
           </p>
 
-          <div className="mx-auto h-px w-20 bg-accent/50" />
+          <div className="mx-auto h-px w-16 bg-accent/50" />
         </motion.div>
 
-        <div className="mt-[clamp(1.5rem,4svh,3rem)] w-full">
+        <div className="mt-[clamp(0.9rem,2.4svh,1.75rem)] w-full">
           <ProfileToggle />
         </div>
       </div>
