@@ -68,6 +68,7 @@ type Social = { id: number; platform: string; url: string; icon?: string };
 type Order = { id: number; items: unknown[]; total_price: number; status: string; customer_email: string };
 type AdminSection = 'artwork' | 'catalog' | 'galleries' | 'content-contact' | 'orders';
 type UploadBatchResult = { urls: string[]; failedFiles: File[] };
+type UploadProgress = { current: number; total: number };
 
 const sectionCard = 'bg-black/20 p-6 md:p-8 border border-white/10 space-y-6';
 const label = 'text-[10px] uppercase tracking-widest text-white/40';
@@ -144,6 +145,9 @@ export default function AdminPage() {
   const [adminKey, setAdminKey] = useState('');
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [uploadingTargets, setUploadingTargets] = useState<Record<string, boolean>>({});
+  const [uploadProgress, setUploadProgress] = useState<Record<string, UploadProgress>>({});
+  const [uploadingMediaGalleryId, setUploadingMediaGalleryId] = useState<number | null>(null);
+  const [uploadingFinishedGalleryId, setUploadingFinishedGalleryId] = useState<number | null>(null);
   const [openAdminSection, setOpenAdminSection] = useState<AdminSection>('artwork');
 
   const [artworks, setArtworks] = useState<Artwork[]>([]);
@@ -195,6 +199,10 @@ export default function AdminPage() {
   const [catalogImagePreview, setCatalogImagePreview] = useState<string | null>(null);
   const catalogImageInputRef = useRef<HTMLInputElement | null>(null);
   const isUploading = (target: string) => Boolean(uploadingTargets[target]);
+  const getUploadProgressLabel = (target: string, label: string) => {
+    const progress = uploadProgress[target];
+    return progress ? `${label} ${progress.current}/${progress.total}` : label;
+  };
   const setTargetUploading = (target: string, value: boolean) => {
     setUploadingTargets((prev) => {
       const next = { ...prev };
@@ -205,6 +213,13 @@ export default function AdminPage() {
       }
       return next;
     });
+    if (!value) {
+      setUploadProgress((prev) => {
+        const next = { ...prev };
+        delete next[target];
+        return next;
+      });
+    }
   };
 
   useEffect(() => {
@@ -319,6 +334,7 @@ export default function AdminPage() {
       console.log('[admin] upload start', { count: files.length, target });
       const uploadedUrls: string[] = [];
       const failedFiles: File[] = [];
+      setUploadProgress((prev) => ({ ...prev, [target]: { current: 0, total: files.length } }));
 
       for (let start = 0; start < files.length; start += uploadBatchSize) {
         const batch = files.slice(start, start + uploadBatchSize);
@@ -354,6 +370,11 @@ export default function AdminPage() {
         } catch (error) {
           console.error('[admin] upload batch error', error);
           failedFiles.push(...batch);
+        } finally {
+          setUploadProgress((prev) => ({
+            ...prev,
+            [target]: { current: Math.min(start + batch.length, files.length), total: files.length },
+          }));
         }
       }
 
@@ -527,30 +548,40 @@ export default function AdminPage() {
     const files = galleryUploads[id] || [];
     if (!files.length) return setMessage({ text: 'Choose client media files first', type: 'error' });
     const target = `gallery-${id}-media`;
-    const { urls, failedFiles } = await uploadFiles(files, target);
-    if (!urls.length) return;
-    const updatedGallery = await updateGallery(id.toString(), 'addImages', { images: urls });
-    if (!updatedGallery) return;
-    setGalleryUploads((prev) => ({ ...prev, [id]: failedFiles }));
-    setMessage({
-      text: `${urls.length} client media ${urls.length === 1 ? 'file' : 'files'} uploaded${failedFiles.length ? `, ${failedFiles.length} failed` : ''}`,
-      type: failedFiles.length ? 'error' : 'success',
-    });
+    setUploadingMediaGalleryId(id);
+    try {
+      const { urls, failedFiles } = await uploadFiles(files, target);
+      if (!urls.length) return;
+      const updatedGallery = await updateGallery(id.toString(), 'addImages', { images: urls });
+      if (!updatedGallery) return;
+      setGalleryUploads((prev) => ({ ...prev, [id]: failedFiles }));
+      setMessage({
+        text: `${urls.length} client media ${urls.length === 1 ? 'file' : 'files'} uploaded${failedFiles.length ? `, ${failedFiles.length} failed` : ''}`,
+        type: failedFiles.length ? 'error' : 'success',
+      });
+    } finally {
+      setUploadingMediaGalleryId(null);
+    }
   };
 
   const uploadFinishedGalleryImage = async (id: number) => {
     const files = finishedGalleryUploads[id] || [];
     if (!files.length) return setMessage({ text: 'Choose finished work files first', type: 'error' });
     const target = `gallery-${id}-finished`;
-    const { urls, failedFiles } = await uploadFiles(files, target);
-    if (!urls.length) return;
-    const updatedGallery = await updateGallery(id.toString(), 'addFinishedImages', { images: urls });
-    if (!updatedGallery) return;
-    setFinishedGalleryUploads((prev) => ({ ...prev, [id]: failedFiles }));
-    setMessage({
-      text: `${urls.length} finished work ${urls.length === 1 ? 'file' : 'files'} uploaded${failedFiles.length ? `, ${failedFiles.length} failed` : ''}`,
-      type: failedFiles.length ? 'error' : 'success',
-    });
+    setUploadingFinishedGalleryId(id);
+    try {
+      const { urls, failedFiles } = await uploadFiles(files, target);
+      if (!urls.length) return;
+      const updatedGallery = await updateGallery(id.toString(), 'addFinishedImages', { images: urls });
+      if (!updatedGallery) return;
+      setFinishedGalleryUploads((prev) => ({ ...prev, [id]: failedFiles }));
+      setMessage({
+        text: `${urls.length} finished work ${urls.length === 1 ? 'file' : 'files'} uploaded${failedFiles.length ? `, ${failedFiles.length} failed` : ''}`,
+        type: failedFiles.length ? 'error' : 'success',
+      });
+    } finally {
+      setUploadingFinishedGalleryId(null);
+    }
   };
 
   const saveGalleryPayment = async (gallery: Gallery, paymentVerified = gallery.payment_verified) => {
@@ -1249,6 +1280,13 @@ export default function AdminPage() {
               <h3 className="text-[10px] uppercase tracking-[0.5em] text-accent">Existing</h3>
               {galleries.map((gal) => (
                 <div key={gal.id} className="bg-surface/20 border border-white/5 p-4 space-y-5">
+                  {(() => {
+                    const mediaTarget = `gallery-${gal.id}-media`;
+                    const finishedTarget = `gallery-${gal.id}-finished`;
+                    const isMediaUploading = uploadingMediaGalleryId === gal.id;
+                    const isFinishedUploading = uploadingFinishedGalleryId === gal.id;
+                    return (
+                      <>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-white font-heading italic">{gal.client_name}</p>
@@ -1289,7 +1327,7 @@ export default function AdminPage() {
                         type="file"
                         accept={mediaAccept}
                         multiple
-                        disabled={isUploading(`gallery-${gal.id}-media`)}
+                        disabled={isMediaUploading}
                         onChange={(e) =>
                           setGalleryUploads((prev) => ({ ...prev, [gal.id]: Array.from(e.target.files || []) }))
                         }
@@ -1299,11 +1337,11 @@ export default function AdminPage() {
                     </label>
                     <button
                       type="button"
-                      disabled={isUploading(`gallery-${gal.id}-media`) || !(galleryUploads[gal.id]?.length)}
+                      disabled={isMediaUploading || !(galleryUploads[gal.id]?.length)}
                       onClick={() => uploadGalleryImage(gal.id)}
                       className="px-4 py-3 border border-white/10 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      {isUploading(`gallery-${gal.id}-media`) ? 'Uploading...' : 'Upload Media'}
+                      {isMediaUploading ? getUploadProgressLabel(mediaTarget, 'Uploading media') : 'Upload Media'}
                     </button>
                   </div>
                   {gal.images.length > gal.approved_images.length && (
@@ -1327,7 +1365,7 @@ export default function AdminPage() {
                           type="file"
                           accept={mediaAccept}
                           multiple
-                          disabled={isUploading(`gallery-${gal.id}-finished`)}
+                          disabled={isFinishedUploading}
                           onChange={(e) =>
                             setFinishedGalleryUploads((prev) => ({ ...prev, [gal.id]: Array.from(e.target.files || []) }))
                           }
@@ -1337,11 +1375,11 @@ export default function AdminPage() {
                       </label>
                       <button
                         type="button"
-                        disabled={isUploading(`gallery-${gal.id}-finished`) || !(finishedGalleryUploads[gal.id]?.length)}
+                        disabled={isFinishedUploading || !(finishedGalleryUploads[gal.id]?.length)}
                         onClick={() => uploadFinishedGalleryImage(gal.id)}
                         className="px-4 py-3 border border-white/10 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
                       >
-                        {isUploading(`gallery-${gal.id}-finished`) ? 'Uploading...' : 'Upload Finished'}
+                        {isFinishedUploading ? getUploadProgressLabel(finishedTarget, 'Uploading finished') : 'Upload Finished'}
                       </button>
                     </div>
                     {gal.finished_images?.length > 0 && (
@@ -1395,6 +1433,9 @@ export default function AdminPage() {
                       </button>
                     </div>
                   </div>
+                      </>
+                    );
+                  })()}
                 </div>
               ))}
             </div>
