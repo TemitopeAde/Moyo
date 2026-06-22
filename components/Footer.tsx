@@ -13,18 +13,18 @@ export default function Footer() {
     return (
         <footer className="border-t border-foreground/5 bg-background py-16 font-body md:py-24">
             <div className="container mx-auto px-6 md:px-12">
-                <div className="mb-16 flex flex-col items-start justify-between gap-12 md:mb-24 md:flex-row md:gap-16">
-                    <div className="space-y-6">
-                        <Link href="/" className="inline-block">
+                <div className="mb-16 flex flex-col items-center justify-between gap-14 text-center md:mb-24 md:flex-row md:items-start md:gap-16 md:text-left">
+                    <div className="flex w-full max-w-[240px] flex-col items-center gap-5 md:w-[260px] md:items-start md:gap-6">
+                        <Link href="/" className="-mb-3 -mt-4 inline-flex h-16 w-16 items-center justify-center overflow-visible md:-mb-4 md:-mt-5 md:h-[76px] md:w-[76px]">
                             <Image
                                 src="/brand/moyo-logo.png"
                                 alt="Ijabiken Moyo"
                                 width={160}
                                 height={160}
-                                className="theme-logo h-14 w-14 object-contain transition-opacity duration-300 hover:opacity-80 md:h-[70px] md:w-[70px]"
+                                className="theme-logo h-full w-full object-contain transition-opacity duration-300 hover:opacity-80"
                             />
                         </Link>
-                        <p className="text-foreground/30 text-xs tracking-widest uppercase max-w-[200px] leading-relaxed whitespace-pre-line">
+                        <p className="max-w-[220px] text-xs uppercase leading-relaxed tracking-widest text-foreground/30 whitespace-pre-line">
                             {t('footer.tagline')}
                         </p>
                     </div>
