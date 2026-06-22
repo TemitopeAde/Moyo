@@ -20,7 +20,7 @@ export default function ProfileToggle() {
 
     return (
         <div className="flex w-full flex-col items-center gap-5 animate-fade-in sm:gap-6" style={{ animationDelay: '1s' }}>
-            <div className="relative isolate grid w-full max-w-[460px] grid-cols-2 gap-1 rounded-full border border-foreground/10 bg-background/20 p-1.5 backdrop-blur-xl group">
+            <div className="glass relative isolate grid w-full max-w-[460px] grid-cols-2 gap-1 rounded-full p-1.5 shadow-[0_24px_80px_rgba(0,0,0,0.18)] group">
 
                 <button
                     onClick={() => handleSelect('photography')}

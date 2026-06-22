@@ -13,7 +13,7 @@ export default function GlobalEntryPage() {
   const { t } = useTranslate(language);
 
   return (
-    <main className="relative flex min-h-[100svh] w-full flex-col items-center justify-start overflow-hidden bg-background px-5 pb-16 pt-24 text-center selection:bg-accent selection:text-black sm:px-6 sm:pt-28 md:pt-28 lg:pt-28">
+    <main className="relative flex min-h-[100svh] w-full flex-col items-center justify-start overflow-hidden bg-background px-5 pb-16 pt-[32svh] text-center selection:bg-accent selection:text-black sm:px-6 sm:pt-[34svh] md:pt-[32svh] lg:pt-[30svh] xl:pt-[28svh]">
       {/* Cinematic Background Layer */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <InteractiveImageScene
@@ -50,7 +50,7 @@ export default function GlobalEntryPage() {
           <div className="mx-auto h-px w-20 bg-accent/50" />
         </motion.div>
 
-        <div className="mt-[clamp(11rem,31vh,21rem)] w-full">
+        <div className="mt-[clamp(3rem,11svh,7rem)] w-full">
           <ProfileToggle />
         </div>
       </div>
