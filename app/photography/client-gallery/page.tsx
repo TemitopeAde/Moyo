@@ -14,8 +14,12 @@ type ClientGallery = {
     slug: string;
     images: string[];
     approved_images: string[];
+    finished_images: string[];
+    payment_verified: boolean;
+    payment_url: string;
     is_locked: boolean;
     image_count: number;
+    finished_count: number;
 };
 
 export default function ClientGalleryPage() {
@@ -274,6 +278,52 @@ export default function ClientGalleryPage() {
                                 <p className="text-white/40 text-sm leading-relaxed">
                                     {t('clientGallery.noImagesDescription')}
                                 </p>
+                            </div>
+                        )}
+
+                        {gallery.finished_count > 0 && (
+                            <div className="mx-auto max-w-3xl border border-white/10 bg-white/5 p-6 text-center space-y-5">
+                                <div className="space-y-2">
+                                    <h2 className="text-2xl font-heading text-white italic">{t('clientGallery.finishedWorkTitle')}</h2>
+                                    <p className="text-white/45 text-sm leading-relaxed">
+                                        {gallery.payment_verified
+                                            ? t('clientGallery.finishedWorkReady')
+                                            : t('clientGallery.paymentRequired')}
+                                    </p>
+                                </div>
+
+                                {gallery.payment_verified ? (
+                                    <div className="grid gap-3 sm:grid-cols-2">
+                                        {gallery.finished_images.map((image, index) => (
+                                            <a
+                                                key={`${image}-${index}`}
+                                                href={image}
+                                                download
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="border border-accent/40 bg-accent/10 px-5 py-4 text-[10px] uppercase tracking-[0.28em] text-accent transition-colors hover:bg-accent hover:text-black"
+                                            >
+                                                {t('clientGallery.downloadFinishedWork')} {index + 1}
+                                            </a>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {gallery.payment_url && (
+                                            <a
+                                                href={gallery.payment_url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="inline-flex w-full justify-center bg-white px-5 py-4 text-[10px] font-bold uppercase tracking-[0.35em] text-black transition-colors hover:bg-accent sm:w-auto"
+                                            >
+                                                {t('clientGallery.payOnline')}
+                                            </a>
+                                        )}
+                                        <p className="text-[10px] uppercase tracking-[0.24em] text-white/30">
+                                            {t('clientGallery.paymentVerificationNote')}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         )}
 

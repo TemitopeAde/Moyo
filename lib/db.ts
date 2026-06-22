@@ -36,6 +36,9 @@ async function ensureTables() {
       client_name TEXT NOT NULL,
       images TEXT[] DEFAULT ARRAY[]::TEXT[],
       approved_images TEXT[] DEFAULT ARRAY[]::TEXT[],
+      finished_images TEXT[] DEFAULT ARRAY[]::TEXT[],
+      payment_verified BOOLEAN DEFAULT FALSE,
+      payment_url TEXT DEFAULT '',
       is_locked BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
@@ -105,6 +108,13 @@ async function ensureTables() {
       created_at TIMESTAMPTZ DEFAULT NOW(),
       updated_at TIMESTAMPTZ DEFAULT NOW()
     );
+  `);
+
+  await pool.query(`
+    ALTER TABLE galleries
+      ADD COLUMN IF NOT EXISTS finished_images TEXT[] DEFAULT ARRAY[]::TEXT[],
+      ADD COLUMN IF NOT EXISTS payment_verified BOOLEAN DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS payment_url TEXT DEFAULT '';
   `);
 
   // seed singleton rows

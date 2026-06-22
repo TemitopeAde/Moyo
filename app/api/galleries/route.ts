@@ -24,9 +24,29 @@ export async function POST(req: NextRequest) {
   const access_code = body.access_code || randomCode();
 
   const { rows } = await query(
-    `INSERT INTO galleries (slug, access_code, client_name, images, approved_images, is_locked)
-     VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-    [slug, access_code, body.clientName, body.images || [], body.approvedImages || [], body.isLocked ?? false]
+    `INSERT INTO galleries (
+      slug,
+      access_code,
+      client_name,
+      images,
+      approved_images,
+      finished_images,
+      payment_verified,
+      payment_url,
+      is_locked
+    )
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+    [
+      slug,
+      access_code,
+      body.clientName,
+      body.images || [],
+      body.approvedImages || [],
+      body.finishedImages || [],
+      body.paymentVerified ?? false,
+      body.paymentUrl || '',
+      body.isLocked ?? false,
+    ]
   );
   return NextResponse.json({ gallery: rows[0] });
 }
@@ -46,6 +66,23 @@ export async function PUT(req: NextRequest) {
     );
     return NextResponse.json({ gallery: rows[0] });
   }
+  if (action === 'addFinishedImages') {
+    const { rows } = await query(
+      `UPDATE galleries SET finished_images = array_cat(finished_images, $1::text[]) WHERE id=$2 RETURNING *`,
+      [payload?.images || [], id]
+    );
+    return NextResponse.json({ gallery: rows[0] });
+  }
+  if (action === 'removeFinishedImage') {
+    const { rows } = await query(
+      `UPDATE galleries
+       SET finished_images = ARRAY(SELECT unnest(finished_images) EXCEPT SELECT unnest($1::text[]))
+       WHERE id=$2
+       RETURNING *`,
+      [payload?.images || [], id]
+    );
+    return NextResponse.json({ gallery: rows[0] });
+  }
   if (action === 'approve') {
     const { rows } = await query(
       `UPDATE galleries SET approved_images = approved_images || $1::text[] WHERE id=$2 RETURNING *`,
@@ -60,6 +97,13 @@ export async function PUT(req: NextRequest) {
     );
     return NextResponse.json({ gallery: rows[0] });
   }
+  if (action === 'payment') {
+    const { rows } = await query(
+      `UPDATE galleries SET payment_verified=$1, payment_url=$2 WHERE id=$3 RETURNING *`,
+      [Boolean(payload?.paymentVerified), String(payload?.paymentUrl || ''), id]
+    );
+    return NextResponse.json({ gallery: rows[0] });
+  }
   if (action === 'lock' || action === 'unlock') {
     const { rows } = await query(
       `UPDATE galleries SET is_locked=$1 WHERE id=$2 RETURNING *`,
@@ -70,13 +114,27 @@ export async function PUT(req: NextRequest) {
 
   // generic update
   const { rows } = await query(
-    `UPDATE galleries SET client_name=$1, slug=$2, access_code=$3, images=$4, approved_images=$5, is_locked=$6 WHERE id=$7 RETURNING *`,
+    `UPDATE galleries
+     SET client_name=$1,
+         slug=$2,
+         access_code=$3,
+         images=$4,
+         approved_images=$5,
+         finished_images=$6,
+         payment_verified=$7,
+         payment_url=$8,
+         is_locked=$9
+     WHERE id=$10
+     RETURNING *`,
     [
       payload?.clientName,
       payload?.slug,
       payload?.access_code,
       payload?.images || [],
       payload?.approvedImages || [],
+      payload?.finishedImages || [],
+      payload?.paymentVerified ?? false,
+      payload?.paymentUrl || '',
       payload?.isLocked ?? false,
       id,
     ]

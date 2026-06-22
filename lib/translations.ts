@@ -152,6 +152,12 @@ export const translations = {
             approveError: "Unable to approve your selection.",
             approveRetryError: "Unable to approve your selection. Please try again.",
             approvedMessage: "{count} {unit} approved.",
+            finishedWorkTitle: "Finished Work",
+            finishedWorkReady: "Your finished files are ready to download.",
+            paymentRequired: "Your finished files are ready. Downloads unlock after online payment or studio verification.",
+            payOnline: "Pay Online",
+            paymentVerificationNote: "Already paid? The studio will verify payment and unlock downloads.",
+            downloadFinishedWork: "Download file",
         },
         bookingsPage: {
             privateBooking: "Private Booking",

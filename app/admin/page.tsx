@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   FiChevronDown,
   FiCheckCircle,
+  FiImage,
   FiLock,
   FiTrash2,
   FiUnlock,
@@ -32,6 +33,9 @@ type Gallery = {
   client_name: string;
   images: string[];
   approved_images: string[];
+  finished_images: string[];
+  payment_verified: boolean;
+  payment_url: string;
   is_locked: boolean;
 };
 
@@ -179,10 +183,14 @@ export default function AdminPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [catalogImageFile, setCatalogImageFile] = useState<File | null>(null);
   const [galleryUploads, setGalleryUploads] = useState<Record<string, File | null>>({});
+  const [finishedGalleryUploads, setFinishedGalleryUploads] = useState<Record<string, File | null>>({});
+  const [galleryPaymentUrls, setGalleryPaymentUrls] = useState<Record<string, string>>({});
   const [isAuthed, setIsAuthed] = useState(false);
   const [authChecking, setAuthChecking] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [catalogImagePreview, setCatalogImagePreview] = useState<string | null>(null);
+  const catalogImageInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     localStorage.removeItem('moyo-admin-key');
@@ -219,6 +227,12 @@ export default function AdminPage() {
 
       setArtworks(artData.artworks || []);
       setGalleries(galData.galleries || []);
+      setGalleryPaymentUrls(
+        (galData.galleries || []).reduce((acc: Record<string, string>, gallery: Gallery) => {
+          acc[gallery.id] = gallery.payment_url || '';
+          return acc;
+        }, {})
+      );
       setCatalogCategories(catalogData.categories || []);
       setContent(conData.content || content);
       setContact(contactData.contact || contact);
@@ -281,6 +295,8 @@ export default function AdminPage() {
     await verifyAdminKey(adminKey);
   };
 
+  const generateAccessCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
+
   const handleUpload = async (file: File) => {
     setUploading(true);
     console.log('[admin] upload start', { name: file.name, size: file.size, type: file.type });
@@ -327,6 +343,36 @@ export default function AdminPage() {
       if (imagePreview && imagePreview.startsWith('blob:')) URL.revokeObjectURL(imagePreview);
     };
   }, [imagePreview]);
+
+  useEffect(() => {
+    return () => {
+      if (catalogImagePreview && catalogImagePreview.startsWith('blob:')) {
+        URL.revokeObjectURL(catalogImagePreview);
+      }
+    };
+  }, [catalogImagePreview]);
+
+  const handleCatalogImageFileChange = async (file: File | null) => {
+    setCatalogImageFile(file);
+    if (!file) {
+      setCatalogImagePreview(catalogImageForm.image_url || null);
+      return;
+    }
+    const localPreview = URL.createObjectURL(file);
+    setCatalogImagePreview(localPreview);
+
+    if (!adminKey) {
+      setMessage({ text: 'Add admin password first', type: 'error' });
+      return;
+    }
+
+    const url = await handleUpload(file);
+    if (url) {
+      setCatalogImageForm((prev) => ({ ...prev, image_url: url }));
+      setCatalogImagePreview(url);
+      setMessage({ text: 'Catalogue image uploaded from this device', type: 'success' });
+    }
+  };
 
   const handleArtworkSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -385,6 +431,7 @@ export default function AdminPage() {
     const data = await res.json();
     if (!res.ok) return setMessage({ text: data.error || 'Failed', type: 'error' });
     setGalleries((prev) => [data.gallery, ...prev]);
+    setGalleryPaymentUrls((prev) => ({ ...prev, [data.gallery.id]: data.gallery.payment_url || '' }));
     setGalleryForm({ clientName: '', slug: '', access_code: '' });
     setMessage({ text: 'Gallery created', type: 'success' });
   };
@@ -396,16 +443,39 @@ export default function AdminPage() {
       body: JSON.stringify({ id, action, payload }),
     });
     const data = await res.json();
-    if (res.ok) setGalleries((prev) => prev.map((g) => (g.id === Number(id) ? data.gallery : g)));
+    if (res.ok) {
+      setGalleries((prev) => prev.map((g) => (g.id === Number(id) ? data.gallery : g)));
+      setGalleryPaymentUrls((prev) => ({ ...prev, [id]: data.gallery.payment_url || '' }));
+    } else {
+      setMessage({ text: data.error || 'Unable to update gallery', type: 'error' });
+    }
   };
 
   const uploadGalleryImage = async (id: number) => {
     const file = galleryUploads[id];
-    if (!file) return;
+    if (!file) return setMessage({ text: 'Choose a client media file first', type: 'error' });
     const url = await handleUpload(file);
     if (!url) return;
     await updateGallery(id.toString(), 'addImages', { images: [url] });
     setGalleryUploads((prev) => ({ ...prev, [id]: null }));
+    setMessage({ text: 'Client media uploaded', type: 'success' });
+  };
+
+  const uploadFinishedGalleryImage = async (id: number) => {
+    const file = finishedGalleryUploads[id];
+    if (!file) return setMessage({ text: 'Choose a finished work file first', type: 'error' });
+    const url = await handleUpload(file);
+    if (!url) return;
+    await updateGallery(id.toString(), 'addFinishedImages', { images: [url] });
+    setFinishedGalleryUploads((prev) => ({ ...prev, [id]: null }));
+    setMessage({ text: 'Finished work uploaded', type: 'success' });
+  };
+
+  const saveGalleryPayment = async (gallery: Gallery, paymentVerified = gallery.payment_verified) => {
+    await updateGallery(gallery.id.toString(), 'payment', {
+      paymentVerified,
+      paymentUrl: galleryPaymentUrls[gallery.id] ?? gallery.payment_url ?? '',
+    });
   };
 
   const createCatalogCategory = async (e: React.FormEvent) => {
@@ -491,6 +561,7 @@ export default function AdminPage() {
     );
     setCatalogImageForm({ category_id: catalogImageForm.category_id, title: '', alt_text: '', image_url: '', display_order: '' });
     setCatalogImageFile(null);
+    setCatalogImagePreview(null);
     setMessage({ text: 'Catalog image added', type: 'success' });
   };
 
@@ -623,6 +694,14 @@ export default function AdminPage() {
             >
               Newsletter Studio
             </Link>
+            <button
+              type="button"
+              onClick={() => setOpenAdminSection('catalog')}
+              className="inline-flex items-center gap-2 px-3 py-2 border border-accent/30 bg-accent/10 text-accent uppercase tracking-[0.25em] hover:border-accent hover:bg-accent hover:text-black transition-colors"
+            >
+              <FiImage aria-hidden="true" />
+              Upload Catalogue
+            </button>
           </div>
           <div className="flex gap-2 items-center">
             <input
@@ -914,17 +993,41 @@ export default function AdminPage() {
                 <div className="space-y-2">
                   <label className={label}>Image</label>
                   <input
+                    ref={catalogImageInputRef}
                     type="file"
                     accept="image/*"
-                    onChange={(e) => setCatalogImageFile(e.target.files?.[0] || null)}
-                    className="w-full text-xs text-white/70"
+                    onChange={(e) => handleCatalogImageFileChange(e.target.files?.[0] || null)}
+                    className="hidden"
                   />
+                  <button
+                    type="button"
+                    onClick={() => catalogImageInputRef.current?.click()}
+                    disabled={uploading}
+                    className="flex w-full flex-col items-center justify-center gap-3 rounded-sm border-2 border-dashed border-white/10 bg-white/[0.04] p-6 text-center transition-colors hover:border-accent/50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <FiUpload className="text-xl text-white/25" aria-hidden="true" />
+                    <span className="text-[10px] uppercase tracking-[0.24em] text-white/45">
+                      {uploading ? 'Uploading from device...' : catalogImageFile ? catalogImageFile.name : 'Upload from this device'}
+                    </span>
+                    <span className="text-xs text-white/30">Desktop, phone gallery, or camera roll</span>
+                  </button>
                   <input
                     className={inputClass}
-                    placeholder="or paste image URL"
+                    placeholder="uploaded image URL will appear here"
                     value={catalogImageForm.image_url}
-                    onChange={(e) => setCatalogImageForm({ ...catalogImageForm, image_url: e.target.value })}
+                    onChange={(e) => {
+                      setCatalogImageForm({ ...catalogImageForm, image_url: e.target.value });
+                      if (!catalogImageFile) setCatalogImagePreview(e.target.value || null);
+                    }}
                   />
+                  {catalogImagePreview && (
+                    <div className="overflow-hidden border border-white/10 bg-white/[0.04]">
+                      <img src={catalogImagePreview} alt="Catalogue preview" className="h-48 w-full object-cover" />
+                      <div className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/50">
+                        Catalogue preview
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <button
                   type="submit"
@@ -1036,11 +1139,20 @@ export default function AdminPage() {
                   </div>
                   <div className="space-y-2">
                     <label className={label}>Access Code (optional)</label>
-                    <input
-                      className={inputClass}
-                      value={galleryForm.access_code}
-                      onChange={(e) => setGalleryForm({ ...galleryForm, access_code: e.target.value })}
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        className={inputClass}
+                        value={galleryForm.access_code}
+                        onChange={(e) => setGalleryForm({ ...galleryForm, access_code: e.target.value.toUpperCase() })}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setGalleryForm((prev) => ({ ...prev, access_code: generateAccessCode() }))}
+                        className="shrink-0 border border-white/10 px-3 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-accent hover:text-accent"
+                      >
+                        Generate
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <button
@@ -1054,7 +1166,7 @@ export default function AdminPage() {
             <div className="space-y-4 max-h-[640px] overflow-y-auto pr-2">
               <h3 className="text-[10px] uppercase tracking-[0.5em] text-accent">Existing</h3>
               {galleries.map((gal) => (
-                <div key={gal.id} className="bg-surface/20 border border-white/5 p-4 space-y-2">
+                <div key={gal.id} className="bg-surface/20 border border-white/5 p-4 space-y-5">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-white font-heading italic">{gal.client_name}</p>
@@ -1071,7 +1183,11 @@ export default function AdminPage() {
                   </div>
                   <div className="flex flex-wrap gap-2 text-[10px] text-white/60">
                     <span>Uploads: {gal.images.length}</span>
-                    <span>Approved: {gal.approved_images.length}</span>
+                    <span>Selected for retouching: {gal.approved_images.length}</span>
+                    <span>Finished: {gal.finished_images?.length || 0}</span>
+                    <span className={gal.payment_verified ? 'text-green-300' : 'text-white/40'}>
+                      {gal.payment_verified ? 'Payment verified' : 'Payment pending'}
+                    </span>
                   </div>
                   {gal.images.length > 0 && (
                     <div className="grid grid-cols-4 gap-2">
@@ -1085,20 +1201,25 @@ export default function AdminPage() {
                       ))}
                     </div>
                   )}
-                  <div className="flex items-center gap-2 text-[10px]">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) =>
-                        setGalleryUploads((prev) => ({ ...prev, [gal.id]: e.target.files?.[0] || null }))
-                      }
-                      className="text-white/70"
-                    />
+                  <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
+                    <label className="relative block cursor-pointer border border-dashed border-white/10 bg-white/[0.03] px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-white/45 transition-colors hover:border-accent/50">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          setGalleryUploads((prev) => ({ ...prev, [gal.id]: e.target.files?.[0] || null }))
+                        }
+                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                      />
+                      {galleryUploads[gal.id]?.name || 'Choose client media'}
+                    </label>
                     <button
+                      type="button"
+                      disabled={uploading || !galleryUploads[gal.id]}
                       onClick={() => uploadGalleryImage(gal.id)}
-                      className="px-3 py-2 border border-white/10 text-white/60 hover:text-white"
+                      className="px-4 py-3 border border-white/10 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      Upload Image
+                      Upload Media
                     </button>
                   </div>
                   {gal.images.length > gal.approved_images.length && (
@@ -1115,6 +1236,79 @@ export default function AdminPage() {
                       Approve New Uploads
                     </button>
                   )}
+                  <div className="space-y-3 border-t border-white/5 pt-4">
+                    <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
+                      <label className="relative block cursor-pointer border border-dashed border-white/10 bg-white/[0.03] px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-white/45 transition-colors hover:border-accent/50">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) =>
+                            setFinishedGalleryUploads((prev) => ({ ...prev, [gal.id]: e.target.files?.[0] || null }))
+                          }
+                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                        />
+                        {finishedGalleryUploads[gal.id]?.name || 'Choose finished work'}
+                      </label>
+                      <button
+                        type="button"
+                        disabled={uploading || !finishedGalleryUploads[gal.id]}
+                        onClick={() => uploadFinishedGalleryImage(gal.id)}
+                        className="px-4 py-3 border border-white/10 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        Upload Finished
+                      </button>
+                    </div>
+                    {gal.finished_images?.length > 0 && (
+                      <div className="grid grid-cols-4 gap-2">
+                        {gal.finished_images.map((img, index) => (
+                          <div key={img} className="relative">
+                            <img
+                              src={img}
+                              alt={`${gal.client_name} finished work ${index + 1}`}
+                              className="h-20 w-full object-cover border border-white/10"
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateGallery(gal.id.toString(), 'removeFinishedImage', { images: [img] })
+                              }
+                              className="absolute right-1 top-1 bg-black/70 p-1 text-red-300"
+                            >
+                              <FiTrash2 />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className="grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-center">
+                      <input
+                        className={`${inputClass} text-xs`}
+                        placeholder="Payment link for client"
+                        value={galleryPaymentUrls[gal.id] ?? gal.payment_url ?? ''}
+                        onChange={(e) =>
+                          setGalleryPaymentUrls((prev) => ({ ...prev, [gal.id]: e.target.value }))
+                        }
+                      />
+                      <button
+                        type="button"
+                        onClick={() => saveGalleryPayment(gal)}
+                        className="px-4 py-3 border border-white/10 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-accent hover:text-accent"
+                      >
+                        Save Link
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => saveGalleryPayment(gal, !gal.payment_verified)}
+                        className={`px-4 py-3 border text-[10px] uppercase tracking-[0.2em] transition-colors ${
+                          gal.payment_verified
+                            ? 'border-green-400/40 text-green-300 hover:border-white hover:text-white'
+                            : 'border-accent/50 text-accent hover:bg-accent hover:text-black'
+                        }`}
+                      >
+                        {gal.payment_verified ? 'Mark Unpaid' : 'Verify Payment'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
