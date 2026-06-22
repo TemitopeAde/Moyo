@@ -8,12 +8,6 @@ interface AboutSectionProps {
     profileType: 'photography' | 'art';
 }
 
-const profileBio = [
-    "Ijabiken Moyosoreoluwa is a Lagos-based contemporary photographer and visual artist whose work seamlessly bridges commercial excellence and fine art.",
-    "Formally trained with an HND in Painting and an ND in General Arts, Moyosoreoluwa uses his background in classical art to elevate modern digital photography. His primary expertise lies in portraiture and conceptual photography, defined by rich storytelling and meticulous composition.",
-    "This unique artistic perspective extends into his commercial practice, where he documents weddings, corporate events, and creative projects with an editorial edge. Moyosoreoluwa’s ability to blend traditional artistic principles with contemporary digital media makes him a highly sought-after visual storyteller for both private clients and creative brands.",
-];
-
 export default function AboutSection({ profileType }: AboutSectionProps) {
     const { language } = useLanguage();
     const { t } = useTranslate(language);
@@ -30,7 +24,11 @@ export default function AboutSection({ profileType }: AboutSectionProps) {
         ? t('about.photography.headline')
         : t('about.art.headline');
 
-    const bioParagraphs = cmsAbout?.text ? [cmsAbout.text] : profileBio;
+    const bioParagraphs = cmsAbout?.text ? [cmsAbout.text] : [
+        t(`about.${profileType}.text1`),
+        t(`about.${profileType}.text2`),
+        t(`about.${profileType}.text3`),
+    ];
 
     return (
         <section id="about" className="relative overflow-hidden border-t border-foreground/5 bg-background py-24 text-foreground md:py-32 lg:py-40">

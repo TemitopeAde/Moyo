@@ -35,13 +35,15 @@ export const translations = {
         about: {
             photography: {
                 headline: "Intentionality & Light",
-                text1: "Ijabiken Moyo is a photographer focused on creating images that feel intentional, timeless, and emotionally grounded.",
-                text2: "His work balances precision and intuition — capturing people, moments, and narratives with clarity and restraint. Each project is approached with respect for the subject and an understanding that strong images are built, not rushed.",
+                text1: "Ijabiken Moyosoreoluwa is a Lagos-based contemporary photographer and visual artist whose work seamlessly bridges commercial excellence and fine art.",
+                text2: "Formally trained with an HND in Painting and an ND in General Arts, Moyosoreoluwa uses his background in classical art to elevate modern digital photography. His primary expertise lies in portraiture and conceptual photography, defined by rich storytelling and meticulous composition.",
+                text3: "This unique artistic perspective extends into his commercial practice, where he documents weddings, corporate events, and creative projects with an editorial edge. Moyosoreoluwa’s ability to blend traditional artistic principles with contemporary digital media makes him a highly sought-after visual storyteller for both private clients and creative brands.",
             },
             art: {
                 headline: "Identity & Memory",
-                text1: "Ijabiken Moyo’s fine art practice explores identity, memory, and human presence through form and symbolism.",
-                text2: "His works exist between personal history and shared experience, often referencing heritage, emotion, and quiet tension. Each piece is created as a standalone statement — meant to be lived with, not just observed.",
+                text1: "Ijabiken Moyosoreoluwa is a Lagos-based contemporary photographer and visual artist whose work seamlessly bridges commercial excellence and fine art.",
+                text2: "Formally trained with an HND in Painting and an ND in General Arts, Moyosoreoluwa uses his background in classical art to elevate modern digital photography. His primary expertise lies in portraiture and conceptual photography, defined by rich storytelling and meticulous composition.",
+                text3: "This unique artistic perspective extends into his commercial practice, where he documents weddings, corporate events, and creative projects with an editorial edge. Moyosoreoluwa’s ability to blend traditional artistic principles with contemporary digital media makes him a highly sought-after visual storyteller for both private clients and creative brands.",
             }
         },
         booking: {
@@ -183,13 +185,15 @@ export const translations = {
         about: {
             photography: {
                 headline: "Intentionnalité & Lumière",
-                text1: "Ijabiken Moyo est un photographe qui se concentre sur la création d'images intentionnelles, intemporelles et émotionnellement ancrées.",
-                text2: "Son travail équilibre précision et intuition — capturant les gens, les moments et les récits avec clarte et retenue.",
+                text1: "Ijabiken Moyosoreoluwa est un photographe contemporain et artiste visuel basé à Lagos, dont le travail relie avec fluidité l’excellence commerciale et les beaux-arts.",
+                text2: "Formé avec un HND en peinture et un ND en arts généraux, Moyosoreoluwa utilise son parcours en art classique pour élever la photographie numérique moderne. Son expertise principale réside dans le portrait et la photographie conceptuelle, définis par une narration riche et une composition méticuleuse.",
+                text3: "Cette perspective artistique unique s’étend à sa pratique commerciale, où il documente mariages, événements d’entreprise et projets créatifs avec une approche éditoriale. Sa capacité à mêler principes artistiques traditionnels et médias numériques contemporains fait de lui un conteur visuel très recherché par les clients privés et les marques créatives.",
             },
             art: {
                 headline: "Identité & Mémoire",
-                text1: "La pratique des beaux-arts d'Ijabiken Moyo explore l'identité, la mémoire et la présence humaine à travers la forme et le symbolisme.",
-                text2: "Ses œuvres existent entre l'histoire personnelle et l'expérience partagée.",
+                text1: "Ijabiken Moyosoreoluwa est un photographe contemporain et artiste visuel basé à Lagos, dont le travail relie avec fluidité l’excellence commerciale et les beaux-arts.",
+                text2: "Formé avec un HND en peinture et un ND en arts généraux, Moyosoreoluwa utilise son parcours en art classique pour élever la photographie numérique moderne. Son expertise principale réside dans le portrait et la photographie conceptuelle, définis par une narration riche et une composition méticuleuse.",
+                text3: "Cette perspective artistique unique s’étend à sa pratique commerciale, où il documente mariages, événements d’entreprise et projets créatifs avec une approche éditoriale. Sa capacité à mêler principes artistiques traditionnels et médias numériques contemporains fait de lui un conteur visuel très recherché par les clients privés et les marques créatives.",
             }
         },
         booking: {
@@ -331,13 +335,15 @@ export const translations = {
         about: {
             photography: {
                 headline: "Intencionalidad y Luz",
-                text1: "Ijabiken Moyo es un fotógrafo centrado en crear imágenes que se sientan intencionales, atemporales y emocionalmente fundamentadas.",
-                text2: "Su trabajo equilibra precisión e intuición.",
+                text1: "Ijabiken Moyosoreoluwa es un fotógrafo contemporáneo y artista visual radicado en Lagos, cuyo trabajo une con fluidez la excelencia comercial y las bellas artes.",
+                text2: "Formado con un HND en Pintura y un ND en Artes Generales, Moyosoreoluwa usa su base en el arte clásico para elevar la fotografía digital moderna. Su principal experiencia está en el retrato y la fotografía conceptual, definidos por una narración rica y una composición meticulosa.",
+                text3: "Esta perspectiva artística única se extiende a su práctica comercial, donde documenta bodas, eventos corporativos y proyectos creativos con un enfoque editorial. Su capacidad para combinar principios artísticos tradicionales con medios digitales contemporáneos lo convierte en un narrador visual muy solicitado por clientes privados y marcas creativas.",
             },
             art: {
                 headline: "Identidad y Memoria",
-                text1: "La práctica de bellas artes de Ijabiken Moyo explora la identidad, la memoria y la presencia humana.",
-                text2: "Sus obras existen entre la historia personal y la experiencia compartida.",
+                text1: "Ijabiken Moyosoreoluwa es un fotógrafo contemporáneo y artista visual radicado en Lagos, cuyo trabajo une con fluidez la excelencia comercial y las bellas artes.",
+                text2: "Formado con un HND en Pintura y un ND en Artes Generales, Moyosoreoluwa usa su base en el arte clásico para elevar la fotografía digital moderna. Su principal experiencia está en el retrato y la fotografía conceptual, definidos por una narración rica y una composición meticulosa.",
+                text3: "Esta perspectiva artística única se extiende a su práctica comercial, donde documenta bodas, eventos corporativos y proyectos creativos con un enfoque editorial. Su capacidad para combinar principios artísticos tradicionales con medios digitales contemporáneos lo convierte en un narrador visual muy solicitado por clientes privados y marcas creativas.",
             }
         },
         booking: {
@@ -479,13 +485,15 @@ export const translations = {
         about: {
             photography: {
                 headline: "Absicht & Licht",
-                text1: "Ijabiken Moyo ist ein Fotograf, der sich auf die Erstellung von Bildern konzentriert, die absichtsvoll, zeitlos und emotional fundiert wirken.",
-                text2: "Seine Arbeit balanciert Präzision und Intuition.",
+                text1: "Ijabiken Moyosoreoluwa ist ein in Lagos ansässiger zeitgenössischer Fotograf und visueller Künstler, dessen Arbeit kommerzielle Exzellenz und bildende Kunst nahtlos verbindet.",
+                text2: "Mit einem HND in Malerei und einem ND in Allgemeinen Künsten ausgebildet, nutzt Moyosoreoluwa seinen Hintergrund in klassischer Kunst, um moderne digitale Fotografie zu veredeln. Seine Kernkompetenz liegt in Porträt- und Konzeptfotografie, geprägt von starkem Storytelling und sorgfältiger Komposition.",
+                text3: "Diese einzigartige künstlerische Perspektive erweitert seine kommerzielle Praxis, in der er Hochzeiten, Unternehmensveranstaltungen und kreative Projekte mit editorialem Anspruch dokumentiert. Seine Fähigkeit, traditionelle künstlerische Prinzipien mit zeitgenössischen digitalen Medien zu verbinden, macht ihn zu einem gefragten visuellen Erzähler für private Kunden und kreative Marken.",
             },
             art: {
                 headline: "Identität & Erinnerung",
-                text1: "Ijabiken Moyos künstlerische Praxis erforscht Identität, Erinnerung und menschliche Präsenz.",
-                text2: "Seine Werke existieren zwischen persönlicher Geschichte und gemeinsamer Erfahrung.",
+                text1: "Ijabiken Moyosoreoluwa ist ein in Lagos ansässiger zeitgenössischer Fotograf und visueller Künstler, dessen Arbeit kommerzielle Exzellenz und bildende Kunst nahtlos verbindet.",
+                text2: "Mit einem HND in Malerei und einem ND in Allgemeinen Künsten ausgebildet, nutzt Moyosoreoluwa seinen Hintergrund in klassischer Kunst, um moderne digitale Fotografie zu veredeln. Seine Kernkompetenz liegt in Porträt- und Konzeptfotografie, geprägt von starkem Storytelling und sorgfältiger Komposition.",
+                text3: "Diese einzigartige künstlerische Perspektive erweitert seine kommerzielle Praxis, in der er Hochzeiten, Unternehmensveranstaltungen und kreative Projekte mit editorialem Anspruch dokumentiert. Seine Fähigkeit, traditionelle künstlerische Prinzipien mit zeitgenössischen digitalen Medien zu verbinden, macht ihn zu einem gefragten visuellen Erzähler für private Kunden und kreative Marken.",
             }
         },
         booking: {
@@ -627,13 +635,15 @@ export const translations = {
         about: {
             photography: {
                 headline: "Intencionalidade e Luz",
-                text1: "Ijabiken Moyo é um fotógrafo focado em criar imagens que pareçam intencionais, atemporais e emocionalmente fundamentadas.",
-                text2: "Seu trabalho equilibra precisão e intuição.",
+                text1: "Ijabiken Moyosoreoluwa é um fotógrafo contemporâneo e artista visual baseado em Lagos, cujo trabalho une com naturalidade excelência comercial e belas artes.",
+                text2: "Com formação em HND em Pintura e ND em Artes Gerais, Moyosoreoluwa usa sua base em arte clássica para elevar a fotografia digital moderna. Sua principal especialidade está no retrato e na fotografia conceitual, definidos por narrativa rica e composição meticulosa.",
+                text3: "Essa perspectiva artística única se estende à sua prática comercial, onde documenta casamentos, eventos corporativos e projetos criativos com uma abordagem editorial. Sua capacidade de combinar princípios artísticos tradicionais com mídia digital contemporânea faz dele um contador visual muito procurado por clientes privados e marcas criativas.",
             },
             art: {
                 headline: "Identidade e Memória",
-                text1: "A prática de belas artes de Ijabiken Moyo explora a identidade, a memória e a presença humana.",
-                text2: "Suas obras existem entre a história pessoal e a experiência compartilhada.",
+                text1: "Ijabiken Moyosoreoluwa é um fotógrafo contemporâneo e artista visual baseado em Lagos, cujo trabalho une com naturalidade excelência comercial e belas artes.",
+                text2: "Com formação em HND em Pintura e ND em Artes Gerais, Moyosoreoluwa usa sua base em arte clássica para elevar a fotografia digital moderna. Sua principal especialidade está no retrato e na fotografia conceitual, definidos por narrativa rica e composição meticulosa.",
+                text3: "Essa perspectiva artística única se estende à sua prática comercial, onde documenta casamentos, eventos corporativos e projetos criativos com uma abordagem editorial. Sua capacidade de combinar princípios artísticos tradicionais com mídia digital contemporânea faz dele um contador visual muito procurado por clientes privados e marcas criativas.",
             }
         },
         booking: {
@@ -775,13 +785,15 @@ export const translations = {
         about: {
             photography: {
                 headline: "القصد والضوء",
-                text1: "إيجابيكن مويو مصور يركز على إنشاء صور تبدو مقصودة وخالدة ومرتكزة عاطفياً.",
-                text2: "يوازن عمله بين الدقة والحدس.",
+                text1: "إيجابيكن مويوسوريولووا مصور معاصر وفنان بصري مقيم في لاغوس، يجمع عمله بسلاسة بين التميز التجاري والفنون الجميلة.",
+                text2: "تلقى تدريباً رسمياً وحصل على HND في الرسم وND في الفنون العامة، ويستخدم مويوسوريولووا خلفيته في الفن الكلاسيكي للارتقاء بالتصوير الرقمي الحديث. تكمن خبرته الأساسية في تصوير البورتريه والتصوير المفاهيمي، حيث يتميز عمله بسرد غني وتكوين دقيق.",
+                text3: "تمتد هذه الرؤية الفنية الفريدة إلى ممارسته التجارية، حيث يوثق حفلات الزفاف والفعاليات المؤسسية والمشاريع الإبداعية بلمسة تحريرية. إن قدرته على مزج المبادئ الفنية التقليدية مع الوسائط الرقمية المعاصرة تجعله راوياً بصرياً مطلوباً للغاية لدى العملاء الخاصين والعلامات الإبداعية.",
             },
             art: {
                 headline: "الهوية والذاكرة",
-                text1: "تستكشف ممارسة الفنون الجميلة لإيجابيكن مويو الهوية والذاكرة والحضور البشري.",
-                text2: "توجد أعماله بين التاريخ الشخصي والتجربة المشتركة.",
+                text1: "إيجابيكن مويوسوريولووا مصور معاصر وفنان بصري مقيم في لاغوس، يجمع عمله بسلاسة بين التميز التجاري والفنون الجميلة.",
+                text2: "تلقى تدريباً رسمياً وحصل على HND في الرسم وND في الفنون العامة، ويستخدم مويوسوريولووا خلفيته في الفن الكلاسيكي للارتقاء بالتصوير الرقمي الحديث. تكمن خبرته الأساسية في تصوير البورتريه والتصوير المفاهيمي، حيث يتميز عمله بسرد غني وتكوين دقيق.",
+                text3: "تمتد هذه الرؤية الفنية الفريدة إلى ممارسته التجارية، حيث يوثق حفلات الزفاف والفعاليات المؤسسية والمشاريع الإبداعية بلمسة تحريرية. إن قدرته على مزج المبادئ الفنية التقليدية مع الوسائط الرقمية المعاصرة تجعله راوياً بصرياً مطلوباً للغاية لدى العملاء الخاصين والعلامات الإبداعية.",
             }
         },
         booking: {
@@ -927,13 +939,15 @@ const localizedTranslations = {
         about: {
             photography: {
                 headline: "意图与光",
-                text1: "Ijabiken Moyo 是一位摄影师，专注于创作有意图、经得起时间考验并富有情感的影像。",
-                text2: "他的作品在精确与直觉之间取得平衡，以清晰和克制捕捉人物、瞬间与叙事。每个项目都以尊重主体为前提，并相信强有力的图像需要被认真构建，而不是匆忙完成。",
+                text1: "Ijabiken Moyosoreoluwa 是一位常驻拉各斯的当代摄影师与视觉艺术家，其作品自然连接商业品质与美术表达。",
+                text2: "Moyosoreoluwa 拥有绘画 HND 和综合艺术 ND 的正规训练，并以古典艺术背景提升现代数字摄影。他的主要专长是肖像与概念摄影，以丰富的叙事和严谨的构图为特点。",
+                text3: "这种独特的艺术视角也延伸到他的商业实践中，他以编辑式的敏锐度记录婚礼、企业活动和创意项目。Moyosoreoluwa 能够融合传统艺术原则与当代数字媒介，因此成为私人客户和创意品牌高度青睐的视觉叙事者。",
             },
             art: {
                 headline: "身份与记忆",
-                text1: "Ijabiken Moyo 的美术实践通过形式与象征探索身份、记忆和人的存在。",
-                text2: "他的作品介于个人历史与共同经验之间，常常指向传承、情感与安静的张力。每件作品都是独立的表达，旨在被生活相伴，而不只是被观看。",
+                text1: "Ijabiken Moyosoreoluwa 是一位常驻拉各斯的当代摄影师与视觉艺术家，其作品自然连接商业品质与美术表达。",
+                text2: "Moyosoreoluwa 拥有绘画 HND 和综合艺术 ND 的正规训练，并以古典艺术背景提升现代数字摄影。他的主要专长是肖像与概念摄影，以丰富的叙事和严谨的构图为特点。",
+                text3: "这种独特的艺术视角也延伸到他的商业实践中，他以编辑式的敏锐度记录婚礼、企业活动和创意项目。Moyosoreoluwa 能够融合传统艺术原则与当代数字媒介，因此成为私人客户和创意品牌高度青睐的视觉叙事者。",
             }
         },
         booking: {
@@ -1075,13 +1089,15 @@ const localizedTranslations = {
         about: {
             photography: {
                 headline: "Èrò inú àti ìmọ́lẹ̀",
-                text1: "Ijabiken Moyo jẹ́ fọ́tógíràfà tó ń dá àwòrán tí ó ní èrò, tó pẹ́, tí ó sì ní ìmọ̀lára jinlẹ̀.",
-                text2: "Iṣẹ́ rẹ ń dọ́gba ìpéye àti ìmọ̀ inú, ó ń mú ènìyàn, àkókò, àti ìtàn pẹ̀lú kedere àti ìfarabalẹ̀. Gbogbo iṣẹ́ ni a ń ṣe pẹ̀lú ọ̀wọ̀ fún ẹni tí a ń ya, àti ìmọ̀ pé àwòrán tó lágbára kò yẹ kí a ṣe ní kánjú.",
+                text1: "Ijabiken Moyosoreoluwa jẹ́ fọ́tógíràfà àti olórin àwòrán ìgbàlódé tó dá lórí Lagos, tí iṣẹ́ rẹ ń so ìdárayá iṣowo tó dára pọ̀ mọ́ iṣẹ́ ọnà tó jinlẹ̀.",
+                text2: "Ó gba ìkẹ́kọ̀ọ́ HND ní Painting àti ND ní General Arts, Moyosoreoluwa sì ń lo ìpìlẹ̀ rẹ nínú iṣẹ́ ọnà kilasika láti gbé fọ́tógíràfì dijítàlì ìgbàlódé ga. Agbára rẹ pàtàkì wà nínú portraiture àti conceptual photography, tí ìtàn tó jinlẹ̀ àti àkópọ̀ tó péye ń ṣàpèjúwe.",
+                text3: "Ìwòye iṣẹ́ ọnà aláìlẹ́gbẹ́ yìí tún wọ inú iṣẹ́ iṣowo rẹ, níbi tí ó ti ń ṣe ìkọ̀wé àwòrán fún ìgbéyàwó, ìṣẹ̀lẹ̀ ilé-iṣẹ́, àti àwọn iṣẹ́ ẹ̀dá pẹ̀lú ìmọ̀ editorial. Agbára Moyosoreoluwa láti darapọ̀ àwọn ìlànà iṣẹ́ ọnà àtijọ́ mọ́ media dijítàlì ìgbàlódé mú kí ó jẹ́ visual storyteller tí àwọn oníbàárà aládani àti brand ẹ̀dá ń wá gidigidi.",
             },
             art: {
                 headline: "Ìdánimọ̀ àti ìrántí",
-                text1: "Ìṣe iṣẹ́ ọnà Ijabiken Moyo ń ṣàwárí ìdánimọ̀, ìrántí, àti wíwà ènìyàn nípasẹ̀ fọ́ọ̀mù àti àmì.",
-                text2: "Àwọn iṣẹ́ rẹ wà láàárín ìtàn ara ẹni àti ìrírí gbogbo wa, ó sábà máa ń tọ́ka sí ogún, ìmọ̀lára, àti ìfarapa tí ó dakẹ́. Kọ̀ọ̀kan jẹ́ ọ̀rọ̀ tirẹ̀, iṣẹ́ tí a lè bá gbé, kì í ṣe ohun tí a kàn ń wò.",
+                text1: "Ijabiken Moyosoreoluwa jẹ́ fọ́tógíràfà àti olórin àwòrán ìgbàlódé tó dá lórí Lagos, tí iṣẹ́ rẹ ń so ìdárayá iṣowo tó dára pọ̀ mọ́ iṣẹ́ ọnà tó jinlẹ̀.",
+                text2: "Ó gba ìkẹ́kọ̀ọ́ HND ní Painting àti ND ní General Arts, Moyosoreoluwa sì ń lo ìpìlẹ̀ rẹ nínú iṣẹ́ ọnà kilasika láti gbé fọ́tógíràfì dijítàlì ìgbàlódé ga. Agbára rẹ pàtàkì wà nínú portraiture àti conceptual photography, tí ìtàn tó jinlẹ̀ àti àkópọ̀ tó péye ń ṣàpèjúwe.",
+                text3: "Ìwòye iṣẹ́ ọnà aláìlẹ́gbẹ́ yìí tún wọ inú iṣẹ́ iṣowo rẹ, níbi tí ó ti ń ṣe ìkọ̀wé àwòrán fún ìgbéyàwó, ìṣẹ̀lẹ̀ ilé-iṣẹ́, àti àwọn iṣẹ́ ẹ̀dá pẹ̀lú ìmọ̀ editorial. Agbára Moyosoreoluwa láti darapọ̀ àwọn ìlànà iṣẹ́ ọnà àtijọ́ mọ́ media dijítàlì ìgbàlódé mú kí ó jẹ́ visual storyteller tí àwọn oníbàárà aládani àti brand ẹ̀dá ń wá gidigidi.",
             }
         },
         booking: {
@@ -1223,13 +1239,15 @@ const localizedTranslations = {
         about: {
             photography: {
                 headline: "Ebumnuche na ìhè",
-                text1: "Ijabiken Moyo bụ onye na-ese foto nke na-elekwasị anya n'ịmepụta onyonyo nwere ebumnuche, na-adịgide, ma juputara n mmetụta.",
-                text2: "Ọrụ ya na-agbakọ izi ezi na nghọta ime, na-ejide mmadụ, oge, na akụkọ n'ụzọ doro anya ma dị jụụ. A na-eme ọrụ ọ bụla n'ịkwanyere isiokwu ùgwù, na nghọta na foto siri ike anaghị eme ngwa ngwa.",
+                text1: "Ijabiken Moyosoreoluwa bụ onye na-ese foto nke oge a na onye nka anya bi na Lagos, onye ọrụ ya na-ejikọta ịdị mma azụmahịa na nkà mara mma n'ụzọ dị nro.",
+                text2: "Ọ gụrụ HND na Painting na ND na General Arts, Moyosoreoluwa na-eji ndabere ya na nka klasịk kwalite foto dijitalụ nke oge a. Ọkachamara ya bụ portraiture na conceptual photography, nke akụkọ bara ụba na nhazi zuru oke na-akọwa.",
+                text3: "Echiche nka pụrụ iche a na-abanye n'ọrụ azụmahịa ya, ebe ọ na-edekọ agbamakwụkwọ, mmemme ụlọ ọrụ, na ọrụ okike n'ụdị editorial. Ike Moyosoreoluwa ijikọta ụkpụrụ nka ọdịnala na mgbasa ozi dijitalụ nke oge a mere ka ọ bụrụ onye na-akọ akụkọ anya a na-achọsi ike maka ndị ahịa onwe ha na ụdị okike.",
             },
             art: {
                 headline: "Njirimara na ncheta",
-                text1: "Omume nkà Ijabiken Moyo na-enyocha njirimara, ncheta, na ịdị adị mmadụ site n'ụdị na akara.",
-                text2: "Ọrụ ya dị n'etiti akụkọ onwe onye na ahụmịhe anyị jikọrọ ọnụ, na-ezo aka na ihe nketa, mmetụta, na esemokwu dị jụụ. Ọrụ ọ bụla bụ nkwupụta nke ya, ihe a ga-ebi na ya, ọ bụghị naanị ile ya.",
+                text1: "Ijabiken Moyosoreoluwa bụ onye na-ese foto nke oge a na onye nka anya bi na Lagos, onye ọrụ ya na-ejikọta ịdị mma azụmahịa na nkà mara mma n'ụzọ dị nro.",
+                text2: "Ọ gụrụ HND na Painting na ND na General Arts, Moyosoreoluwa na-eji ndabere ya na nka klasịk kwalite foto dijitalụ nke oge a. Ọkachamara ya bụ portraiture na conceptual photography, nke akụkọ bara ụba na nhazi zuru oke na-akọwa.",
+                text3: "Echiche nka pụrụ iche a na-abanye n'ọrụ azụmahịa ya, ebe ọ na-edekọ agbamakwụkwọ, mmemme ụlọ ọrụ, na ọrụ okike n'ụdị editorial. Ike Moyosoreoluwa ijikọta ụkpụrụ nka ọdịnala na mgbasa ozi dijitalụ nke oge a mere ka ọ bụrụ onye na-akọ akụkọ anya a na-achọsi ike maka ndị ahịa onwe ha na ụdị okike.",
             }
         },
         booking: {
@@ -1371,13 +1389,15 @@ const localizedTranslations = {
         about: {
             photography: {
                 headline: "Niyya da haske",
-                text1: "Ijabiken Moyo mai daukar hoto ne da ke mayar da hankali wajen kirkirar hotuna masu niyya, masu dorewa, kuma masu motsin rai.",
-                text2: "Aikinsa yana daidaita daidaito da fahimta, yana kama mutane, lokuta, da labarai cikin tsabta da nutsuwa. Ana kusantar kowane aiki da girmamawa ga abin da ake dauka, tare da fahimtar cewa hoto mai karfi ana gina shi ne, ba a hanzarta shi ba.",
+                text1: "Ijabiken Moyosoreoluwa mai daukar hoto ne na zamani kuma mai fasahar gani da ke Lagos, wanda aikinsa ke hada kwarewar kasuwanci da fasahar zane-zane cikin sauki.",
+                text2: "An horar da shi da HND a Painting da ND a General Arts, Moyosoreoluwa yana amfani da tushensa a fasahar gargajiya don daukaka daukar hoto na dijital na zamani. Babban kwarewarsa tana cikin portraiture da conceptual photography, wadanda ke da labari mai zurfi da tsari mai kyau.",
+                text3: "Wannan hangen fasaha na musamman yana shiga aikin kasuwancinsa, inda yake daukar bayanan aure, tarukan kamfanoni, da ayyukan kirkira da salo na editorial. Ikon Moyosoreoluwa na hada ka'idojin fasaha na gargajiya da kafofin dijital na zamani ya sa ya zama mai bayar da labari ta gani da ake nema sosai daga abokan ciniki na sirri da kamfanonin kirkira.",
             },
             art: {
                 headline: "Ainihi da tunani",
-                text1: "Aikin zane-zane na Ijabiken Moyo yana binciken ainihi, tunani, da kasancewar mutum ta hanyar siffa da alama.",
-                text2: "Ayyukansa suna tsakanin tarihin mutum da kwarewar jama'a, suna nuni ga gado, motsin rai, da shiru mai nauyi. Kowanne aiki magana ce ta kansa, abin da za a zauna da shi, ba wai kawai a kalla ba.",
+                text1: "Ijabiken Moyosoreoluwa mai daukar hoto ne na zamani kuma mai fasahar gani da ke Lagos, wanda aikinsa ke hada kwarewar kasuwanci da fasahar zane-zane cikin sauki.",
+                text2: "An horar da shi da HND a Painting da ND a General Arts, Moyosoreoluwa yana amfani da tushensa a fasahar gargajiya don daukaka daukar hoto na dijital na zamani. Babban kwarewarsa tana cikin portraiture da conceptual photography, wadanda ke da labari mai zurfi da tsari mai kyau.",
+                text3: "Wannan hangen fasaha na musamman yana shiga aikin kasuwancinsa, inda yake daukar bayanan aure, tarukan kamfanoni, da ayyukan kirkira da salo na editorial. Ikon Moyosoreoluwa na hada ka'idojin fasaha na gargajiya da kafofin dijital na zamani ya sa ya zama mai bayar da labari ta gani da ake nema sosai daga abokan ciniki na sirri da kamfanonin kirkira.",
             }
         },
         booking: {

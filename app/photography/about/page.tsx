@@ -4,8 +4,18 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/context/LanguageContext';
+import { useTranslate } from '@/lib/translations';
 
 export default function PhotographyAboutPage() {
+    const { language } = useLanguage();
+    const { t } = useTranslate(language);
+    const bioParagraphs = [
+        t('about.photography.text1'),
+        t('about.photography.text2'),
+        t('about.photography.text3'),
+    ];
+
     return (
         <main className="bg-background min-h-screen">
             <Navbar />
@@ -32,16 +42,11 @@ export default function PhotographyAboutPage() {
                         </header>
 
                         <div className="space-y-8 text-base leading-relaxed text-white/50 md:space-y-12 md:text-xl">
-                            <p>
-                                Ijabiken Moyosoreoluwa is a Lagos-based contemporary photographer and visual artist whose work seamlessly bridges commercial excellence and fine art.
-                            </p>
-                            <p>
-                                Formally trained with an HND in Painting and an ND in General Arts, Moyosoreoluwa uses his background in classical art to elevate modern digital photography. His primary expertise lies in portraiture and conceptual photography, defined by rich storytelling and meticulous composition.
-                            </p>
+                            {bioParagraphs.slice(0, 2).map((paragraph) => (
+                                <p key={paragraph}>{paragraph}</p>
+                            ))}
                             <div className="h-px w-20 bg-accent/50" />
-                            <p>
-                                This unique artistic perspective extends into his commercial practice, where he documents weddings, corporate events, and creative projects with an editorial edge. Moyosoreoluwa’s ability to blend traditional artistic principles with contemporary digital media makes him a highly sought-after visual storyteller for both private clients and creative brands.
-                            </p>
+                            <p>{bioParagraphs[2]}</p>
                         </div>
 
                         <div className="space-y-8">
