@@ -74,6 +74,7 @@ const label = 'text-[10px] uppercase tracking-widest text-white/40';
 const inputClass =
   'w-full rounded-sm bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-accent outline-none transition-colors';
 const mediaAccept = 'image/*,video/*';
+const uploadBatchSize = 5;
 
 function AdminAccordionPanel({
   id,
@@ -311,45 +312,63 @@ export default function AdminPage() {
 
   const generateAccessCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 
-  const uploadSingleFile = async (file: File) => {
-    console.log('[admin] upload start', { name: file.name, size: file.size, type: file.type });
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      headers: { 'x-admin-key': adminKey },
-      body: formData,
-    });
-    console.log('[admin] upload response', { status: res.status });
-    const data = await res.json();
-    if (data.url) return data.url;
-    throw new Error(data.error || 'Upload failed');
-  };
-
   const uploadFiles = async (files: File[], target = 'upload'): Promise<UploadBatchResult> => {
     if (!files.length) return { urls: [], failedFiles: [] };
     setTargetUploading(target, true);
     try {
-      const results = await Promise.allSettled(files.map((file) => uploadSingleFile(file)));
-      const urls = results
-        .filter((result): result is PromiseFulfilledResult<string> => result.status === 'fulfilled')
-        .map((result) => result.value);
-      const failedFiles = files.filter((_, index) => results[index].status === 'rejected');
-      const failedCount = failedFiles.length;
+      console.log('[admin] upload start', { count: files.length, target });
+      const uploadedUrls: string[] = [];
+      const failedFiles: File[] = [];
 
-      if (failedCount > 0) {
-        const firstFailure = results.find(
-          (result): result is PromiseRejectedResult => result.status === 'rejected'
-        );
-        console.error('[admin] upload batch failed', firstFailure?.reason);
+      for (let start = 0; start < files.length; start += uploadBatchSize) {
+        const batch = files.slice(start, start + uploadBatchSize);
+        const formData = new FormData();
+        batch.forEach((file) => formData.append('file', file));
+
+        try {
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'x-admin-key': adminKey },
+            body: formData,
+          });
+          const data = await res.json();
+          const urls = Array.isArray(data.urls) ? data.urls : data.url ? [data.url] : [];
+          const failedIndexes = Array.isArray(data.failedIndexes) ? data.failedIndexes : [];
+          const batchFailedFiles = (failedIndexes.length ? failedIndexes : batch.slice(urls.length).map((_, index) => urls.length + index))
+            .map((index: unknown) => batch[Number(index)])
+            .filter((file: File | undefined): file is File => Boolean(file));
+
+          console.log('[admin] upload batch response', {
+            status: res.status,
+            selected: batch.length,
+            uploaded: urls.length,
+            failed: batchFailedFiles.length,
+          });
+
+          if (!res.ok || !urls.length) {
+            failedFiles.push(...batch);
+          } else {
+            uploadedUrls.push(...urls);
+            failedFiles.push(...batchFailedFiles);
+          }
+        } catch (error) {
+          console.error('[admin] upload batch error', error);
+          failedFiles.push(...batch);
+        }
+      }
+
+      if (failedFiles.length > 0) {
         setMessage({
-          text: `${failedCount} ${failedCount === 1 ? 'file failed' : 'files failed'} to upload`,
+          text: `${failedFiles.length} ${failedFiles.length === 1 ? 'file failed' : 'files failed'} to upload`,
           type: 'error',
         });
       }
 
-      return { urls, failedFiles };
+      return { urls: uploadedUrls, failedFiles };
+    } catch (error) {
+      console.error('[admin] upload error', error);
+      setMessage({ text: (error as Error).message, type: 'error' });
+      return { urls: [], failedFiles: files };
     } finally {
       setTargetUploading(target, false);
     }

@@ -38,6 +38,47 @@ async function saveLocalUpload(file: File, buffer: Buffer) {
   return `/uploads/${filename}`;
 }
 
+async function uploadFile(file: File) {
+  console.log('[upload] file meta', {
+    name: file.name,
+    type: file.type,
+    size: file.size,
+  });
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  if (!cloudinaryConfigured) {
+    const url = await saveLocalUpload(file, buffer);
+    console.log('[upload] saved local file', { url });
+    return url;
+  }
+
+  const upload = await new Promise<UploadApiResponse>((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: 'moyo-admin', resource_type: 'auto' },
+      (error, result) => {
+        if (error) {
+          console.error('[upload] cloudinary error', error);
+          reject(error);
+        } else if (result) {
+          console.log('[upload] cloudinary result', {
+            assetId: result.asset_id,
+            publicId: result.public_id,
+            bytes: result.bytes,
+            secureUrl: Boolean(result.secure_url),
+          });
+          resolve(result);
+        } else {
+          reject(new Error('Cloudinary returned no upload result'));
+        }
+      }
+    );
+    stream.end(buffer);
+  });
+
+  return upload.secure_url;
+}
+
 export async function POST(req: NextRequest) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
@@ -48,49 +89,32 @@ export async function POST(req: NextRequest) {
       cloudinaryConfigured,
     });
     const formData = await req.formData();
-    const file = formData.get('file') as File | null;
-    if (!file) {
+    const files = formData
+      .getAll('file')
+      .filter((value): value is File => value instanceof File && value.size > 0);
+
+    if (!files.length) {
       console.warn('[upload] no file in formData');
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
-    console.log('[upload] file meta', {
-      name: file.name,
-      type: file.type,
-      size: file.size,
-    });
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
 
-    if (!cloudinaryConfigured) {
-      const url = await saveLocalUpload(file, buffer);
-      console.log('[upload] saved local file', { url });
-      return NextResponse.json({ url });
+    const results = await Promise.allSettled(files.map((file) => uploadFile(file)));
+    const urls = results
+      .filter((result): result is PromiseFulfilledResult<string> => result.status === 'fulfilled')
+      .map((result) => result.value);
+    const failedIndexes = results
+      .map((result, index) => (result.status === 'rejected' ? index : -1))
+      .filter((index) => index >= 0);
+    const failedCount = results.length - urls.length;
+
+    if (!urls.length) {
+      return NextResponse.json({ error: 'Upload failed', failedCount, failedIndexes }, { status: 500 });
     }
 
-    const upload = await new Promise<UploadApiResponse>((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { folder: 'moyo-admin', resource_type: 'auto' },
-        (error, result) => {
-          if (error) {
-            console.error('[upload] cloudinary error', error);
-            reject(error);
-          } else if (result) {
-            console.log('[upload] cloudinary result', {
-              assetId: result.asset_id,
-              publicId: result.public_id,
-              bytes: result.bytes,
-              secureUrl: Boolean(result.secure_url),
-            });
-            resolve(result);
-          } else {
-            reject(new Error('Cloudinary returned no upload result'));
-          }
-        }
-      );
-      stream.end(buffer);
-    });
-
-    return NextResponse.json({ url: upload.secure_url });
+    return NextResponse.json(
+      { url: urls[0], urls, uploadedCount: urls.length, failedCount, failedIndexes },
+      { status: failedCount ? 207 : 200 }
+    );
   } catch (error) {
     console.error('[upload] Cloudinary upload failed', error);
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
