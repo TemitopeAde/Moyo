@@ -182,8 +182,8 @@ export default function AdminPage() {
   const [socialForm, setSocialForm] = useState({ platform: '', url: '', icon: '' });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [catalogImageFile, setCatalogImageFile] = useState<File | null>(null);
-  const [galleryUploads, setGalleryUploads] = useState<Record<string, File | null>>({});
-  const [finishedGalleryUploads, setFinishedGalleryUploads] = useState<Record<string, File | null>>({});
+  const [galleryUploads, setGalleryUploads] = useState<Record<string, File[]>>({});
+  const [finishedGalleryUploads, setFinishedGalleryUploads] = useState<Record<string, File[]>>({});
   const [galleryPaymentUrls, setGalleryPaymentUrls] = useState<Record<string, string>>({});
   const [isAuthed, setIsAuthed] = useState(false);
   const [authChecking, setAuthChecking] = useState(false);
@@ -297,28 +297,45 @@ export default function AdminPage() {
 
   const generateAccessCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 
-  const handleUpload = async (file: File) => {
-    setUploading(true);
+  const uploadSingleFile = async (file: File) => {
     console.log('[admin] upload start', { name: file.name, size: file.size, type: file.type });
     const formData = new FormData();
     formData.append('file', file);
+
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'x-admin-key': adminKey },
+      body: formData,
+    });
+    console.log('[admin] upload response', { status: res.status });
+    const data = await res.json();
+    if (data.url) return data.url;
+    throw new Error(data.error || 'Upload failed');
+  };
+
+  const uploadFiles = async (files: File[]) => {
+    if (!files.length) return [];
+    setUploading(true);
     try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'x-admin-key': adminKey },
-        body: formData,
-      });
-      console.log('[admin] upload response', { status: res.status });
-      const data = await res.json();
-      if (data.url) return data.url;
-      throw new Error(data.error || 'Upload failed');
+      return await Promise.all(files.map((file) => uploadSingleFile(file)));
     } catch (error) {
       console.error('[admin] upload error', error);
       setMessage({ text: (error as Error).message, type: 'error' });
-      return null;
+      return [];
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleUpload = async (file: File) => {
+    const urls = await uploadFiles([file]);
+    return urls[0] || null;
+  };
+
+  const getSelectedFileLabel = (files: File[] | undefined, fallback: string) => {
+    if (!files?.length) return fallback;
+    if (files.length === 1) return files[0].name;
+    return `${files.length} files selected`;
   };
 
   const handleArtworkFileChange = async (file: File | null) => {
@@ -452,23 +469,23 @@ export default function AdminPage() {
   };
 
   const uploadGalleryImage = async (id: number) => {
-    const file = galleryUploads[id];
-    if (!file) return setMessage({ text: 'Choose a client media file first', type: 'error' });
-    const url = await handleUpload(file);
-    if (!url) return;
-    await updateGallery(id.toString(), 'addImages', { images: [url] });
-    setGalleryUploads((prev) => ({ ...prev, [id]: null }));
-    setMessage({ text: 'Client media uploaded', type: 'success' });
+    const files = galleryUploads[id] || [];
+    if (!files.length) return setMessage({ text: 'Choose client media files first', type: 'error' });
+    const urls = await uploadFiles(files);
+    if (!urls.length) return;
+    await updateGallery(id.toString(), 'addImages', { images: urls });
+    setGalleryUploads((prev) => ({ ...prev, [id]: [] }));
+    setMessage({ text: `${urls.length} client media ${urls.length === 1 ? 'file' : 'files'} uploaded`, type: 'success' });
   };
 
   const uploadFinishedGalleryImage = async (id: number) => {
-    const file = finishedGalleryUploads[id];
-    if (!file) return setMessage({ text: 'Choose a finished work file first', type: 'error' });
-    const url = await handleUpload(file);
-    if (!url) return;
-    await updateGallery(id.toString(), 'addFinishedImages', { images: [url] });
-    setFinishedGalleryUploads((prev) => ({ ...prev, [id]: null }));
-    setMessage({ text: 'Finished work uploaded', type: 'success' });
+    const files = finishedGalleryUploads[id] || [];
+    if (!files.length) return setMessage({ text: 'Choose finished work files first', type: 'error' });
+    const urls = await uploadFiles(files);
+    if (!urls.length) return;
+    await updateGallery(id.toString(), 'addFinishedImages', { images: urls });
+    setFinishedGalleryUploads((prev) => ({ ...prev, [id]: [] }));
+    setMessage({ text: `${urls.length} finished work ${urls.length === 1 ? 'file' : 'files'} uploaded`, type: 'success' });
   };
 
   const saveGalleryPayment = async (gallery: Gallery, paymentVerified = gallery.payment_verified) => {
@@ -1206,20 +1223,21 @@ export default function AdminPage() {
                       <input
                         type="file"
                         accept="image/*"
+                        multiple
                         onChange={(e) =>
-                          setGalleryUploads((prev) => ({ ...prev, [gal.id]: e.target.files?.[0] || null }))
+                          setGalleryUploads((prev) => ({ ...prev, [gal.id]: Array.from(e.target.files || []) }))
                         }
                         className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                       />
-                      {galleryUploads[gal.id]?.name || 'Choose client media'}
+                      {getSelectedFileLabel(galleryUploads[gal.id], 'Choose client media')}
                     </label>
                     <button
                       type="button"
-                      disabled={uploading || !galleryUploads[gal.id]}
+                      disabled={uploading || !(galleryUploads[gal.id]?.length)}
                       onClick={() => uploadGalleryImage(gal.id)}
                       className="px-4 py-3 border border-white/10 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      Upload Media
+                      {uploading ? 'Uploading...' : 'Upload Media'}
                     </button>
                   </div>
                   {gal.images.length > gal.approved_images.length && (
@@ -1242,20 +1260,21 @@ export default function AdminPage() {
                         <input
                           type="file"
                           accept="image/*"
+                          multiple
                           onChange={(e) =>
-                            setFinishedGalleryUploads((prev) => ({ ...prev, [gal.id]: e.target.files?.[0] || null }))
+                            setFinishedGalleryUploads((prev) => ({ ...prev, [gal.id]: Array.from(e.target.files || []) }))
                           }
                           className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                         />
-                        {finishedGalleryUploads[gal.id]?.name || 'Choose finished work'}
+                        {getSelectedFileLabel(finishedGalleryUploads[gal.id], 'Choose finished work')}
                       </label>
                       <button
                         type="button"
-                        disabled={uploading || !finishedGalleryUploads[gal.id]}
+                        disabled={uploading || !(finishedGalleryUploads[gal.id]?.length)}
                         onClick={() => uploadFinishedGalleryImage(gal.id)}
                         className="px-4 py-3 border border-white/10 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
                       >
-                        Upload Finished
+                        {uploading ? 'Uploading...' : 'Upload Finished'}
                       </button>
                     </div>
                     {gal.finished_images?.length > 0 && (
