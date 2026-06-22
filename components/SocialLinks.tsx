@@ -7,7 +7,7 @@ import { socialLinks } from '@/lib/socialLinks';
 export default function SocialLinks() {
     return (
         <div className="fixed inset-x-0 bottom-5 z-[100] flex justify-center px-5 mix-blend-difference md:inset-x-auto md:bottom-12 md:right-12 md:px-0">
-            <div className="flex items-center gap-6 rounded-full border border-white/10 bg-black/10 px-5 py-3 backdrop-blur-xl md:flex-col md:gap-6 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+            <div className="social-frost flex items-center gap-6 rounded-full px-5 py-3 md:flex-col md:gap-6 md:px-4 md:py-5">
                 {socialLinks.map((link) => (
                     <motion.a
                         key={link.name}
