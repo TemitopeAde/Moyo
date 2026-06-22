@@ -45,7 +45,7 @@ export default function AboutSection({ profileType }: AboutSectionProps) {
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-1000 z-10" />
                     <div
                         className="w-full h-full grayscale hover:grayscale-0 transition-all duration-1000 bg-cover bg-center"
-                        style={{ backgroundImage: `url('${cmsAbout?.image || '/' + profileType + '_about.webp'}')` }}
+                        style={{ backgroundImage: `url('${cmsAbout?.image || '/profile-portrait.jpg'}')` }}
                     />
                     <div className="absolute -top-4 -left-4 w-12 h-12 border-t border-l border-accent/50" />
                     <div className="absolute -bottom-4 -right-4 w-12 h-12 border-b border-r border-accent/50" />

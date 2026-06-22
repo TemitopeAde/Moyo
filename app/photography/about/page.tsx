@@ -17,7 +17,7 @@ export default function PhotographyAboutPage() {
                             animate={{ x: 0, opacity: 1 }}
                             transition={{ duration: 1.5 }}
                             className="aspect-[4/5] bg-neutral-900 border border-white/5"
-                            style={{ backgroundImage: "url('/photo_about_main.webp')", backgroundSize: 'cover', backgroundPosition: 'center' }}
+                            style={{ backgroundImage: "url('/profile-portrait.jpg')", backgroundSize: 'cover', backgroundPosition: 'center' }}
                         />
                         <div className="flex justify-between gap-6 text-[10px] uppercase tracking-[0.24em] text-white/20 md:tracking-[0.4em]">
                             <p>In Process</p>
