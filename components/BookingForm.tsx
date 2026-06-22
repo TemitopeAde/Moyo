@@ -143,10 +143,10 @@ export default function BookingForm() {
                                 disabled={status === 'loading'}
                                 className="w-full bg-white px-4 py-5 text-[10px] font-bold uppercase tracking-[0.28em] text-background transition-colors duration-500 hover:bg-accent hover:text-background disabled:opacity-50 sm:tracking-[0.5em]"
                             >
-                                {status === 'loading' ? 'Sending...' : t('booking.sendInquiry')}
+                                {status === 'loading' ? t('ui.sending') : t('booking.sendInquiry')}
                             </button>
-                            {status === 'success' && <p className="text-green-500 text-center text-xs tracking-widest uppercase">Message sent successfully.</p>}
-                            {status === 'error' && <p className="text-red-500 text-center text-xs tracking-widest uppercase">Failed to send message.</p>}
+                            {status === 'success' && <p className="text-green-500 text-center text-xs tracking-widest uppercase">{t('ui.messageSent')}</p>}
+                            {status === 'error' && <p className="text-red-500 text-center text-xs tracking-widest uppercase">{t('ui.messageFailed')}</p>}
                         </form>
                     </motion.div>
                 </div>

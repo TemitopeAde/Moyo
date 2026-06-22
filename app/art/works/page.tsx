@@ -40,7 +40,7 @@ export default function WorksPage() {
                     <span className="text-accent text-[10px] tracking-[0.5em] uppercase">{t('artPage.collection')}</span>
                     <h1 className="text-5xl md:text-7xl font-heading text-white italic">{t('artPage.selectedWorks')}</h1>
                     <p className="text-white/40 max-w-lg font-body text-sm leading-relaxed pt-4">
-                        A comprehensive archive of works exploring themes of memory, identity, and the metaphysical.
+                        {t('worksPage.archiveDescription')}
                     </p>
                 </header>
 
@@ -70,7 +70,7 @@ export default function WorksPage() {
                                 <div className="flex justify-between items-baseline">
                                     <p className="text-[10px] text-white/60 uppercase tracking-widest">{work.category}</p>
                                     <p className="text-[10px] text-white/30 uppercase tracking-widest text-right">
-                                        {work.is_available ? 'Available' : 'Sold Out'}
+                                        {work.is_available ? t('ui.available') : t('ui.soldOut')}
                                     </p>
                                 </div>
                             </div>

@@ -23,8 +23,8 @@ export default function ArtAboutPage() {
                 <div className="grid gap-14 lg:grid-cols-12 lg:gap-20">
                     <div className="space-y-10 lg:col-span-7 lg:space-y-16">
                         <header className="space-y-6">
-                            <span className="text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">Biography</span>
-                            <h1 className="text-5xl font-heading italic text-white md:text-8xl">The Artist</h1>
+                            <span className="text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">{t('profilePage.biography')}</span>
+                            <h1 className="text-5xl font-heading italic text-white md:text-8xl">{t('profilePage.artist')}</h1>
                         </header>
 
                         <motion.div
@@ -40,16 +40,16 @@ export default function ArtAboutPage() {
 
                         <div className="grid grid-cols-1 gap-10 border-t border-white/5 pt-10 sm:grid-cols-3 md:gap-16 md:pt-12">
                             <div className="space-y-4">
-                                <span className="text-[10px] tracking-[0.4em] uppercase text-accent">Focus</span>
-                                <p className="text-[10px] tracking-widest text-white/40 uppercase leading-relaxed">Identity<br />Memory<br />Presence</p>
+                                <span className="text-[10px] tracking-[0.4em] uppercase text-accent">{t('profilePage.focus')}</span>
+                                <p className="text-[10px] tracking-widest text-white/40 uppercase leading-relaxed whitespace-pre-line">{t('profilePage.focusItems')}</p>
                             </div>
                             <div className="space-y-4">
-                                <span className="text-[10px] tracking-[0.4em] uppercase text-accent">Mediums</span>
-                                <p className="text-[10px] tracking-widest text-white/40 uppercase leading-relaxed">Acrylic<br />Digital Composite<br />Textiles</p>
+                                <span className="text-[10px] tracking-[0.4em] uppercase text-accent">{t('profilePage.mediums')}</span>
+                                <p className="text-[10px] tracking-widest text-white/40 uppercase leading-relaxed whitespace-pre-line">{t('profilePage.mediumsItems')}</p>
                             </div>
                             <div className="space-y-4">
-                                <span className="text-[10px] tracking-[0.4em] uppercase text-accent">Base</span>
-                                <p className="text-[10px] tracking-widest text-white/40 uppercase leading-relaxed">Amsterdam<br />London<br />Lagos</p>
+                                <span className="text-[10px] tracking-[0.4em] uppercase text-accent">{t('profilePage.base')}</span>
+                                <p className="text-[10px] tracking-widest text-white/40 uppercase leading-relaxed whitespace-pre-line">{t('profilePage.baseItems')}</p>
                             </div>
                         </div>
                     </div>
@@ -63,7 +63,7 @@ export default function ArtAboutPage() {
                             style={{ backgroundImage: "url('/profile-portrait.jpg')" }}
                         />
                         <div className="space-y-2">
-                            <p className="text-[10px] tracking-[0.5em] uppercase text-white/20">Studio Portrait, 2026</p>
+                            <p className="text-[10px] tracking-[0.5em] uppercase text-white/20">{t('profilePage.studioPortrait')}</p>
                         </div>
                     </div>
                 </div>

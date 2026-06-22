@@ -30,15 +30,15 @@ export default function PhotographyAboutPage() {
                             style={{ backgroundImage: "url('/profile-portrait.jpg')" }}
                         />
                         <div className="flex justify-between gap-6 text-[10px] uppercase tracking-[0.24em] text-white/20 md:tracking-[0.4em]">
-                            <p>In Process</p>
-                            <p>Paris, France</p>
+                            <p>{t('profilePage.inProcess')}</p>
+                            <p>{t('profilePage.location')}</p>
                         </div>
                     </div>
 
                     <div className="space-y-10 lg:col-span-6 lg:space-y-16">
                         <header className="space-y-6">
-                            <span className="text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">Philosophy</span>
-                            <h1 className="text-5xl font-heading text-white md:text-8xl">The Lens</h1>
+                            <span className="text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">{t('profilePage.philosophy')}</span>
+                            <h1 className="text-5xl font-heading text-white md:text-8xl">{t('profilePage.lens')}</h1>
                         </header>
 
                         <div className="space-y-8 text-base leading-relaxed text-white/50 md:space-y-12 md:text-xl">
@@ -50,7 +50,7 @@ export default function PhotographyAboutPage() {
                         </div>
 
                         <div className="space-y-8">
-                            <span className="text-[10px] uppercase tracking-[0.32em] text-accent md:tracking-[0.5em]">Selected Clients</span>
+                            <span className="text-[10px] uppercase tracking-[0.32em] text-accent md:tracking-[0.5em]">{t('profilePage.selectedClients')}</span>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
                                 {['Vogue', 'L\'Officiel', 'The New York Times', 'Nike', 'Apple', 'Aesthetica'].map((client) => (
                                     <span key={client} className="text-[10px] tracking-[0.3em] uppercase text-white/30 border-l border-white/5 pl-4">

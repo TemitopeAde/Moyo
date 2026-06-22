@@ -44,7 +44,7 @@ export default function ClientGalleryPage() {
         setApprovalMessage('');
 
         if (!code) {
-            setError('Please enter your access code.');
+            setError(t('clientGallery.accessCodeRequired'));
             return;
         }
 
@@ -58,14 +58,14 @@ export default function ClientGalleryPage() {
             const data = await res.json();
 
             if (!res.ok) {
-                setError(data.error || 'Unable to open this gallery.');
+                setError(data.error || t('clientGallery.openError'));
                 return;
             }
 
             setGallery(data.gallery);
             setSelectedImages(data.gallery.approved_images || []);
         } catch {
-            setError('Unable to open this gallery. Please try again.');
+            setError(t('clientGallery.openRetryError'));
         } finally {
             setIsLoading(false);
         }
@@ -108,7 +108,7 @@ export default function ClientGalleryPage() {
             const data = await res.json();
 
             if (!res.ok) {
-                setError(data.error || 'Unable to approve your selection.');
+                setError(data.error || t('clientGallery.approveError'));
                 return;
             }
 
@@ -116,9 +116,13 @@ export default function ClientGalleryPage() {
             setGallery((current) =>
                 current ? { ...current, approved_images: data.approved_images || selectedImages } : current
             );
-            setApprovalMessage(`${data.approved_count} ${data.approved_count === 1 ? 'image' : 'images'} approved.`);
+            setApprovalMessage(
+                t('clientGallery.approvedMessage')
+                    .replace('{count}', data.approved_count.toString())
+                    .replace('{unit}', data.approved_count === 1 ? t('ui.imageSingular') : t('ui.images'))
+            );
         } catch {
-            setError('Unable to approve your selection. Please try again.');
+            setError(t('clientGallery.approveRetryError'));
         } finally {
             setIsApproving(false);
         }
@@ -164,7 +168,7 @@ export default function ClientGalleryPage() {
                                 disabled={isLoading}
                                 className="w-full bg-white text-black text-[10px] tracking-[0.4em] uppercase py-4 font-bold hover:bg-accent transition-colors duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {isLoading ? 'Checking...' : t('clientGallery.enterGallery')}
+                                {isLoading ? t('ui.checking') : t('clientGallery.enterGallery')}
                             </button>
                         </form>
 
@@ -186,7 +190,7 @@ export default function ClientGalleryPage() {
                                 {gallery.client_name}
                             </h1>
                             <p className="text-white/40 text-sm italic">
-                                {gallery.image_count} {gallery.image_count === 1 ? 'image' : 'images'} in this private gallery.
+                                {gallery.image_count} {gallery.image_count === 1 ? t('ui.imageSingular') : t('ui.images')} {t('clientGallery.privateGalleryCountText')}
                             </p>
                             <p className="text-white/50 text-xs uppercase tracking-[0.25em]">
                                 {t('clientGallery.selectionStatus')
@@ -215,13 +219,13 @@ export default function ClientGalleryPage() {
                                                     className="absolute inset-0 z-10"
                                                 >
                                                     <span className="sr-only">
-                                                        {isSelected ? 'Remove image from selection' : 'Select image'}
+                                                        {isSelected ? t('ui.removeImage') : t('ui.selectImage')}
                                                     </span>
                                                 </button>
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                                 <img
                                                     src={image}
-                                                    alt={`${gallery.client_name} gallery image ${index + 1}`}
+                                                    alt={`${gallery.client_name} ${t('clientGallery.galleryImageAlt')} ${index + 1}`}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                                                 />
                                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
@@ -232,7 +236,7 @@ export default function ClientGalleryPage() {
                                                             : 'border-white/20 bg-black/40 text-white/60'
                                                     }`}
                                                 >
-                                                    {isSelected ? 'Selected' : `Image ${index + 1}`}
+                                                    {isSelected ? t('ui.selected') : `${t('ui.image')} ${index + 1}`}
                                                 </div>
                                                 <a
                                                     href={image}
@@ -241,7 +245,7 @@ export default function ClientGalleryPage() {
                                                     onClick={(event) => event.stopPropagation()}
                                                     className="absolute bottom-3 right-3 z-20 border border-white/20 bg-black/50 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-accent hover:text-accent"
                                                 >
-                                                    Preview
+                                                    {t('ui.preview')}
                                                 </a>
                                             </div>
                                         );
@@ -250,7 +254,7 @@ export default function ClientGalleryPage() {
 
                                 <div className="mx-auto max-w-2xl border border-white/10 bg-white/5 p-6 text-center space-y-4">
                                     <p className="text-white/45 text-sm">
-                                        Select the images you want approved, then submit your selection to the studio.
+                                        {t('clientGallery.selectionInstructions')}
                                     </p>
                                     {error && <p className="text-red-300 text-xs leading-relaxed">{error}</p>}
                                     {approvalMessage && <p className="text-accent text-xs leading-relaxed">{approvalMessage}</p>}
@@ -260,15 +264,15 @@ export default function ClientGalleryPage() {
                                         disabled={selectedImages.length === 0 || isApproving}
                                         className="w-full bg-white text-black text-[10px] tracking-[0.4em] uppercase py-4 font-bold hover:bg-accent transition-colors duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {isApproving ? 'Approving...' : t('clientGallery.approveSelection')}
+                                        {isApproving ? t('ui.approving') : t('clientGallery.approveSelection')}
                                     </button>
                                 </div>
                             </>
                         ) : (
                             <div className="max-w-xl mx-auto text-center border border-white/10 bg-white/5 p-10 space-y-3">
-                                <h2 className="text-2xl font-heading text-white italic">No images uploaded yet</h2>
+                                <h2 className="text-2xl font-heading text-white italic">{t('clientGallery.noImagesTitle')}</h2>
                                 <p className="text-white/40 text-sm leading-relaxed">
-                                    This gallery is open, but the studio has not added images to it yet.
+                                    {t('clientGallery.noImagesDescription')}
                                 </p>
                             </div>
                         )}
@@ -278,7 +282,7 @@ export default function ClientGalleryPage() {
                                 onClick={resetGallery}
                                 className="px-12 py-4 border border-white/20 text-[10px] tracking-[0.4em] uppercase text-white hover:border-accent hover:text-accent transition-colors duration-500"
                             >
-                                Use Another Code
+                                {t('ui.useAnotherCode')}
                             </button>
                         </div>
                     </motion.div>

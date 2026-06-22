@@ -118,10 +118,10 @@ export default function BookingsPage() {
                             disabled={status === 'loading'}
                             className="w-full bg-foreground text-background text-[10px] tracking-[0.4em] uppercase py-5 font-bold hover:bg-accent hover:text-background transition-colors disabled:opacity-50"
                         >
-                            {status === 'loading' ? 'Sending...' : t('booking.sendInquiry')}
+                            {status === 'loading' ? t('ui.sending') : t('booking.sendInquiry')}
                         </button>
-                        {status === 'success' && <p className="text-green-500 text-center text-xs tracking-widest uppercase">Message sent successfully.</p>}
-                        {status === 'error' && <p className="text-red-500 text-center text-xs tracking-widest uppercase">Failed to send message.</p>}
+                        {status === 'success' && <p className="text-green-500 text-center text-xs tracking-widest uppercase">{t('ui.messageSent')}</p>}
+                        {status === 'error' && <p className="text-red-500 text-center text-xs tracking-widest uppercase">{t('ui.messageFailed')}</p>}
                     </form>
                 </motion.div>
             </div>

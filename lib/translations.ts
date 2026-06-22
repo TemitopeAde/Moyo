@@ -110,6 +110,7 @@ export const translations = {
             },
             placeholder: "EMAIL ADDRESS",
             privacy: "Respecting your privacy at all times.",
+            subscribeError: "Unable to subscribe right now.",
         },
         categories: {
             editorial: "Editorial",
@@ -140,6 +141,17 @@ export const translations = {
             select: "Select",
             selectionStatus: "You have selected {count} of {total} images for retouching.",
             approveSelection: "Approve Selection",
+            privateGalleryCountText: "in this private gallery.",
+            galleryImageAlt: "gallery image",
+            selectionInstructions: "Select the images you want approved, then submit your selection to the studio.",
+            noImagesTitle: "No images uploaded yet",
+            noImagesDescription: "This gallery is open, but the studio has not added images to it yet.",
+            accessCodeRequired: "Please enter your access code.",
+            openError: "Unable to open this gallery.",
+            openRetryError: "Unable to open this gallery. Please try again.",
+            approveError: "Unable to approve your selection.",
+            approveRetryError: "Unable to approve your selection. Please try again.",
+            approvedMessage: "{count} {unit} approved.",
         },
         bookingsPage: {
             privateBooking: "Private Booking",
@@ -149,6 +161,84 @@ export const translations = {
             selectType: "Select Type",
             message: "Message",
             other: "Other",
+        },
+        ui: {
+            sending: "Sending...",
+            checking: "Checking...",
+            approving: "Approving...",
+            subscribing: "Subscribing...",
+            messageSent: "Message sent successfully.",
+            messageFailed: "Failed to send message.",
+            subscribed: "You have been subscribed.",
+            available: "Available",
+            soldOut: "Sold Out",
+            selected: "Selected",
+            image: "Image",
+            images: "images",
+            imageSingular: "image",
+            preview: "Preview",
+            selectImage: "Select image",
+            removeImage: "Remove image from selection",
+            useAnotherCode: "Use Another Code",
+            toggleTheme: "Toggle Theme",
+            openMenu: "Open menu",
+            closeMenu: "Close menu",
+        },
+        profilePage: {
+            inProcess: "In Process",
+            location: "Paris, France",
+            philosophy: "Philosophy",
+            lens: "The Lens",
+            selectedClients: "Selected Clients",
+            biography: "Biography",
+            artist: "The Artist",
+            focus: "Focus",
+            focusItems: "Identity\nMemory\nPresence",
+            mediums: "Mediums",
+            mediumsItems: "Acrylic\nDigital Composite\nTextiles",
+            base: "Base",
+            baseItems: "Amsterdam\nLondon\nLagos",
+            studioPortrait: "Studio Portrait, 2026",
+        },
+        artShopPage: {
+            editions: "Editions",
+            title: "Shop",
+            shipping: "Worldwide shipping available on all editions and original works.",
+            addToCollection: "Add to Collection",
+            privateViewings: "Private viewings by appointment only.",
+            handFinishedPrint: "Hand-finished Print",
+            monograph: "Monograph",
+            originalWork: "Original Work",
+            framedEdition: "Framed Edition",
+        },
+        artExhibitionsPage: {
+            venerations: "Venerations",
+            title: "Exhibitions",
+            presentations: "Solo and Group Presentations (2020 — 2026)",
+            publications: "Publications",
+            catalogTitle: "Exhibition Catalogs & Monographs",
+            catalogDescription: "Limited edition prints and catalogs from the latest exhibitions are available for purchase. Each copy is signed and numbered by the artist.",
+            exploreArchive: "Explore Archive",
+        },
+        commissionsPage: {
+            bespoke: "Bespoke Creations",
+            title: "Art Commissions",
+            description: "Collaborate on a unique piece of art tailored to your space or personal narrative. Each commission is a journey of discovery and co-creation.",
+            processTitle: "The Process",
+            processDescription: "From initial consultation to final installation, the commissioning process is transparent and deeply engaging. We begin with a dialogue about your vision, heritage, or specific conceptual interests.",
+            step1Title: "Dialogue",
+            step1Description: "Understanding the emotional and physical context.",
+            step2Title: "Conceptualization",
+            step2Description: "Developing sketches and material studies.",
+            step3Title: "Creation",
+            step3Description: "Hand-crafted production with regular updates.",
+            step4Title: "Unveiling",
+            step4Description: "Final presentation and documentation.",
+            startConversation: "Start a conversation.",
+            inquireNow: "Inquire Now",
+        },
+        worksPage: {
+            archiveDescription: "A comprehensive archive of works exploring themes of memory, identity, and the metaphysical.",
         }
     },
     FR: {
@@ -1528,7 +1618,15 @@ export function useTranslate(lang: LanguageCode) {
             if (result && typeof result === 'object' && key in result) {
                 result = (result as Record<string, unknown>)[key];
             } else {
-                return path;
+                let fallback: unknown = localizedTranslations.EN;
+                for (const fallbackKey of keys) {
+                    if (fallback && typeof fallback === 'object' && fallbackKey in fallback) {
+                        fallback = (fallback as Record<string, unknown>)[fallbackKey];
+                    } else {
+                        return path;
+                    }
+                }
+                return typeof fallback === 'string' ? fallback : path;
             }
         }
         return typeof result === 'string' ? result : path;

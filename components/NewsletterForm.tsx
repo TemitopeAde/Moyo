@@ -50,13 +50,13 @@ export default function NewsletterForm({ profileType }: NewsletterFormProps) {
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.error || 'Unable to subscribe right now.');
+                throw new Error(data.error || t('newsletter.subscribeError'));
             }
 
             setEmail('');
             setShowToast(true);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Unable to subscribe right now.');
+            setError(err instanceof Error ? err.message : t('newsletter.subscribeError'));
         } finally {
             setIsSubmitting(false);
         }
@@ -96,7 +96,7 @@ export default function NewsletterForm({ profileType }: NewsletterFormProps) {
                     disabled={isSubmitting}
                     className="mt-10 w-full bg-foreground px-4 py-5 text-[10px] font-bold uppercase tracking-[0.26em] text-background transition-colors duration-500 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60 sm:mt-12 sm:tracking-[0.5em]"
                 >
-                    {isSubmitting ? 'Subscribing...' : buttonText}
+                    {isSubmitting ? t('ui.subscribing') : buttonText}
                 </button>
             </form>
 
@@ -114,7 +114,7 @@ export default function NewsletterForm({ profileType }: NewsletterFormProps) {
                         aria-live="polite"
                         className="fixed bottom-6 left-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 border border-accent/40 bg-background/95 px-5 py-4 text-center text-[10px] font-bold uppercase tracking-[0.28em] text-accent shadow-2xl backdrop-blur-md md:left-auto md:right-6 md:translate-x-0"
                     >
-                        You have been subscribed.
+                        {t('ui.subscribed')}
                     </motion.div>
                 )}
             </AnimatePresence>

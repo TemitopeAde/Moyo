@@ -191,7 +191,7 @@ export default function Navbar() {
                     <button
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                         className="group relative z-50 flex h-11 w-11 flex-col items-end justify-center gap-1.5 rounded-md border border-transparent transition-colors duration-300 hover:border-foreground/10 hover:bg-white/10 focus:outline-none"
-                        aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+                        aria-label={mobileMenuOpen ? t('ui.closeMenu') : t('ui.openMenu')}
                     >
                         <motion.div
                             animate={mobileMenuOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}

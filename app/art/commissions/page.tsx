@@ -4,8 +4,19 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/context/LanguageContext';
+import { useTranslate } from '@/lib/translations';
 
 export default function ArtCommissionsPage() {
+    const { language } = useLanguage();
+    const { t } = useTranslate(language);
+    const steps = [
+        { step: "01", title: t('commissionsPage.step1Title'), desc: t('commissionsPage.step1Description') },
+        { step: "02", title: t('commissionsPage.step2Title'), desc: t('commissionsPage.step2Description') },
+        { step: "03", title: t('commissionsPage.step3Title'), desc: t('commissionsPage.step3Description') },
+        { step: "04", title: t('commissionsPage.step4Title'), desc: t('commissionsPage.step4Description') },
+    ];
+
     return (
         <main className="bg-background min-h-screen">
             <Navbar />
@@ -16,30 +27,24 @@ export default function ArtCommissionsPage() {
                     className="max-w-4xl mx-auto space-y-24"
                 >
                     <header className="space-y-6 text-center">
-                        <span className="text-accent text-[10px] tracking-[0.5em] uppercase">Bespoke Creations</span>
-                        <h1 className="text-5xl md:text-7xl font-heading text-white font-light italic">Art Commissions</h1>
+                        <span className="text-accent text-[10px] tracking-[0.5em] uppercase">{t('commissionsPage.bespoke')}</span>
+                        <h1 className="text-5xl md:text-7xl font-heading text-white font-light italic">{t('commissionsPage.title')}</h1>
                         <p className="text-white/50 font-body text-lg max-w-2xl mx-auto tracking-wide">
-                            Collaborate on a unique piece of art tailored to your space or personal narrative.
-                            Each commission is a journey of discovery and co-creation.
+                            {t('commissionsPage.description')}
                         </p>
                     </header>
 
                     <div className="grid md:grid-cols-2 gap-20 items-center">
                         <div className="space-y-8">
                             <div className="space-y-4">
-                                <h3 className="text-2xl font-heading text-white">The Process</h3>
+                                <h3 className="text-2xl font-heading text-white">{t('commissionsPage.processTitle')}</h3>
                                 <p className="text-white/40 text-sm leading-relaxed">
-                                    From initial consultation to final installation, the commissioning process is transparent and deeply engaging. We begin with a dialogue about your vision, heritage, or specific conceptual interests.
+                                    {t('commissionsPage.processDescription')}
                                 </p>
                             </div>
 
                             <ul className="space-y-6">
-                                {[
-                                    { step: "01", title: "Dialogue", desc: "Understanding the emotional and physical context." },
-                                    { step: "02", title: "Conceptualization", desc: "Developing sketches and material studies." },
-                                    { step: "03", title: "Creation", desc: "Hand-crafted production with regular updates." },
-                                    { step: "04", title: "Unveiling", desc: "Final presentation and documentation." }
-                                ].map((item) => (
+                                {steps.map((item) => (
                                     <li key={item.step} className="flex gap-6 border-b border-white/5 pb-6 last:border-0">
                                         <span className="text-accent text-xs font-heading">{item.step}</span>
                                         <div className="space-y-1">
@@ -58,9 +63,9 @@ export default function ArtCommissionsPage() {
                     </div>
 
                     <div className="glass p-12 md:p-20 text-center space-y-12">
-                        <h2 className="text-3xl font-heading text-white italic">Start a conversation.</h2>
+                        <h2 className="text-3xl font-heading text-white italic">{t('commissionsPage.startConversation')}</h2>
                         <button className="bg-white text-black px-12 py-5 text-[10px] tracking-[0.5em] uppercase font-bold hover:bg-accent transition-colors">
-                            Inquire Now
+                            {t('commissionsPage.inquireNow')}
                         </button>
                     </div>
                 </motion.div>
