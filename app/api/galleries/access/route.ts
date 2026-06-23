@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
+function toStringArray(value: unknown) {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
   const accessCode = String(body?.accessCode || '').trim();
@@ -35,19 +39,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'This gallery is currently locked' }, { status: 403 });
   }
 
+  const allImages = toStringArray(gallery.images);
+  const approvedImages = toStringArray(gallery.approved_images);
+  const visibleImages = approvedImages.length ? approvedImages : [];
+  const finishedImages = toStringArray(gallery.finished_images);
+
   return NextResponse.json({
     gallery: {
       id: gallery.id,
       client_name: gallery.client_name,
       slug: gallery.slug,
-      images: gallery.images || [],
-      approved_images: gallery.approved_images || [],
-      finished_images: gallery.payment_verified ? gallery.finished_images || [] : [],
+      images: visibleImages,
+      approved_images: approvedImages,
+      finished_images: gallery.payment_verified ? finishedImages : [],
       payment_verified: gallery.payment_verified || false,
       payment_url: gallery.payment_url || '',
       is_locked: gallery.is_locked,
-      image_count: (gallery.images || []).length,
-      finished_count: (gallery.finished_images || []).length,
+      image_count: visibleImages.length,
+      finished_count: finishedImages.length,
+      upload_count: allImages.length,
     },
   });
 }

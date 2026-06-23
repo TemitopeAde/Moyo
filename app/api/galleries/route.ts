@@ -61,14 +61,36 @@ export async function PUT(req: NextRequest) {
 
   if (action === 'addImages') {
     const { rows } = await query(
-      `UPDATE galleries SET images = array_cat(images, $1::text[]) WHERE id=$2 RETURNING *`,
+      `UPDATE galleries
+       SET images = ARRAY(
+         SELECT image
+         FROM (
+           SELECT image, MIN(position) AS first_position
+           FROM unnest(COALESCE(images, ARRAY[]::text[]) || $1::text[]) WITH ORDINALITY AS combined(image, position)
+           GROUP BY image
+         ) unique_images
+         ORDER BY first_position
+       )
+       WHERE id=$2
+       RETURNING *`,
       [payload?.images || [], id]
     );
     return NextResponse.json({ gallery: rows[0] });
   }
   if (action === 'addFinishedImages') {
     const { rows } = await query(
-      `UPDATE galleries SET finished_images = array_cat(finished_images, $1::text[]) WHERE id=$2 RETURNING *`,
+      `UPDATE galleries
+       SET finished_images = ARRAY(
+         SELECT image
+         FROM (
+           SELECT image, MIN(position) AS first_position
+           FROM unnest(COALESCE(finished_images, ARRAY[]::text[]) || $1::text[]) WITH ORDINALITY AS combined(image, position)
+           GROUP BY image
+         ) unique_images
+         ORDER BY first_position
+       )
+       WHERE id=$2
+       RETURNING *`,
       [payload?.images || [], id]
     );
     return NextResponse.json({ gallery: rows[0] });
@@ -76,7 +98,11 @@ export async function PUT(req: NextRequest) {
   if (action === 'removeFinishedImage') {
     const { rows } = await query(
       `UPDATE galleries
-       SET finished_images = ARRAY(SELECT unnest(finished_images) EXCEPT SELECT unnest($1::text[]))
+       SET finished_images = ARRAY(
+         SELECT unnest(COALESCE(finished_images, ARRAY[]::text[]))
+         EXCEPT
+         SELECT unnest($1::text[])
+       )
        WHERE id=$2
        RETURNING *`,
       [payload?.images || [], id]
@@ -85,14 +111,32 @@ export async function PUT(req: NextRequest) {
   }
   if (action === 'approve') {
     const { rows } = await query(
-      `UPDATE galleries SET approved_images = approved_images || $1::text[] WHERE id=$2 RETURNING *`,
+      `UPDATE galleries
+       SET approved_images = ARRAY(
+         SELECT image
+         FROM (
+           SELECT image, MIN(position) AS first_position
+           FROM unnest(COALESCE(approved_images, ARRAY[]::text[]) || $1::text[]) WITH ORDINALITY AS combined(image, position)
+           GROUP BY image
+         ) unique_images
+         ORDER BY first_position
+       )
+       WHERE id=$2
+       RETURNING *`,
       [payload?.images || [], id]
     );
     return NextResponse.json({ gallery: rows[0] });
   }
   if (action === 'reject') {
     const { rows } = await query(
-      `UPDATE galleries SET approved_images = ARRAY(SELECT unnest(approved_images) EXCEPT SELECT unnest($1::text[])) WHERE id=$2 RETURNING *`,
+      `UPDATE galleries
+       SET approved_images = ARRAY(
+         SELECT unnest(COALESCE(approved_images, ARRAY[]::text[]))
+         EXCEPT
+         SELECT unnest($1::text[])
+       )
+       WHERE id=$2
+       RETURNING *`,
       [payload?.images || [], id]
     );
     return NextResponse.json({ gallery: rows[0] });

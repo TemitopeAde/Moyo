@@ -117,6 +117,13 @@ async function ensureTables() {
       ADD COLUMN IF NOT EXISTS payment_url TEXT DEFAULT '';
   `);
 
+  await pool.query(`
+    UPDATE galleries
+    SET images = COALESCE(images, ARRAY[]::TEXT[]),
+        approved_images = COALESCE(approved_images, ARRAY[]::TEXT[]),
+        finished_images = COALESCE(finished_images, ARRAY[]::TEXT[]);
+  `);
+
   // seed singleton rows
   await pool.query(`INSERT INTO content (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);
   await pool.query(`INSERT INTO contact (id) VALUES (1) ON CONFLICT (id) DO NOTHING`);
