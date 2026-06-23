@@ -89,8 +89,7 @@ export async function POST(req: NextRequest) {
       cloudinaryConfigured,
     });
     const formData = await req.formData();
-    const files = formData
-      .getAll('file')
+    const files = [...formData.getAll('file'), ...formData.getAll('files')]
       .filter((value): value is File => value instanceof File && value.size > 0);
 
     if (!files.length) {

@@ -75,7 +75,7 @@ const label = 'text-[10px] uppercase tracking-widest text-white/40';
 const inputClass =
   'w-full rounded-sm bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-accent outline-none transition-colors';
 const mediaAccept = 'image/*,video/*';
-const uploadBatchSize = 5;
+const uploadBatchSize = 1;
 
 function AdminAccordionPanel({
   id,
@@ -361,10 +361,11 @@ export default function AdminPage() {
             failed: batchFailedFiles.length,
           });
 
+          uploadedUrls.push(...urls);
+
           if (!res.ok || !urls.length) {
             failedFiles.push(...batch);
           } else {
-            uploadedUrls.push(...urls);
             failedFiles.push(...batchFailedFiles);
           }
         } catch (error) {
