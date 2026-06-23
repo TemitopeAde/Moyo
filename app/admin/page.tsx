@@ -76,6 +76,7 @@ const inputClass =
   'w-full rounded-sm bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-accent outline-none transition-colors';
 const mediaAccept = 'image/*,video/*';
 const uploadBatchSize = 1;
+const uploadRequestTimeoutMs = 120_000;
 
 function AdminAccordionPanel({
   id,
@@ -340,12 +341,15 @@ export default function AdminPage() {
         const batch = files.slice(start, start + uploadBatchSize);
         const formData = new FormData();
         batch.forEach((file) => formData.append('file', file));
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), uploadRequestTimeoutMs);
 
         try {
           const res = await fetch('/api/upload', {
             method: 'POST',
             headers: { 'x-admin-key': adminKey },
             body: formData,
+            signal: controller.signal,
           });
           const data = await res.json();
           const urls = Array.isArray(data.urls) ? data.urls : data.url ? [data.url] : [];
@@ -372,6 +376,7 @@ export default function AdminPage() {
           console.error('[admin] upload batch error', error);
           failedFiles.push(...batch);
         } finally {
+          window.clearTimeout(timeout);
           setUploadProgress((prev) => ({
             ...prev,
             [target]: { current: Math.min(start + batch.length, files.length), total: files.length },
@@ -583,6 +588,12 @@ export default function AdminPage() {
     } finally {
       setUploadingFinishedGalleryId(null);
     }
+  };
+
+  const deleteGalleryUpload = async (id: number, image: string) => {
+    const updatedGallery = await updateGallery(id.toString(), 'removeImages', { images: [image] });
+    if (!updatedGallery) return;
+    setMessage({ text: 'Gallery upload deleted', type: 'success' });
   };
 
   const saveGalleryPayment = async (gallery: Gallery, paymentVerified = gallery.payment_verified) => {
@@ -1313,12 +1324,21 @@ export default function AdminPage() {
                   {gal.images.length > 0 && (
                     <div className="grid grid-cols-4 gap-2">
                       {gal.images.map((img, index) => (
-                        <img
-                          key={img}
-                          src={img}
-                          alt={`${gal.client_name} gallery upload ${index + 1}`}
-                          className="h-20 w-full object-cover border border-white/10"
-                        />
+                        <div key={img} className="relative">
+                          <img
+                            src={img}
+                            alt={`${gal.client_name} gallery upload ${index + 1}`}
+                            className="h-20 w-full object-cover border border-white/10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => deleteGalleryUpload(gal.id, img)}
+                            className="absolute right-1 top-1 bg-black/70 p-1 text-red-300 transition-colors hover:bg-red-500 hover:text-white"
+                            aria-label={`Delete gallery upload ${index + 1}`}
+                          >
+                            <FiTrash2 />
+                          </button>
+                        </div>
                       ))}
                     </div>
                   )}

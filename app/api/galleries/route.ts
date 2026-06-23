@@ -95,13 +95,35 @@ export async function PUT(req: NextRequest) {
     );
     return NextResponse.json({ gallery: rows[0] });
   }
+  if (action === 'removeImages') {
+    const { rows } = await query(
+      `UPDATE galleries
+       SET images = ARRAY(
+             SELECT image
+             FROM unnest(COALESCE(images, ARRAY[]::text[])) WITH ORDINALITY AS existing(image, position)
+             WHERE NOT image = ANY($1::text[])
+             ORDER BY position
+           ),
+           approved_images = ARRAY(
+             SELECT image
+             FROM unnest(COALESCE(approved_images, ARRAY[]::text[])) WITH ORDINALITY AS existing(image, position)
+             WHERE NOT image = ANY($1::text[])
+             ORDER BY position
+           )
+       WHERE id=$2
+       RETURNING *`,
+      [payload?.images || [], id]
+    );
+    return NextResponse.json({ gallery: rows[0] });
+  }
   if (action === 'removeFinishedImage') {
     const { rows } = await query(
       `UPDATE galleries
        SET finished_images = ARRAY(
-         SELECT unnest(COALESCE(finished_images, ARRAY[]::text[]))
-         EXCEPT
-         SELECT unnest($1::text[])
+         SELECT image
+         FROM unnest(COALESCE(finished_images, ARRAY[]::text[])) WITH ORDINALITY AS existing(image, position)
+         WHERE NOT image = ANY($1::text[])
+         ORDER BY position
        )
        WHERE id=$2
        RETURNING *`,
@@ -131,9 +153,10 @@ export async function PUT(req: NextRequest) {
     const { rows } = await query(
       `UPDATE galleries
        SET approved_images = ARRAY(
-         SELECT unnest(COALESCE(approved_images, ARRAY[]::text[]))
-         EXCEPT
-         SELECT unnest($1::text[])
+         SELECT image
+         FROM unnest(COALESCE(approved_images, ARRAY[]::text[])) WITH ORDINALITY AS existing(image, position)
+         WHERE NOT image = ANY($1::text[])
+         ORDER BY position
        )
        WHERE id=$2
        RETURNING *`,

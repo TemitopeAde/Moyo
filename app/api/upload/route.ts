@@ -10,6 +10,7 @@ const cloudinaryConfigured = Boolean(
     process.env.CLOUDINARY_API_KEY &&
     process.env.CLOUDINARY_API_SECRET
 );
+const cloudinaryUploadTimeoutMs = 90_000;
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -54,9 +55,19 @@ async function uploadFile(file: File) {
   }
 
   const upload = await new Promise<UploadApiResponse>((resolve, reject) => {
+    let settled = false;
+    const timeout = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      reject(new Error(`Upload timed out for ${file.name}`));
+    }, cloudinaryUploadTimeoutMs);
+
     const stream = cloudinary.uploader.upload_stream(
       { folder: 'moyo-admin', resource_type: 'auto' },
       (error, result) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
         if (error) {
           console.error('[upload] cloudinary error', error);
           reject(error);
@@ -73,6 +84,12 @@ async function uploadFile(file: File) {
         }
       }
     );
+    stream.on('error', (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      reject(error);
+    });
     stream.end(buffer);
   });
 
