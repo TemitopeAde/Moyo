@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { useProfile } from '@/context/ProfileContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
+import GlareHover from '@/components/GlareHover';
 
 type Artwork = {
     id: number;
@@ -20,7 +21,7 @@ type Artwork = {
 export default function WorksPage() {
     const { setProfile } = useProfile();
     const { language } = useLanguage();
-    const { t } = useTranslate(language);
+    const { t, translateText } = useTranslate(language);
     const [works, setWorks] = useState<Artwork[]>([]);
 
     useEffect(() => {
@@ -54,26 +55,38 @@ export default function WorksPage() {
                             viewport={{ once: true }}
                             className="group cursor-pointer"
                         >
-                            <div className="aspect-[3/4] bg-neutral-900 border border-white/5 relative overflow-hidden mb-6">
-                                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors z-10" />
-                                <div
-                                    className="w-full h-full bg-cover bg-center grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
-                                    style={{ backgroundImage: `url(${work.image})` }}
-                                />
-                            </div>
+                            <GlareHover
+                                width="100%"
+                                height="auto"
+                                background="transparent"
+                                borderRadius="2px"
+                                borderColor="rgba(255,255,255,0.08)"
+                                glareOpacity={0.2}
+                                glareAngle={-30}
+                                glareSize={180}
+                                transitionDuration={760}
+                            >
+                                <div className="relative aspect-[3/4] overflow-hidden bg-neutral-900">
+                                    <div className="absolute inset-0 z-10 bg-black/20 transition-colors group-hover:bg-black/0" />
+                                    <div
+                                        className="h-full w-full bg-cover bg-center grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0"
+                                        style={{ backgroundImage: `url(${work.image})` }}
+                                    />
+                                </div>
 
-                            <div className="space-y-1">
-                                <div className="flex justify-between items-baseline">
-                                    <h3 className="text-xl font-heading text-white group-hover:text-accent transition-colors duration-300">{work.title}</h3>
-                                    <span className="text-[10px] text-white/40 tracking-widest">${work.price}</span>
+                                <div className="space-y-1 px-4 py-5">
+                                    <div className="flex items-baseline justify-between gap-3">
+                                        <h3 className="text-xl font-heading text-white transition-colors duration-300 group-hover:text-accent">{translateText(work.title)}</h3>
+                                        <span className="text-[10px] tracking-widest text-white/40">${work.price}</span>
+                                    </div>
+                                    <div className="flex items-baseline justify-between gap-3">
+                                        <p className="text-[10px] uppercase tracking-widest text-white/60">{translateText(work.category)}</p>
+                                        <p className="text-right text-[10px] uppercase tracking-widest text-white/30">
+                                            {work.is_available ? t('ui.available') : t('ui.soldOut')}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="flex justify-between items-baseline">
-                                    <p className="text-[10px] text-white/60 uppercase tracking-widest">{work.category}</p>
-                                    <p className="text-[10px] text-white/30 uppercase tracking-widest text-right">
-                                        {work.is_available ? t('ui.available') : t('ui.soldOut')}
-                                    </p>
-                                </div>
-                            </div>
+                            </GlareHover>
                         </motion.div>
                     ))}
                 </div>

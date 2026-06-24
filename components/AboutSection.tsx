@@ -4,13 +4,14 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import { useEffect, useState } from 'react';
+import GlareHover from '@/components/GlareHover';
 interface AboutSectionProps {
     profileType: 'photography' | 'art';
 }
 
 export default function AboutSection({ profileType }: AboutSectionProps) {
     const { language } = useLanguage();
-    const { t } = useTranslate(language);
+    const { t, translateText } = useTranslate(language);
     const [cmsAbout, setCmsAbout] = useState<{ text: string; image: string } | null>(null);
 
     useEffect(() => {
@@ -38,13 +39,27 @@ export default function AboutSection({ profileType }: AboutSectionProps) {
                     initial={{ opacity: 0, scale: 0.95 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 1.5, ease: 'easeOut' }}
-                    className="relative mx-auto aspect-4/5 w-full max-w-sm overflow-hidden border border-foreground/5 bg-surface md:max-w-none"
+                    className="mx-auto w-full max-w-sm md:max-w-none"
                 >
-                    <div className="absolute inset-0 bg-black/10 z-10" />
-                    <div
-                        className="h-full w-full bg-cover bg-center bg-no-repeat"
-                        style={{ backgroundImage: `url('${cmsAbout?.image || '/profile-portrait.jpg'}')` }}
-                    />
+                    <GlareHover
+                        width="100%"
+                        height="auto"
+                        background="var(--color-surface)"
+                        borderRadius="2px"
+                        borderColor="rgba(255,255,255,0.08)"
+                        glareOpacity={0.2}
+                        glareAngle={-30}
+                        glareSize={180}
+                        transitionDuration={760}
+                    >
+                        <div className="relative aspect-4/5 overflow-hidden">
+                            <div className="absolute inset-0 z-10 bg-black/10" />
+                            <div
+                                className="h-full w-full bg-cover bg-center bg-no-repeat"
+                                style={{ backgroundImage: `url('${cmsAbout?.image || '/profile-portrait.jpg'}')` }}
+                            />
+                        </div>
+                    </GlareHover>
                 </motion.div>
 
                 {/* Text Content */}
@@ -64,7 +79,7 @@ export default function AboutSection({ profileType }: AboutSectionProps) {
                     <div className="max-w-lg space-y-6 md:space-y-8">
                         {bioParagraphs.map((paragraph) => (
                             <p key={paragraph} className="text-base leading-relaxed tracking-wide text-foreground/50 md:text-lg">
-                                {paragraph}
+                                {cmsAbout?.text ? translateText(paragraph) : paragraph}
                             </p>
                         ))}
                     </div>

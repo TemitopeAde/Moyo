@@ -8,6 +8,7 @@ import { useProfile } from '@/context/ProfileContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import GalleryMedia from '@/components/GalleryMedia';
+import GlareHover from '@/components/GlareHover';
 
 type ClientGallery = {
     id: number;
@@ -147,44 +148,57 @@ export default function ClientGalleryPage() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="max-w-md mx-auto py-20 bg-white/5 p-12 text-center space-y-8 backdrop-blur-sm border border-white/5"
+                        className="mx-auto max-w-md"
                     >
-                        <div className="space-y-4">
-                            <span className="text-accent text-[10px] tracking-[0.5em] uppercase">{t('clientGallery.privateAccess')}</span>
-                            <h1 className="text-3xl font-heading text-white">{t('clientGallery.clientPortfolio')}</h1>
-                            <p className="text-white/40 text-xs font-body tracking-wider leading-relaxed">
-                                {t('clientGallery.enterAccessCodeText')}
-                            </p>
-                        </div>
-
-                        <form onSubmit={handleAccessSubmit} className="space-y-6">
-                            <input
-                                type="password"
-                                placeholder={t('clientGallery.accessCodePlaceholder')}
-                                value={accessCode}
-                                onChange={(event) => {
-                                    setAccessCode(event.target.value);
-                                    setError('');
-                                }}
-                                className="w-full bg-white/5 border border-white/10 rounded-sm py-4 text-center text-white text-[10px] tracking-[0.5em] focus:outline-none focus:border-accent transition-colors placeholder:text-white/20"
-                            />
-                            {error && (
-                                <p className="text-red-300 text-xs leading-relaxed">
-                                    {error}
+                        <GlareHover
+                            width="100%"
+                            height="auto"
+                            background="rgba(255,255,255,0.05)"
+                            borderRadius="2px"
+                            borderColor="rgba(255,255,255,0.08)"
+                            glareOpacity={0.16}
+                            glareAngle={-30}
+                            glareSize={170}
+                            transitionDuration={780}
+                            contentClassName="space-y-8 p-12 py-20 text-center backdrop-blur-sm"
+                        >
+                            <div className="space-y-4">
+                                <span className="text-accent text-[10px] tracking-[0.5em] uppercase">{t('clientGallery.privateAccess')}</span>
+                                <h1 className="text-3xl font-heading text-white">{t('clientGallery.clientPortfolio')}</h1>
+                                <p className="text-white/40 text-xs font-body tracking-wider leading-relaxed">
+                                    {t('clientGallery.enterAccessCodeText')}
                                 </p>
-                            )}
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="w-full bg-white text-black text-[10px] tracking-[0.4em] uppercase py-4 font-bold hover:bg-accent transition-colors duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isLoading ? t('ui.checking') : t('clientGallery.enterGallery')}
-                            </button>
-                        </form>
+                            </div>
 
-                        <p className="text-[10px] text-white/20 tracking-widest uppercase cursor-pointer hover:text-white transition-colors">
-                            {t('clientGallery.lostCode')}
-                        </p>
+                            <form onSubmit={handleAccessSubmit} className="space-y-6">
+                                <input
+                                    type="password"
+                                    placeholder={t('clientGallery.accessCodePlaceholder')}
+                                    value={accessCode}
+                                    onChange={(event) => {
+                                        setAccessCode(event.target.value);
+                                        setError('');
+                                    }}
+                                    className="w-full bg-white/5 border border-white/10 rounded-sm py-4 text-center text-white text-[10px] tracking-[0.5em] focus:outline-none focus:border-accent transition-colors placeholder:text-white/20"
+                                />
+                                {error && (
+                                    <p className="text-red-300 text-xs leading-relaxed">
+                                        {error}
+                                    </p>
+                                )}
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="w-full bg-white text-black text-[10px] tracking-[0.4em] uppercase py-4 font-bold hover:bg-accent transition-colors duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isLoading ? t('ui.checking') : t('clientGallery.enterGallery')}
+                                </button>
+                            </form>
+
+                            <p className="text-[10px] text-white/20 tracking-widest uppercase cursor-pointer hover:text-white transition-colors">
+                                {t('clientGallery.lostCode')}
+                            </p>
+                        </GlareHover>
                     </motion.div>
                 ) : (
                     <motion.div
@@ -216,9 +230,18 @@ export default function ClientGalleryPage() {
                                         const isSelected = selectedImageSet.has(image);
 
                                         return (
-                                            <div
+                                            <GlareHover
                                                 key={`${image}-${index}`}
-                                                className={`aspect-square relative group overflow-hidden border bg-neutral-900 transition-colors ${
+                                                width="100%"
+                                                height="auto"
+                                                background="#111"
+                                                borderRadius="2px"
+                                                borderColor={isSelected ? 'rgba(146,1,16,0.75)' : 'rgba(255,255,255,0.08)'}
+                                                glareOpacity={0.18}
+                                                glareAngle={-30}
+                                                glareSize={180}
+                                                transitionDuration={720}
+                                                className={`aspect-square group transition-colors ${
                                                     isSelected ? 'border-accent shadow-[0_0_0_1px_rgba(146,1,16,0.45)]' : 'border-white/5'
                                                 }`}
                                             >
@@ -259,12 +282,24 @@ export default function ClientGalleryPage() {
                                                 >
                                                     {t('ui.preview')}
                                                 </a>
-                                            </div>
+                                            </GlareHover>
                                         );
                                     })}
                                 </div>
 
-                                <div className="mx-auto max-w-2xl border border-white/10 bg-white/5 p-6 text-center space-y-4">
+                                <GlareHover
+                                    width="100%"
+                                    height="auto"
+                                    background="rgba(255,255,255,0.05)"
+                                    borderRadius="2px"
+                                    borderColor="rgba(255,255,255,0.1)"
+                                    glareOpacity={0.16}
+                                    glareAngle={-30}
+                                    glareSize={170}
+                                    transitionDuration={780}
+                                    className="mx-auto max-w-2xl"
+                                    contentClassName="space-y-4 p-6 text-center"
+                                >
                                     <p className="text-white/45 text-sm">
                                         {t('clientGallery.selectionInstructions')}
                                     </p>
@@ -278,19 +313,19 @@ export default function ClientGalleryPage() {
                                     >
                                         {isApproving ? t('ui.approving') : t('clientGallery.approveSelection')}
                                     </button>
-                                </div>
+                                </GlareHover>
                             </>
                         ) : (
-                            <div className="max-w-xl mx-auto text-center border border-white/10 bg-white/5 p-10 space-y-3">
+                            <GlareHover width="100%" height="auto" background="rgba(255,255,255,0.05)" borderRadius="2px" borderColor="rgba(255,255,255,0.1)" glareOpacity={0.16} className="max-w-xl mx-auto" contentClassName="text-center p-10 space-y-3">
                                 <h2 className="text-2xl font-heading text-white italic">{t('clientGallery.noImagesTitle')}</h2>
                                 <p className="text-white/40 text-sm leading-relaxed">
                                     {t('clientGallery.noImagesDescription')}
                                 </p>
-                            </div>
+                            </GlareHover>
                         )}
 
                         {gallery.finished_count > 0 && (
-                            <div className="mx-auto max-w-3xl border border-white/10 bg-white/5 p-6 text-center space-y-5">
+                            <GlareHover width="100%" height="auto" background="rgba(255,255,255,0.05)" borderRadius="2px" borderColor="rgba(255,255,255,0.1)" glareOpacity={0.16} className="mx-auto max-w-3xl" contentClassName="p-6 text-center space-y-5">
                                 <div className="space-y-2">
                                     <h2 className="text-2xl font-heading text-white italic">{t('clientGallery.finishedWorkTitle')}</h2>
                                     <p className="text-white/45 text-sm leading-relaxed">
@@ -332,7 +367,7 @@ export default function ClientGalleryPage() {
                                         </p>
                                     </div>
                                 )}
-                            </div>
+                            </GlareHover>
                         )}
 
                         <div className="flex flex-col items-center gap-8 py-12 border-t border-white/5">

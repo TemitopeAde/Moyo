@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
+import GlareHover from '@/components/GlareHover';
 
 const events = [
     { year: '2026', title: 'Presence in Absence', venue: 'Galería de Arte', city: 'Madrid' },
@@ -13,7 +14,7 @@ const events = [
 
 export default function Exhibitions() {
     const { language } = useLanguage();
-    const { t } = useTranslate(language);
+    const { t, translateText } = useTranslate(language);
 
     return (
         <section id="exhibitions" className="bg-background py-24 md:py-32 lg:py-40">
@@ -39,27 +40,40 @@ export default function Exhibitions() {
                                 initial={{ opacity: 0 }}
                                 whileInView={{ opacity: 1 }}
                                 transition={{ duration: 0.8, delay: index * 0.1 }}
-                                className="group relative flex items-center justify-between border-b border-foreground/5 p-6 transition-all duration-500 last:border-0 hover:bg-foreground/5 md:p-10"
+                                className="group relative border-b border-foreground/5 transition-all duration-500 last:border-0"
                             >
-                                <div className="flex items-baseline gap-5 md:gap-12">
-                                    <span className="text-sm font-heading text-foreground/20 group-hover:text-accent transition-colors duration-500">
-                                        {event.year}
-                                    </span>
-                                    <div className="space-y-1">
-                                        <h3 className="text-xl md:text-2xl font-heading text-foreground group-hover:italic transition-all duration-500">
-                                            {event.title}
-                                        </h3>
-                                        <p className="text-[10px] tracking-widest text-foreground/30 uppercase">
-                                            {event.venue} — {event.city}
-                                        </p>
+                                <GlareHover
+                                    width="100%"
+                                    height="auto"
+                                    background="transparent"
+                                    borderRadius="0"
+                                    borderColor="transparent"
+                                    glareOpacity={0.16}
+                                    glareAngle={-30}
+                                    glareSize={160}
+                                    transitionDuration={720}
+                                    contentClassName="flex items-center justify-between p-6 md:p-10"
+                                >
+                                    <div className="flex items-baseline gap-5 md:gap-12">
+                                        <span className="text-sm font-heading text-foreground/20 transition-colors duration-500 group-hover:text-accent">
+                                            {event.year}
+                                        </span>
+                                        <div className="space-y-1">
+                                            <h3 className="text-xl font-heading text-foreground transition-all duration-500 group-hover:italic md:text-2xl">
+                                                {translateText(event.title)}
+                                            </h3>
+                                            <p className="text-[10px] uppercase tracking-widest text-foreground/30">
+                                                {translateText(event.venue)} — {translateText(event.city)}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-500 hidden md:block">
-                                    <span className="text-[10px] tracking-[0.3em] font-medium text-foreground uppercase border-b border-foreground pb-1">
-                                        {t('exhibitions.details')}
-                                    </span>
-                                </div>
+                                    <div className="hidden opacity-0 transition-opacity duration-500 group-hover:opacity-100 md:block">
+                                        <span className="border-b border-foreground pb-1 text-[10px] font-medium uppercase tracking-[0.3em] text-foreground">
+                                            {t('exhibitions.details')}
+                                        </span>
+                                    </div>
+                                </GlareHover>
                             </motion.div>
                         ))}
                     </div>

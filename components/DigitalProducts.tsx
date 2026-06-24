@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
+import GlareHover from '@/components/GlareHover';
 
 const products = [
     { id: 1, title: 'Editorial Presets Vol. 1', price: '$45.00', details: '10 Lightroom Presets', image: '/digital_1.webp' },
@@ -12,7 +13,7 @@ const products = [
 
 export default function DigitalProducts() {
     const { language } = useLanguage();
-    const { t } = useTranslate(language);
+    const { t, translateText } = useTranslate(language);
 
     return (
         <section id="digital-shop" className="border-t border-white/5 bg-background py-24 md:py-32 lg:py-40">
@@ -36,23 +37,35 @@ export default function DigitalProducts() {
                             transition={{ duration: 0.8, delay: index * 0.1 }}
                             className="group cursor-pointer space-y-6 md:space-y-8"
                         >
-                            <div className="relative aspect-[4/5] bg-neutral-900 overflow-hidden border border-white/5">
-                                <div
-                                    className="w-full h-full bg-cover bg-center grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000"
-                                    style={{ backgroundImage: `url(${product.image})` }}
-                                />
-                                <button className="absolute inset-x-0 bottom-0 z-20 translate-y-0 bg-white py-5 text-center transition-transform duration-500 md:translate-y-full md:group-hover:translate-y-0">
-                                    <span className="text-[10px] font-bold uppercase tracking-[0.24em] text-black md:tracking-[0.4em]">{t('shop.purchaseNow')}</span>
-                                </button>
-                            </div>
-
-                            <div className="flex items-start justify-between gap-4 border-t border-white/10 pt-6">
-                                <div className="space-y-1">
-                                    <h3 className="text-xl font-heading text-white group-hover:text-accent transition-colors">{product.title}</h3>
-                                    <span className="text-[10px] tracking-widest text-white/30 uppercase font-body">{product.details}</span>
+                            <GlareHover
+                                width="100%"
+                                height="auto"
+                                background="transparent"
+                                borderRadius="2px"
+                                borderColor="rgba(255,255,255,0.08)"
+                                glareOpacity={0.2}
+                                glareAngle={-30}
+                                glareSize={180}
+                                transitionDuration={760}
+                            >
+                                <div className="relative aspect-[4/5] overflow-hidden bg-neutral-900">
+                                    <div
+                                        className="h-full w-full bg-cover bg-center grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0"
+                                        style={{ backgroundImage: `url(${product.image})` }}
+                                    />
+                                    <button className="absolute inset-x-0 bottom-0 z-20 translate-y-0 bg-white py-5 text-center transition-transform duration-500 md:translate-y-full md:group-hover:translate-y-0">
+                                        <span className="text-[10px] font-bold uppercase tracking-[0.24em] text-black md:tracking-[0.4em]">{t('shop.purchaseNow')}</span>
+                                    </button>
                                 </div>
-                                <span className="text-[10px] tracking-widest text-accent font-body uppercase pr-2">{product.price}</span>
-                            </div>
+
+                                <div className="flex items-start justify-between gap-4 border-t border-white/10 px-4 py-6">
+                                    <div className="space-y-1">
+                                        <h3 className="text-xl font-heading text-white transition-colors group-hover:text-accent">{translateText(product.title)}</h3>
+                                        <span className="font-body text-[10px] uppercase tracking-widest text-white/30">{translateText(product.details)}</span>
+                                    </div>
+                                    <span className="font-body pr-2 text-[10px] uppercase tracking-widest text-accent">{product.price}</span>
+                                </div>
+                            </GlareHover>
                         </motion.div>
                     ))}
                 </div>

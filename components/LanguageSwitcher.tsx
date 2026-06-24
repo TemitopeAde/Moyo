@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useLanguage, LanguageCode } from '@/context/LanguageContext';
+import { useTranslate } from '@/lib/translations';
 
 const languages: { code: LanguageCode, name: string }[] = [
     { code: 'EN', name: 'English' },
@@ -19,6 +20,7 @@ const languages: { code: LanguageCode, name: string }[] = [
 
 export default function LanguageSwitcher({ className }: { className?: string }) {
     const { language, setLanguage } = useLanguage();
+    const { translateText } = useTranslate(language);
     const [isOpen, setIsOpen] = useState(false);
 
     return (
@@ -57,7 +59,7 @@ export default function LanguageSwitcher({ className }: { className?: string }) 
                                         : "text-foreground/62 hover:bg-foreground/8 hover:text-foreground"
                                 )}
                             >
-                                {lang.name}
+                                {translateText(lang.name)}
                             </button>
                         ))}
                     </div>

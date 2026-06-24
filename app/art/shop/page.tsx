@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
+import GlareHover from '@/components/GlareHover';
 
 const items = [
     { id: 1, name: "Presence (Limited Edition)", price: "€450.00", categoryKey: "handFinishedPrint", image: "/shop_1.webp" },
@@ -16,7 +17,7 @@ const items = [
 
 export default function ArtShopPage() {
     const { language } = useLanguage();
-    const { t } = useTranslate(language);
+    const { t, translateText } = useTranslate(language);
 
     return (
         <main className="bg-background min-h-screen">
@@ -41,23 +42,35 @@ export default function ArtShopPage() {
                             transition={{ duration: 0.8, delay: index * 0.1 }}
                             className="group space-y-6"
                         >
-                            <div className="aspect-[4/5] bg-neutral-900 overflow-hidden relative border border-white/5">
-                                <div className="absolute inset-x-0 bottom-0 py-6 text-center translate-y-full group-hover:translate-y-0 transition-transform duration-500 z-20 bg-white">
-                                    <span className="text-[10px] tracking-[0.4em] uppercase text-black font-bold">{t('artShopPage.addToCollection')}</span>
+                            <GlareHover
+                                width="100%"
+                                height="auto"
+                                background="transparent"
+                                borderRadius="2px"
+                                borderColor="rgba(255,255,255,0.08)"
+                                glareOpacity={0.2}
+                                glareAngle={-30}
+                                glareSize={180}
+                                transitionDuration={760}
+                            >
+                                <div className="relative aspect-[4/5] overflow-hidden bg-neutral-900">
+                                    <div className="absolute inset-x-0 bottom-0 z-20 translate-y-0 bg-white py-6 text-center transition-transform duration-500 md:translate-y-full md:group-hover:translate-y-0">
+                                        <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-black">{t('artShopPage.addToCollection')}</span>
+                                    </div>
+                                    <div
+                                        className="h-full w-full bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
+                                        style={{ backgroundImage: `url(${item.image})` }}
+                                    />
                                 </div>
-                                <div
-                                    className="w-full h-full bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
-                                    style={{ backgroundImage: `url(${item.image})` }}
-                                />
-                            </div>
 
-                            <div className="space-y-1">
-                                <div className="flex justify-between items-baseline">
-                                    <h3 className="text-sm font-heading text-white group-hover:text-accent transition-colors">{item.name}</h3>
-                                    <span className="text-[10px] text-white/40">{item.price}</span>
+                                <div className="space-y-1 px-4 py-5">
+                                    <div className="flex items-baseline justify-between gap-3">
+                                        <h3 className="text-sm font-heading text-white transition-colors group-hover:text-accent">{translateText(item.name)}</h3>
+                                        <span className="text-[10px] text-white/40">{item.price}</span>
+                                    </div>
+                                    <p className="font-body text-[10px] uppercase tracking-[0.2em] text-white/20">{t(`artShopPage.${item.categoryKey}`)}</p>
                                 </div>
-                                <p className="text-[10px] tracking-[0.2em] uppercase text-white/20 font-body">{t(`artShopPage.${item.categoryKey}`)}</p>
-                            </div>
+                            </GlareHover>
                         </motion.div>
                     ))}
                 </div>

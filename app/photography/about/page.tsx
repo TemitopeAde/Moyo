@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
+import GlareHover from '@/components/GlareHover';
 
 export default function PhotographyAboutPage() {
     const { language } = useLanguage();
@@ -26,9 +27,24 @@ export default function PhotographyAboutPage() {
                             initial={{ x: -20, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             transition={{ duration: 1.5 }}
-                            className="aspect-[4/5] overflow-hidden border border-white/5 bg-neutral-900 bg-cover bg-center bg-no-repeat"
-                            style={{ backgroundImage: "url('/profile-portrait.jpg')" }}
-                        />
+                        >
+                            <GlareHover
+                                width="100%"
+                                height="auto"
+                                background="#111"
+                                borderRadius="2px"
+                                borderColor="rgba(255,255,255,0.08)"
+                                glareOpacity={0.2}
+                                glareAngle={-30}
+                                glareSize={180}
+                                transitionDuration={760}
+                            >
+                                <div
+                                    className="aspect-[4/5] overflow-hidden bg-neutral-900 bg-cover bg-center bg-no-repeat"
+                                    style={{ backgroundImage: "url('/profile-portrait.jpg')" }}
+                                />
+                            </GlareHover>
+                        </motion.div>
                         <div className="flex justify-between gap-6 text-[10px] uppercase tracking-[0.24em] text-white/20 md:tracking-[0.4em]">
                             <p>{t('profilePage.inProcess')}</p>
                             <p>{t('profilePage.location')}</p>

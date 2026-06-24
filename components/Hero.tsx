@@ -17,7 +17,7 @@ interface HeroProps {
 
 export default function Hero({ profileType }: HeroProps) {
     const { language } = useLanguage();
-    const { t } = useTranslate(language);
+    const { t, translateText } = useTranslate(language);
     const [cmsHero, setCmsHero] = useState<{ heroText: string; heroImage: string } | null>(null);
 
     const [isInitialLoad] = useState(() => {
@@ -38,7 +38,7 @@ export default function Hero({ profileType }: HeroProps) {
     }, []);
 
     const defaultHeadline = profileType === 'photography' ? t('hero.photography') : t('hero.art');
-    const headline = cmsHero?.heroText || defaultHeadline;
+    const headline = cmsHero?.heroText ? translateText(cmsHero.heroText) : defaultHeadline;
 
     const subtext = profileType === 'photography' ? t('hero.photographySub') : t('hero.artSub');
 
@@ -97,7 +97,7 @@ export default function Hero({ profileType }: HeroProps) {
                             transition={{ duration: durationText, delay: delayTextStart - 0.1, ease: [0.22, 1, 0.36, 1] }}
                             className="text-[9px] uppercase tracking-[0.34em] text-accent sm:text-[10px] md:text-xs md:tracking-[0.5em]"
                         >
-                            {profileType}
+                            {profileType === 'photography' ? t('common.photography') : t('common.fineArt')}
                         </motion.p>
                     </div>
 
@@ -144,7 +144,7 @@ export default function Hero({ profileType }: HeroProps) {
                 >
                     <div className="h-[1px] w-24 bg-foreground/20" />
                     <span className="text-[10px] uppercase tracking-[0.4em] text-foreground/40 italic">
-                        Exploring {accent}
+                        {translateText('Exploring')} {translateText(accent)}
                     </span>
                 </motion.div>
             </div>

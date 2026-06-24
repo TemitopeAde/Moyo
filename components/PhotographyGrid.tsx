@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
+import GlareHover from '@/components/GlareHover';
 
 type CatalogImage = {
     id: number;
@@ -30,7 +31,7 @@ type CatalogGridItem = CatalogImage & {
 
 export default function PhotographyGrid() {
     const { language } = useLanguage();
-    const { t } = useTranslate(language);
+    const { t, translateText } = useTranslate(language);
     const [categories, setCategories] = useState<CatalogCategory[]>([]);
     const [activeCategory, setActiveCategory] = useState('all');
     const [isLoading, setIsLoading] = useState(true);
@@ -103,7 +104,7 @@ export default function PhotographyGrid() {
                                 : 'border-foreground/10 text-foreground/50 hover:border-accent hover:text-accent'
                         }`}
                     >
-                        All
+                        {translateText('All')}
                     </button>
                     {categories.map((category) => (
                         <button
@@ -116,20 +117,20 @@ export default function PhotographyGrid() {
                                     : 'border-foreground/10 text-foreground/50 hover:border-accent hover:text-accent'
                             }`}
                         >
-                            {category.name}
+                            {translateText(category.name)}
                         </button>
                     ))}
                 </div>
 
                 {isLoading && (
                     <div className="border border-foreground/10 py-20 text-center text-[10px] uppercase tracking-[0.4em] text-foreground/30">
-                        Loading portfolio
+                        {translateText('Loading portfolio')}
                     </div>
                 )}
 
                 {!isLoading && visibleItems.length === 0 && (
                     <div className="border border-foreground/10 py-20 text-center text-[10px] uppercase tracking-[0.4em] text-foreground/30">
-                        No photography catalog images yet.
+                        {translateText('No photography catalog images yet.')}
                     </div>
                 )}
 
@@ -143,32 +144,44 @@ export default function PhotographyGrid() {
                                 initial={{ opacity: 0, y: 40 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 1, delay: index * 0.06 }}
-                                className="group mb-5 block w-full cursor-pointer break-inside-avoid overflow-hidden bg-surface text-left outline-none focus-visible:ring-2 focus-visible:ring-accent md:mb-8"
+                                className="group mb-5 block w-full cursor-pointer break-inside-avoid text-left outline-none focus-visible:ring-2 focus-visible:ring-accent md:mb-8"
                             >
-                                <div className="relative overflow-hidden">
-                                    <img
-                                        src={item.image_url}
-                                        alt={item.alt_text || item.title || item.categoryName}
-                                        className="h-auto w-full transition-transform duration-1000 group-hover:scale-[1.02]"
-                                        loading="lazy"
-                                    />
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-100 transition-colors duration-500 group-hover:bg-black/35 sm:opacity-0 sm:group-hover:opacity-100">
-                                        <span className="border border-white/40 bg-black/50 px-5 py-3 text-[10px] uppercase tracking-[0.3em] text-white">
-                                            View
-                                        </span>
+                                <GlareHover
+                                    width="100%"
+                                    height="auto"
+                                    background="var(--color-surface)"
+                                    borderRadius="2px"
+                                    borderColor="rgba(255,255,255,0.08)"
+                                    glareOpacity={0.18}
+                                    glareAngle={-30}
+                                    glareSize={180}
+                                    transitionDuration={760}
+                                >
+                                    <div className="relative overflow-hidden">
+                                        <img
+                                            src={item.image_url}
+                                            alt={translateText(item.alt_text || item.title || item.categoryName)}
+                                            className="h-auto w-full transition-transform duration-1000 group-hover:scale-[1.02]"
+                                            loading="lazy"
+                                        />
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-100 transition-colors duration-500 group-hover:bg-black/35 sm:opacity-0 sm:group-hover:opacity-100">
+                                            <span className="border border-white/40 bg-black/50 px-5 py-3 text-[10px] uppercase tracking-[0.3em] text-white">
+                                                {translateText('View')}
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="border-x border-b border-foreground/10 px-4 py-4 sm:px-5">
-                                    <p className="text-[10px] uppercase tracking-[0.28em] text-accent">
-                                        {item.categoryName}
-                                    </p>
-                                    {item.title && (
-                                        <h3 className="mt-2 text-lg font-heading text-foreground transition-colors group-hover:text-accent">
-                                            {item.title}
-                                        </h3>
-                                    )}
-                                </div>
+                                    <div className="px-4 py-4 sm:px-5">
+                                        <p className="text-[10px] uppercase tracking-[0.28em] text-accent">
+                                            {translateText(item.categoryName)}
+                                        </p>
+                                        {item.title && (
+                                            <h3 className="mt-2 text-lg font-heading text-foreground transition-colors group-hover:text-accent">
+                                                {translateText(item.title)}
+                                            </h3>
+                                        )}
+                                    </div>
+                                </GlareHover>
                             </motion.button>
                         ))}
                     </div>
@@ -184,13 +197,13 @@ export default function PhotographyGrid() {
                         exit={{ opacity: 0 }}
                         role="dialog"
                         aria-modal="true"
-                        aria-label={selectedItem.title || selectedItem.categoryName}
+                        aria-label={translateText(selectedItem.title || selectedItem.categoryName)}
                     >
                         <button
                             type="button"
                             onClick={() => setSelectedItem(null)}
                             className="absolute inset-0 cursor-default"
-                            aria-label="Close catalogue preview"
+                            aria-label={translateText('Close catalogue preview')}
                         />
 
                         <motion.div
@@ -203,7 +216,7 @@ export default function PhotographyGrid() {
                             <div className="flex max-h-[62vh] items-center justify-center bg-black lg:max-h-[92vh]">
                                 <img
                                     src={selectedItem.image_url}
-                                    alt={selectedItem.alt_text || selectedItem.title || selectedItem.categoryName}
+                                    alt={translateText(selectedItem.alt_text || selectedItem.title || selectedItem.categoryName)}
                                     className="max-h-[62vh] w-auto max-w-full object-contain lg:max-h-[92vh]"
                                 />
                             </div>
@@ -211,21 +224,21 @@ export default function PhotographyGrid() {
                             <div className="flex flex-col gap-6 overflow-y-auto p-6 sm:p-8">
                                 <div className="space-y-3">
                                     <p className="text-[10px] uppercase tracking-[0.35em] text-accent">
-                                        {selectedItem.categoryName}
+                                        {translateText(selectedItem.categoryName)}
                                     </p>
                                     <h2 className="text-3xl font-heading italic text-foreground sm:text-4xl">
-                                        {selectedItem.title || selectedItem.categoryName}
+                                        {translateText(selectedItem.title || selectedItem.categoryName)}
                                     </h2>
                                     {selectedItem.categoryDescription && (
                                         <p className="text-sm leading-relaxed text-foreground/45">
-                                            {selectedItem.categoryDescription}
+                                            {translateText(selectedItem.categoryDescription)}
                                         </p>
                                     )}
                                 </div>
 
                                 {selectedItem.alt_text && (
                                     <p className="border-t border-foreground/10 pt-5 text-sm leading-relaxed text-foreground/55">
-                                        {selectedItem.alt_text}
+                                        {translateText(selectedItem.alt_text)}
                                     </p>
                                 )}
 
@@ -236,14 +249,14 @@ export default function PhotographyGrid() {
                                         rel="noreferrer"
                                         className="border border-accent/50 px-5 py-4 text-center text-[10px] uppercase tracking-[0.28em] text-accent transition-colors hover:bg-accent hover:text-black"
                                     >
-                                        Open Full Image
+                                        {translateText('Open Full Image')}
                                     </a>
                                     <button
                                         type="button"
                                         onClick={() => setSelectedItem(null)}
                                         className="border border-foreground/10 px-5 py-4 text-[10px] uppercase tracking-[0.28em] text-foreground/60 transition-colors hover:border-foreground/30 hover:text-foreground"
                                     >
-                                        Close
+                                        {translateText('Close')}
                                     </button>
                                 </div>
                             </div>

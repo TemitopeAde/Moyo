@@ -7,6 +7,7 @@ import Exhibitions from '@/components/Exhibitions';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
+import GlareHover from '@/components/GlareHover';
 
 export default function ArtExhibitionsPage() {
     const { language } = useLanguage();
@@ -43,10 +44,23 @@ export default function ArtExhibitionsPage() {
                         </button>
                     </div>
 
-                    <div className="aspect-square bg-neutral-900 border border-white/5 relative group overflow-hidden">
-                        <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors z-10" />
-                        <div className="w-full h-full bg-[url('/exhibition_catalog.webp')] bg-cover bg-center transition-transform duration-[3s] group-hover:scale-105" />
-                    </div>
+                    <GlareHover
+                        width="100%"
+                        height="auto"
+                        background="#111"
+                        borderRadius="2px"
+                        borderColor="rgba(255,255,255,0.08)"
+                        glareOpacity={0.2}
+                        glareAngle={-30}
+                        glareSize={180}
+                        transitionDuration={760}
+                        className="group"
+                    >
+                        <div className="relative aspect-square overflow-hidden bg-neutral-900">
+                            <div className="absolute inset-0 z-10 bg-black/40 transition-colors group-hover:bg-black/20" />
+                            <div className="h-full w-full bg-[url('/exhibition_catalog.webp')] bg-cover bg-center transition-transform duration-[3s] group-hover:scale-105" />
+                        </div>
+                    </GlareHover>
                 </div>
             </div>
             <Footer />

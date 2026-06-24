@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
+import GlareHover from '@/components/GlareHover';
 
 export default function ArtAboutPage() {
     const { language } = useLanguage();
@@ -59,9 +60,24 @@ export default function ArtAboutPage() {
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ duration: 2, ease: "easeOut" }}
-                            className="aspect-[3/4] overflow-hidden border border-white/5 bg-neutral-900 bg-cover bg-center bg-no-repeat"
-                            style={{ backgroundImage: "url('/profile-portrait.jpg')" }}
-                        />
+                        >
+                            <GlareHover
+                                width="100%"
+                                height="auto"
+                                background="#111"
+                                borderRadius="2px"
+                                borderColor="rgba(255,255,255,0.08)"
+                                glareOpacity={0.2}
+                                glareAngle={-30}
+                                glareSize={180}
+                                transitionDuration={760}
+                            >
+                                <div
+                                    className="aspect-[3/4] overflow-hidden bg-neutral-900 bg-cover bg-center bg-no-repeat"
+                                    style={{ backgroundImage: "url('/profile-portrait.jpg')" }}
+                                />
+                            </GlareHover>
+                        </motion.div>
                         <div className="space-y-2">
                             <p className="text-[10px] tracking-[0.5em] uppercase text-white/20">{t('profilePage.studioPortrait')}</p>
                         </div>

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
+import GlareHover from '@/components/GlareHover';
 
 interface NewsletterFormProps {
     profileType: 'photography' | 'art';
@@ -77,28 +78,42 @@ export default function NewsletterForm({ profileType }: NewsletterFormProps) {
                 </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="relative mx-auto max-w-md group">
-                <input
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder={t('newsletter.placeholder')}
-                    className="w-full border-b border-foreground/20 bg-transparent py-4 text-center text-[10px] font-medium tracking-[0.18em] text-foreground transition-colors placeholder:text-foreground/20 focus:border-accent focus:outline-none sm:tracking-[0.3em]"
-                    required
-                />
-                {error && (
-                    <p className="mt-4 text-[10px] text-red-400 tracking-widest uppercase">
-                        {error}
-                    </p>
-                )}
-                <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="mt-10 w-full bg-foreground px-4 py-5 text-[10px] font-bold uppercase tracking-[0.26em] text-background transition-colors duration-500 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60 sm:mt-12 sm:tracking-[0.5em]"
-                >
-                    {isSubmitting ? t('ui.subscribing') : buttonText}
-                </button>
-            </form>
+            <GlareHover
+                width="100%"
+                height="auto"
+                background="transparent"
+                borderRadius="2px"
+                borderColor="rgba(255,255,255,0.08)"
+                glareOpacity={0.14}
+                glareAngle={-30}
+                glareSize={170}
+                transitionDuration={760}
+                className="mx-auto max-w-md"
+                contentClassName="px-4 py-6"
+            >
+                <form onSubmit={handleSubmit} className="relative group">
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        placeholder={t('newsletter.placeholder')}
+                        className="w-full border-b border-foreground/20 bg-transparent py-4 text-center text-[10px] font-medium tracking-[0.18em] text-foreground transition-colors placeholder:text-foreground/20 focus:border-accent focus:outline-none sm:tracking-[0.3em]"
+                        required
+                    />
+                    {error && (
+                        <p className="mt-4 text-[10px] text-red-400 tracking-widest uppercase">
+                            {error}
+                        </p>
+                    )}
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="mt-10 w-full bg-foreground px-4 py-5 text-[10px] font-bold uppercase tracking-[0.26em] text-background transition-colors duration-500 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60 sm:mt-12 sm:tracking-[0.5em]"
+                    >
+                        {isSubmitting ? t('ui.subscribing') : buttonText}
+                    </button>
+                </form>
+            </GlareHover>
 
             <p className="text-[10px] uppercase tracking-widest text-foreground/20">
                 {t('newsletter.privacy')}

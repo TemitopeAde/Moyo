@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
+import GlareHover from '@/components/GlareHover';
 
 export default function ArtCommissionsPage() {
     const { language } = useLanguage();
@@ -56,18 +57,43 @@ export default function ArtCommissionsPage() {
                             </ul>
                         </div>
 
-                        <div className="aspect-[3/4] bg-neutral-900 overflow-hidden relative border border-white/5">
-                            <div className="absolute inset-0 bg-black/20" />
-                            <div className="w-full h-full bg-[url('/art_commission.webp')] bg-cover bg-center grayscale hover:grayscale-0 transition-all duration-1000" />
-                        </div>
+                        <GlareHover
+                            width="100%"
+                            height="auto"
+                            background="#111"
+                            borderRadius="2px"
+                            borderColor="rgba(255,255,255,0.08)"
+                            glareOpacity={0.2}
+                            glareAngle={-30}
+                            glareSize={180}
+                            transitionDuration={760}
+                            className="group"
+                        >
+                            <div className="relative aspect-[3/4] overflow-hidden bg-neutral-900">
+                                <div className="absolute inset-0 bg-black/20" />
+                                <div className="h-full w-full bg-[url('/art_commission.webp')] bg-cover bg-center grayscale transition-all duration-1000 group-hover:grayscale-0" />
+                            </div>
+                        </GlareHover>
                     </div>
 
-                    <div className="glass p-12 md:p-20 text-center space-y-12">
+                    <GlareHover
+                        width="100%"
+                        height="auto"
+                        background="var(--glass-bg)"
+                        borderRadius="2px"
+                        borderColor="var(--glass-border)"
+                        glareOpacity={0.16}
+                        glareAngle={-30}
+                        glareSize={170}
+                        transitionDuration={780}
+                        className="glass"
+                        contentClassName="p-12 text-center space-y-12 md:p-20"
+                    >
                         <h2 className="text-3xl font-heading text-white italic">{t('commissionsPage.startConversation')}</h2>
                         <button className="bg-white text-black px-12 py-5 text-[10px] tracking-[0.5em] uppercase font-bold hover:bg-accent transition-colors">
                             {t('commissionsPage.inquireNow')}
                         </button>
-                    </div>
+                    </GlareHover>
                 </motion.div>
             </div>
             <Footer />

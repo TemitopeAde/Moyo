@@ -5,7 +5,7 @@ import { useTranslate } from '@/lib/translations';
 
 export default function Commission() {
     const { language } = useLanguage();
-    const { t } = useTranslate(language);
+    const { t, translateText } = useTranslate(language);
     const steps = [
         { title: t('commissionsPage.step1Title'), description: t('commissionsPage.step1Description') },
         { title: t('commissionsPage.step2Title'), description: t('commissionsPage.step2Description') },
@@ -23,7 +23,7 @@ export default function Commission() {
                     <div className="grid md:grid-cols-2 gap-12">
                         <div>
                             <p className="text-neutral-400 font-body leading-relaxed mb-8">
-                                For collectors and brands seeking unique visual narratives, Moyo offers commissioned art pieces tailored to specific spaces and stories.
+                                {translateText('For collectors and brands seeking unique visual narratives, Moyo offers commissioned art pieces tailored to specific spaces and stories.')}
                             </p>
                             <button className="px-8 py-3 border border-white/20 hover:bg-accent hover:text-black hover:border-accent transition-all duration-300 text-xs uppercase tracking-widest">
                                 {t('artExhibitionsPage.exploreArchive')}
