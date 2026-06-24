@@ -82,7 +82,7 @@ export default function Navbar() {
         <>
             <nav
                 className={cn(
-                    'fixed left-0 right-0 top-0 z-50 flex min-h-18 items-center justify-between gap-4 border-b px-4 backdrop-blur-xl transition-all duration-700 ease-in-out sm:min-h-20 sm:px-6 md:min-h-24 md:px-8 xl:gap-10 xl:px-12',
+                    'fixed left-0 right-0 top-0 z-[80] flex min-h-18 items-center justify-between gap-4 border-b px-4 backdrop-blur-xl transition-all duration-700 ease-in-out sm:min-h-20 sm:px-6 md:min-h-24 md:px-8 xl:gap-10 xl:px-12',
                     scrolled ? 'border-foreground/10 bg-background/85 shadow-[0_18px_60px_rgba(0,0,0,0.08)]' : 'border-transparent bg-background/20'
                 )}
             >
@@ -110,7 +110,7 @@ export default function Navbar() {
                     initial={isInitialLoad ? { opacity: 0 } : false}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5, delay: isInitialLoad ? 0.9 : 0, ease: "easeOut" }}
-                    className="entry-selector-frost hidden items-center rounded-full px-2 py-1 gap-1 xl:flex"
+                    className="entry-selector-frost relative z-10 hidden items-center rounded-full px-2 py-1 gap-1 xl:flex"
                 >
                     <Link
                         href="/photography"
@@ -143,7 +143,7 @@ export default function Navbar() {
                     initial={isInitialLoad ? { opacity: 0 } : false}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5, delay: isInitialLoad ? 1.0 : 0, staggerChildren: 0.1, ease: "easeOut" }}
-                    className="ml-auto hidden min-w-0 items-center gap-5 lg:flex xl:gap-8"
+                    className="relative z-10 ml-auto hidden min-w-0 items-center gap-5 lg:flex xl:gap-8"
                 >
                     <div className="flex min-w-0 items-center gap-3 text-[9px] font-body tracking-[0.12em] text-foreground/60 xl:gap-6 xl:text-[10px] xl:tracking-[0.2em]">
                         {links.map((link) => (
@@ -183,14 +183,15 @@ export default function Navbar() {
                     </div>
                 </motion.div>
 
-                <div className="ml-auto flex items-center gap-1.5 sm:gap-2 lg:hidden">
+                <div className="relative z-10 ml-auto flex items-center gap-1.5 sm:gap-2 lg:hidden">
                     <ThemeToggle className="h-11 w-11" />
                     <LanguageSwitcher className="h-11 px-3" />
 
                     {/* Mobile Menu Toggle */}
                     <button
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="group relative z-50 flex h-11 w-11 flex-col items-end justify-center gap-1.5 rounded-md border border-transparent transition-colors duration-300 hover:border-foreground/10 hover:bg-white/10 focus:outline-none"
+                        type="button"
+                        className="group relative z-[90] flex h-11 w-11 flex-col items-end justify-center gap-1.5 rounded-md border border-transparent transition-colors duration-300 hover:border-foreground/10 hover:bg-white/10 focus:outline-none"
                         aria-label={mobileMenuOpen ? t('ui.closeMenu') : t('ui.openMenu')}
                     >
                         <motion.div
@@ -217,7 +218,7 @@ export default function Navbar() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: '-100%' }}
                         transition={{ duration: 0.5, ease: [0.19, 1, 0.22, 1] }}
-                        className="fixed inset-0 z-40 bg-black/95 backdrop-blur-3xl lg:hidden overflow-y-auto"
+                        className="fixed inset-0 z-[70] bg-black/95 backdrop-blur-3xl lg:hidden overflow-y-auto"
                     >
                         <div className="flex min-h-screen flex-col items-center justify-center space-y-10 px-5 py-28 sm:p-8">
 

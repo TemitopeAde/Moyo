@@ -24,6 +24,7 @@ export default function LanguageSwitcher({ className }: { className?: string }) 
     return (
         <div className="relative font-body">
             <button
+                type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className={cn(
                     "inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md border border-transparent px-3 text-[10px] uppercase tracking-[0.2em] text-foreground/60 transition-colors hover:border-foreground/10 hover:bg-white/10 hover:text-foreground",
@@ -37,12 +38,13 @@ export default function LanguageSwitcher({ className }: { className?: string }) 
             {isOpen && (
                 <>
                     <div
-                        className="fixed inset-0 z-40"
+                        className="fixed inset-0 z-[70]"
                         onClick={() => setIsOpen(false)}
                     />
-                    <div className="absolute top-full right-0 mt-2 max-h-[70vh] min-w-[160px] overflow-y-auto glass py-4 px-2 z-50 flex flex-col gap-1">
+                    <div className="absolute top-full right-0 z-[90] mt-2 flex max-h-[70vh] min-w-[160px] flex-col gap-1 overflow-y-auto glass px-2 py-4">
                         {languages.map((lang) => (
                             <button
+                                type="button"
                                 key={lang.code}
                                 onClick={() => {
                                     setLanguage(lang.code);
