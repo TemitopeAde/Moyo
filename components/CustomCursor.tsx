@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 
 const interactiveSelector = [
     'a',
@@ -22,9 +23,16 @@ const textSelector = [
 ].join(',');
 
 export default function CustomCursor() {
+    const pathname = usePathname();
+    const isDisabled = pathname.startsWith('/admin') || pathname.startsWith('/photography/client-gallery');
     const cursorRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
+        if (isDisabled) {
+            document.documentElement.classList.remove('custom-cursor-enabled');
+            return;
+        }
+
         const cursor = cursorRef.current;
         if (!cursor || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
 
@@ -81,7 +89,9 @@ export default function CustomCursor() {
             window.removeEventListener('blur', hide);
             if (frame) window.cancelAnimationFrame(frame);
         };
-    }, []);
+    }, [isDisabled]);
+
+    if (isDisabled) return null;
 
     return (
         <div ref={cursorRef} className="custom-cursor" aria-hidden="true">

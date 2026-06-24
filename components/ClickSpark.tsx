@@ -32,18 +32,17 @@ export default function ClickSpark({
 }: ClickSparkProps) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const sparksRef = useRef<Spark[]>([]);
+    const animationIdRef = useRef<number | null>(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const parent = canvas.parentElement;
-        if (!parent) return;
-
         let resizeTimeout: number | undefined;
 
         const resizeCanvas = () => {
-            const { width, height } = parent.getBoundingClientRect();
+            const width = window.innerWidth;
+            const height = window.innerHeight;
             const pixelRatio = window.devicePixelRatio || 1;
             const nextWidth = Math.max(1, Math.round(width * pixelRatio));
             const nextHeight = Math.max(1, Math.round(height * pixelRatio));
@@ -61,12 +60,11 @@ export default function ClickSpark({
             resizeTimeout = window.setTimeout(resizeCanvas, 100);
         };
 
-        const observer = new ResizeObserver(handleResize);
-        observer.observe(parent);
+        window.addEventListener('resize', handleResize, { passive: true });
         resizeCanvas();
 
         return () => {
-            observer.disconnect();
+            window.removeEventListener('resize', handleResize);
             if (resizeTimeout) window.clearTimeout(resizeTimeout);
         };
     }, []);
@@ -87,19 +85,14 @@ export default function ClickSpark({
         [easing]
     );
 
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
+    const drawSparks = useCallback(
+        function drawSparksFrame(timestamp: number) {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
 
-        const context = canvas.getContext('2d');
-        if (!context) return;
+            const context = canvas.getContext('2d');
+            if (!context) return;
 
-        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (reduceMotion) return;
-
-        let animationId: number;
-
-        const draw = (timestamp: number) => {
             const pixelRatio = window.devicePixelRatio || 1;
 
             context.clearRect(0, 0, canvas.width, canvas.height);
@@ -130,23 +123,50 @@ export default function ClickSpark({
             });
 
             context.restore();
-            animationId = requestAnimationFrame(draw);
-        };
 
-        animationId = requestAnimationFrame(draw);
+            if (sparksRef.current.length > 0) {
+                animationIdRef.current = requestAnimationFrame(drawSparksFrame);
+            } else {
+                animationIdRef.current = null;
+            }
+        },
+        [duration, easeFunc, extraScale, sparkColor, sparkRadius, sparkSize]
+    );
 
-        return () => {
-            cancelAnimationFrame(animationId);
-        };
-    }, [duration, easeFunc, extraScale, sparkColor, sparkRadius, sparkSize]);
+    const startAnimation = useCallback(() => {
+        if (animationIdRef.current === null) {
+            animationIdRef.current = requestAnimationFrame(drawSparks);
+        }
+    }, [drawSparks]);
 
-    const handleClick = (event: MouseEvent<HTMLDivElement>) => {
+    useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+        const context = canvas.getContext('2d');
+        if (!context) return;
+
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduceMotion) return;
+
+        return () => {
+            if (animationIdRef.current !== null) {
+                cancelAnimationFrame(animationIdRef.current);
+                animationIdRef.current = null;
+            }
+            sparksRef.current = [];
+            context.clearRect(0, 0, canvas.width, canvas.height);
+        };
+    }, []);
+
+    const handleClick = (event: MouseEvent<HTMLDivElement>) => {
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const x = event.clientX;
+        const y = event.clientY;
         const now = performance.now();
         const newSparks = Array.from({ length: sparkCount }, (_, index) => ({
             x,
@@ -156,6 +176,7 @@ export default function ClickSpark({
         }));
 
         sparksRef.current.push(...newSparks);
+        startAnimation();
     };
 
     return (
@@ -163,7 +184,7 @@ export default function ClickSpark({
             <canvas
                 ref={canvasRef}
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 z-[60] block select-none"
+                className="pointer-events-none fixed inset-0 z-[60] block select-none"
             />
             {children}
         </div>

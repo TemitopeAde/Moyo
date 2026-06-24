@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import GalleryMedia from '@/components/GalleryMedia';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   FiChevronDown,
@@ -1301,7 +1302,16 @@ export default function AdminPage() {
               </form>
             </div>
             <div className="space-y-4 max-h-[640px] overflow-y-auto pr-2">
-              <h3 className="text-[10px] uppercase tracking-[0.5em] text-accent">Existing</h3>
+              <div className="flex items-center justify-between gap-4">
+                <h3 className="text-[10px] uppercase tracking-[0.5em] text-accent">Existing</h3>
+                <button
+                  type="button"
+                  onClick={fetchAll}
+                  className="border border-white/10 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/50 transition-colors hover:border-accent hover:text-accent"
+                >
+                  Refresh
+                </button>
+              </div>
               {galleries.map((gal) => (
                 <div key={gal.id} className="bg-surface/20 border border-white/5 p-4 space-y-5">
                   {(() => {
@@ -1333,17 +1343,52 @@ export default function AdminPage() {
                       {gal.payment_verified ? 'Payment verified' : 'Payment pending'}
                     </span>
                   </div>
+                  {gal.approved_images.length > 0 && (
+                    <div className="space-y-2 border border-accent/20 bg-accent/[0.04] p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[10px] uppercase tracking-[0.28em] text-accent">
+                          Client selected
+                        </p>
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
+                          {gal.approved_images.length} {gal.approved_images.length === 1 ? 'image' : 'images'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+                        {gal.approved_images.map((img, index) => (
+                          <a
+                            key={`${img}-selected-${index}`}
+                            href={img}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="group relative block overflow-hidden border border-accent/30 bg-black"
+                            aria-label={`Open selected image ${index + 1}`}
+                          >
+                            <GalleryMedia
+                              src={img}
+                              alt={`${gal.client_name} selected image ${index + 1}`}
+                              className="h-20 w-full object-cover"
+                              sizes="(min-width: 1280px) 96px, (min-width: 640px) 33vw, 50vw"
+                            />
+                            <span className="absolute left-1 top-1 bg-accent px-2 py-1 text-[8px] uppercase tracking-[0.16em] text-black">
+                              Pick {index + 1}
+                            </span>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {gal.images.length > 0 && (
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
                       {gal.images.map((img, index) => {
                         const isSelected = gal.approved_images.includes(img);
                         return (
-                          <div key={img} className="space-y-1">
+                          <div key={`${img}-${index}`} className="space-y-1">
                             <div className="relative">
-                              <img
+                              <GalleryMedia
                                 src={img}
                                 alt={`${gal.client_name} gallery upload ${index + 1}`}
                                 className={`h-20 w-full object-cover border ${isSelected ? 'border-accent' : 'border-white/10'}`}
+                                sizes="(min-width: 1280px) 96px, (min-width: 640px) 33vw, 50vw"
                               />
                               {isSelected && (
                                 <span className="absolute left-1 top-1 bg-accent px-2 py-1 text-[8px] uppercase tracking-[0.16em] text-black">
@@ -1427,14 +1472,15 @@ export default function AdminPage() {
                       </button>
                     </div>
                     {gal.finished_images?.length > 0 && (
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
                         {gal.finished_images.map((img, index) => (
                           <div key={img} className="space-y-1">
                             <div className="relative">
-                              <img
+                              <GalleryMedia
                                 src={img}
                                 alt={`${gal.client_name} finished work ${index + 1}`}
                                 className="h-20 w-full object-cover border border-white/10"
+                                sizes="(min-width: 1280px) 96px, (min-width: 640px) 33vw, 50vw"
                               />
                             </div>
                             <button

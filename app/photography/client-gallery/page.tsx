@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
 import { useProfile } from '@/context/ProfileContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
+import GalleryMedia from '@/components/GalleryMedia';
 
 type ClientGallery = {
     id: number;
@@ -33,6 +34,7 @@ export default function ClientGalleryPage() {
     const { setProfile } = useProfile();
     const { language } = useLanguage();
     const { t } = useTranslate(language);
+    const selectedImageSet = useMemo(() => new Set(selectedImages), [selectedImages]);
 
     useEffect(() => {
         setProfile('photography');
@@ -85,11 +87,15 @@ export default function ClientGalleryPage() {
 
     const toggleImageSelection = (image: string) => {
         setApprovalMessage('');
-        setSelectedImages((current) =>
-            current.includes(image)
-                ? current.filter((selected) => selected !== image)
-                : [...current, image]
-        );
+        setSelectedImages((current) => {
+            const next = new Set(current);
+            if (next.has(image)) {
+                next.delete(image);
+            } else {
+                next.add(image);
+            }
+            return Array.from(next);
+        });
     };
 
     const approveSelection = async () => {
@@ -205,9 +211,9 @@ export default function ClientGalleryPage() {
 
                         {gallery.images.length > 0 ? (
                             <>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4">
                                     {gallery.images.map((image, index) => {
-                                        const isSelected = selectedImages.includes(image);
+                                        const isSelected = selectedImageSet.has(image);
 
                                         return (
                                             <div
@@ -220,34 +226,36 @@ export default function ClientGalleryPage() {
                                                     type="button"
                                                     onClick={() => toggleImageSelection(image)}
                                                     aria-pressed={isSelected}
-                                                    className="absolute inset-0 z-10"
+                                                    className="absolute inset-0 z-10 cursor-pointer"
                                                 >
                                                     <span className="sr-only">
                                                         {isSelected ? t('ui.removeImage') : t('ui.selectImage')}
                                                     </span>
                                                 </button>
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img
+                                                <GalleryMedia
                                                     src={image}
                                                     alt={`${gallery.client_name} ${t('clientGallery.galleryImageAlt')} ${index + 1}`}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                                    className="pointer-events-none w-full h-full object-cover"
                                                 />
-                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                                                <div
+                                                <div className="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleImageSelection(image)}
+                                                    aria-pressed={isSelected}
                                                     className={`absolute left-3 top-3 z-20 rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.2em] transition-colors ${
                                                         isSelected
                                                             ? 'border-accent bg-accent text-black'
-                                                            : 'border-white/20 bg-black/40 text-white/60'
+                                                            : 'border-white/20 bg-black/40 text-white/60 hover:border-accent hover:text-accent'
                                                     }`}
                                                 >
                                                     {isSelected ? t('ui.selected') : `${t('ui.image')} ${index + 1}`}
-                                                </div>
+                                                </button>
                                                 <a
                                                     href={image}
                                                     target="_blank"
                                                     rel="noreferrer"
                                                     onClick={(event) => event.stopPropagation()}
-                                                    className="absolute bottom-3 right-3 z-20 border border-white/20 bg-black/50 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-accent hover:text-accent"
+                                                    className="absolute bottom-3 right-3 z-30 border border-white/20 bg-black/50 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-accent hover:text-accent"
                                                 >
                                                     {t('ui.preview')}
                                                 </a>
