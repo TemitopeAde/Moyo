@@ -7,6 +7,7 @@ import ThreeAtmosphere from '@/components/ThreeAtmosphere';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
+import Shuffle from '@/components/Shuffle';
 
 export default function GlobalEntryPage() {
   const { language } = useLanguage();
@@ -35,12 +36,17 @@ export default function GlobalEntryPage() {
           transition={{ duration: 1.5, ease: [0.19, 1, 0.22, 1] }}
           className="flex w-full flex-col items-center space-y-2 text-center sm:space-y-3"
         >
-          <h1
-            className="w-full whitespace-nowrap text-center text-[clamp(1.65rem,5vw,4.15rem)] font-semibold uppercase leading-none tracking-[0.16em] text-foreground sm:tracking-[0.2em]"
+          <Shuffle
+            tag="h1"
+            text="Ijabiken Moyo"
+            duration={0.62}
+            stagger={0.045}
+            triggerOnce={true}
+            triggerOnHover={true}
+            respectReducedMotion={true}
+            className="w-full max-w-full text-center text-[clamp(2rem,9vw,4.35rem)] font-semibold uppercase leading-none tracking-[0.08em] text-foreground sm:tracking-[0.16em] md:tracking-[0.2em]"
             style={{ fontFamily: 'var(--font-body)' }}
-          >
-            Ijabiken Moyo
-          </h1>
+          />
 
           <p className="mx-auto max-w-3xl text-[9px] uppercase leading-relaxed tracking-[0.18em] text-foreground/60 sm:text-[10px] sm:tracking-[0.28em] md:text-xs md:tracking-[0.36em]">
             {t('home.tagline_part1')} <br className="hidden md:block" />
