@@ -41,7 +41,6 @@ export async function POST(req: NextRequest) {
 
   const allImages = toStringArray(gallery.images);
   const approvedImages = toStringArray(gallery.approved_images);
-  const visibleImages = approvedImages.length ? approvedImages : [];
   const finishedImages = toStringArray(gallery.finished_images);
 
   return NextResponse.json({
@@ -49,13 +48,13 @@ export async function POST(req: NextRequest) {
       id: gallery.id,
       client_name: gallery.client_name,
       slug: gallery.slug,
-      images: visibleImages,
+      images: allImages,
       approved_images: approvedImages,
       finished_images: gallery.payment_verified ? finishedImages : [],
       payment_verified: gallery.payment_verified || false,
       payment_url: gallery.payment_url || '',
       is_locked: gallery.is_locked,
-      image_count: visibleImages.length,
+      image_count: allImages.length,
       finished_count: finishedImages.length,
       upload_count: allImages.length,
     },

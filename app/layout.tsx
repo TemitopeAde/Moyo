@@ -6,6 +6,7 @@ import SocialLinks from '@/components/SocialLinks';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import SessionTracker from '@/components/SessionTracker';
 import CustomCursor from '@/components/CustomCursor';
+import ClickSpark from '@/components/ClickSpark';
 
 export const metadata: Metadata = {
   title: 'Ijabiken Moyo | Photography & Fine Art',
@@ -33,8 +34,17 @@ export default function RootLayout({
             <ProfileProvider>
               <SessionTracker />
               <CustomCursor />
-              {children}
-              <SocialLinks />
+              <ClickSpark
+                sparkColor="#920110"
+                sparkSize={12}
+                sparkRadius={22}
+                sparkCount={8}
+                duration={460}
+                extraScale={1.1}
+              >
+                {children}
+                <SocialLinks />
+              </ClickSpark>
             </ProfileProvider>
           </LanguageProvider>
         </ThemeProvider>

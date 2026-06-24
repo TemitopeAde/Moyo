@@ -75,8 +75,15 @@ const label = 'text-[10px] uppercase tracking-widest text-white/40';
 const inputClass =
   'w-full rounded-sm bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-accent outline-none transition-colors';
 const mediaAccept = 'image/*,video/*';
-const uploadBatchSize = 1;
+const uploadConcurrency = 2;
 const uploadRequestTimeoutMs = 120_000;
+const maxCloudinaryFreeUploadBytes = 10 * 1024 * 1024;
+const compressedImageQuality = 0.82;
+const compressedImageMaxDimension = 2400;
+
+function formatFileSize(bytes: number) {
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 function AdminAccordionPanel({
   id,
@@ -335,12 +342,12 @@ export default function AdminPage() {
       console.log('[admin] upload start', { count: files.length, target });
       const uploadedUrls: string[] = [];
       const failedFiles: File[] = [];
-      setUploadProgress((prev) => ({ ...prev, [target]: { current: 0, total: files.length } }));
+      let completedCount = 0;
+      setUploadProgress((prev) => ({ ...prev, [target]: { current: completedCount, total: files.length } }));
 
-      for (let start = 0; start < files.length; start += uploadBatchSize) {
-        const batch = files.slice(start, start + uploadBatchSize);
+      const uploadSingleFile = async (file: File, index: number) => {
         const formData = new FormData();
-        batch.forEach((file) => formData.append('file', file));
+        formData.append('file', file);
         const controller = new AbortController();
         const timeout = window.setTimeout(() => controller.abort(), uploadRequestTimeoutMs);
 
@@ -353,35 +360,40 @@ export default function AdminPage() {
           });
           const data = await res.json();
           const urls = Array.isArray(data.urls) ? data.urls : data.url ? [data.url] : [];
-          const failedIndexes = Array.isArray(data.failedIndexes) ? data.failedIndexes : [];
-          const batchFailedFiles = (failedIndexes.length ? failedIndexes : batch.slice(urls.length).map((_, index) => urls.length + index))
-            .map((index: unknown) => batch[Number(index)])
-            .filter((file: File | undefined): file is File => Boolean(file));
+          const url = urls[0] || null;
 
           console.log('[admin] upload batch response', {
             status: res.status,
-            selected: batch.length,
-            uploaded: urls.length,
-            failed: batchFailedFiles.length,
+            file: file.name,
+            uploaded: url ? 1 : 0,
           });
 
-          uploadedUrls.push(...urls);
-
-          if (!res.ok || !urls.length) {
-            failedFiles.push(...batch);
-          } else {
-            failedFiles.push(...batchFailedFiles);
-          }
+          return res.ok && url ? { url, file, index } : { url: null, file, index };
         } catch (error) {
           console.error('[admin] upload batch error', error);
-          failedFiles.push(...batch);
+          return { url: null, file, index };
         } finally {
           window.clearTimeout(timeout);
+          completedCount += 1;
           setUploadProgress((prev) => ({
             ...prev,
-            [target]: { current: Math.min(start + batch.length, files.length), total: files.length },
+            [target]: { current: completedCount, total: files.length },
           }));
         }
+      };
+
+      for (let start = 0; start < files.length; start += uploadConcurrency) {
+        const batch = files.slice(start, start + uploadConcurrency);
+        const results = await Promise.all(batch.map((file, index) => uploadSingleFile(file, start + index)));
+        results
+          .sort((a, b) => a.index - b.index)
+          .forEach((result) => {
+            if (result.url) {
+              uploadedUrls.push(result.url);
+            } else {
+              failedFiles.push(result.file);
+            }
+          });
       }
 
       if (failedFiles.length > 0) {
@@ -1323,23 +1335,34 @@ export default function AdminPage() {
                   </div>
                   {gal.images.length > 0 && (
                     <div className="grid grid-cols-4 gap-2">
-                      {gal.images.map((img, index) => (
-                        <div key={img} className="relative">
-                          <img
-                            src={img}
-                            alt={`${gal.client_name} gallery upload ${index + 1}`}
-                            className="h-20 w-full object-cover border border-white/10"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => deleteGalleryUpload(gal.id, img)}
-                            className="absolute right-1 top-1 bg-black/70 p-1 text-red-300 transition-colors hover:bg-red-500 hover:text-white"
-                            aria-label={`Delete gallery upload ${index + 1}`}
-                          >
-                            <FiTrash2 />
-                          </button>
-                        </div>
-                      ))}
+                      {gal.images.map((img, index) => {
+                        const isSelected = gal.approved_images.includes(img);
+                        return (
+                          <div key={img} className="space-y-1">
+                            <div className="relative">
+                              <img
+                                src={img}
+                                alt={`${gal.client_name} gallery upload ${index + 1}`}
+                                className={`h-20 w-full object-cover border ${isSelected ? 'border-accent' : 'border-white/10'}`}
+                              />
+                              {isSelected && (
+                                <span className="absolute left-1 top-1 bg-accent px-2 py-1 text-[8px] uppercase tracking-[0.16em] text-black">
+                                  Selected
+                                </span>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => deleteGalleryUpload(gal.id, img)}
+                              className="flex w-full items-center justify-center gap-1 border border-red-500/50 bg-red-500/10 px-2 py-1 text-[9px] uppercase tracking-[0.18em] text-red-300 transition-colors hover:bg-red-500 hover:text-white"
+                              aria-label={`Delete gallery upload ${index + 1}`}
+                            >
+                              <FiTrash2 aria-hidden="true" />
+                              Delete
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                   <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
@@ -1365,18 +1388,18 @@ export default function AdminPage() {
                       {isMediaUploading ? getUploadProgressLabel(mediaTarget, 'Uploading media') : 'Upload Media'}
                     </button>
                   </div>
-                  {gal.images.length > gal.approved_images.length && (
+                  {gal.approved_images.length > 0 && (
                     <button
                       onClick={() =>
                         updateGallery(
                           gal.id.toString(),
-                          'approve',
-                          { images: gal.images.filter((i) => !gal.approved_images.includes(i)) }
+                          'reject',
+                          { images: gal.approved_images }
                         )
                       }
-                      className="text-[10px] uppercase tracking-[0.3em] px-3 py-2 border border-accent text-accent"
+                      className="text-[10px] uppercase tracking-[0.3em] px-3 py-2 border border-white/10 text-white/45 transition-colors hover:border-red-500 hover:text-red-300"
                     >
-                      Approve New Uploads
+                      Clear Client Selection
                     </button>
                   )}
                   <div className="space-y-3 border-t border-white/5 pt-4">
@@ -1406,20 +1429,24 @@ export default function AdminPage() {
                     {gal.finished_images?.length > 0 && (
                       <div className="grid grid-cols-4 gap-2">
                         {gal.finished_images.map((img, index) => (
-                          <div key={img} className="relative">
-                            <img
-                              src={img}
-                              alt={`${gal.client_name} finished work ${index + 1}`}
-                              className="h-20 w-full object-cover border border-white/10"
-                            />
+                          <div key={img} className="space-y-1">
+                            <div className="relative">
+                              <img
+                                src={img}
+                                alt={`${gal.client_name} finished work ${index + 1}`}
+                                className="h-20 w-full object-cover border border-white/10"
+                              />
+                            </div>
                             <button
                               type="button"
                               onClick={() =>
                                 updateGallery(gal.id.toString(), 'removeFinishedImage', { images: [img] })
                               }
-                              className="absolute right-1 top-1 bg-black/70 p-1 text-red-300"
+                              className="flex w-full items-center justify-center gap-1 border border-red-500/50 bg-red-500/10 px-2 py-1 text-[9px] uppercase tracking-[0.18em] text-red-300 transition-colors hover:bg-red-500 hover:text-white"
+                              aria-label={`Delete finished work ${index + 1}`}
                             >
-                              <FiTrash2 />
+                              <FiTrash2 aria-hidden="true" />
+                              Delete
                             </button>
                           </div>
                         ))}

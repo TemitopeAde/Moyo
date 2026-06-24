@@ -9,6 +9,7 @@ import NewsletterForm from '@/components/NewsletterForm';
 import Footer from '@/components/Footer';
 import BookingForm from '@/components/BookingForm';
 import DigitalProducts from '@/components/DigitalProducts';
+import ClientReview from '@/components/ClientReview';
 import { useProfile } from '@/context/ProfileContext';
 
 export default function PhotographyPage() {
@@ -30,6 +31,8 @@ export default function PhotographyPage() {
             <DigitalProducts />
 
             <BookingForm />
+
+            <ClientReview />
 
             <section className="py-40 bg-background flex flex-col items-center border-t border-white/5">
                 <NewsletterForm profileType="photography" />

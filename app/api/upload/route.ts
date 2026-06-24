@@ -5,6 +5,9 @@ import fs from 'fs/promises';
 import path from 'path';
 import { requireAdmin } from '@/lib/auth';
 
+export const runtime = 'nodejs';
+export const maxDuration = 120;
+
 const cloudinaryConfigured = Boolean(
   process.env.CLOUDINARY_CLOUD_NAME &&
     process.env.CLOUDINARY_API_KEY &&
