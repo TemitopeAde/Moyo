@@ -41,7 +41,7 @@ export default function LanguageSwitcher({ className }: { className?: string }) 
                         className="fixed inset-0 z-[70]"
                         onClick={() => setIsOpen(false)}
                     />
-                    <div className="absolute top-full right-0 z-[90] mt-2 flex max-h-[70vh] min-w-[160px] flex-col gap-1 overflow-y-auto glass px-2 py-4">
+                    <div className="absolute top-full right-0 z-[90] mt-2 flex max-h-[70vh] min-w-[190px] flex-col gap-1 overflow-y-auto rounded-md border border-foreground/15 bg-background/92 px-3 py-4 shadow-[0_24px_90px_rgba(0,0,0,0.72)] backdrop-blur-3xl backdrop-saturate-150">
                         {languages.map((lang) => (
                             <button
                                 type="button"
@@ -51,8 +51,10 @@ export default function LanguageSwitcher({ className }: { className?: string }) 
                                     setIsOpen(false);
                                 }}
                                 className={cn(
-                                    "text-left px-4 py-3 text-[10px] tracking-widest uppercase transition-colors rounded-sm",
-                                    language === lang.code ? "bg-white/10 text-accent" : "text-white/40 hover:text-white hover:bg-white/5"
+                                    "rounded-sm px-4 py-3 text-left text-[10px] uppercase tracking-widest transition-colors",
+                                    language === lang.code
+                                        ? "bg-foreground/12 text-accent shadow-inner shadow-white/5"
+                                        : "text-foreground/62 hover:bg-foreground/8 hover:text-foreground"
                                 )}
                             >
                                 {lang.name}
