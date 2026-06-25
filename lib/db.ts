@@ -39,6 +39,10 @@ async function ensureTables() {
       finished_images TEXT[] DEFAULT ARRAY[]::TEXT[],
       payment_verified BOOLEAN DEFAULT FALSE,
       payment_url TEXT DEFAULT '',
+      review_rating INTEGER,
+      review_text TEXT DEFAULT '',
+      review_submitted_at TIMESTAMPTZ,
+      review_featured BOOLEAN DEFAULT FALSE,
       is_locked BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
@@ -114,7 +118,11 @@ async function ensureTables() {
     ALTER TABLE galleries
       ADD COLUMN IF NOT EXISTS finished_images TEXT[] DEFAULT ARRAY[]::TEXT[],
       ADD COLUMN IF NOT EXISTS payment_verified BOOLEAN DEFAULT FALSE,
-      ADD COLUMN IF NOT EXISTS payment_url TEXT DEFAULT '';
+      ADD COLUMN IF NOT EXISTS payment_url TEXT DEFAULT '',
+      ADD COLUMN IF NOT EXISTS review_rating INTEGER,
+      ADD COLUMN IF NOT EXISTS review_text TEXT DEFAULT '',
+      ADD COLUMN IF NOT EXISTS review_submitted_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS review_featured BOOLEAN DEFAULT FALSE;
   `);
 
   await pool.query(`

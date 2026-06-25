@@ -7,21 +7,31 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import GlareHover from '@/components/GlareHover';
 
-const reviews = [
+type HomepageReview = {
+    name: string;
+    session: string;
+    quote: string;
+    rating: number;
+};
+
+const fallbackReviews: HomepageReview[] = [
     {
         name: 'Adaora N.',
         session: 'Portrait Session',
         quote: 'The images felt cinematic without losing who I am. Every frame carried presence, patience, and a kind of quiet honesty.',
+        rating: 5,
     },
     {
         name: 'Tomiwa A.',
         session: 'Editorial Shoot',
         quote: 'Moyo understood the feeling before the first frame. The final edits looked refined, intimate, and completely intentional.',
+        rating: 5,
     },
     {
         name: 'Kemi O.',
         session: 'Brand Portraits',
         quote: 'He made the whole session feel calm and exact. I left with photographs that finally matched how I wanted my work to be seen.',
+        rating: 5,
     },
 ];
 
@@ -29,7 +39,44 @@ export default function ClientReview() {
     const { language } = useLanguage();
     const { translateText } = useTranslate(language);
     const [activeReview, setActiveReview] = useState(0);
+    const [featuredReviews, setFeaturedReviews] = useState<HomepageReview[]>([]);
+    const reviews = featuredReviews.length > 0 ? featuredReviews : fallbackReviews;
     const review = reviews[activeReview];
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadFeaturedReviews = async () => {
+            try {
+                const res = await fetch('/api/galleries/reviews');
+                if (!res.ok) return;
+                const data = await res.json();
+                const nextReviews = Array.isArray(data.reviews)
+                    ? data.reviews.filter((item: Partial<HomepageReview>) => item.name && item.quote)
+                    : [];
+
+                if (isMounted && nextReviews.length > 0) {
+                    setFeaturedReviews(
+                        nextReviews.map((item: HomepageReview) => ({
+                            name: item.name,
+                            session: item.session || 'Delivered Gallery',
+                            quote: item.quote,
+                            rating: Math.min(5, Math.max(1, Number(item.rating) || 5)),
+                        }))
+                    );
+                    setActiveReview(0);
+                }
+            } catch {
+                // Keep curated fallback reviews if featured reviews cannot load.
+            }
+        };
+
+        loadFeaturedReviews();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     useEffect(() => {
         const timer = window.setInterval(() => {
@@ -37,7 +84,7 @@ export default function ClientReview() {
         }, 5200);
 
         return () => window.clearInterval(timer);
-    }, []);
+    }, [reviews.length]);
 
     return (
         <section className="relative z-10 bg-background px-6 pb-24 md:px-12 md:pb-32">
@@ -69,7 +116,11 @@ export default function ClientReview() {
                         <div className="space-y-5 border-b border-foreground/10 pb-8 md:border-b-0 md:border-r md:pb-0 md:pr-10">
                             <div className="flex gap-1.5 text-accent" aria-label={translateText('Five star review')}>
                                 {Array.from({ length: 5 }).map((_, index) => (
-                                    <Star key={index} className="h-3.5 w-3.5 fill-current" strokeWidth={1.5} />
+                                    <Star
+                                        key={index}
+                                        className={`h-3.5 w-3.5 ${index < review.rating ? 'fill-current opacity-100' : 'opacity-25'}`}
+                                        strokeWidth={1.5}
+                                    />
                                 ))}
                             </div>
                             <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-foreground/30 md:tracking-[0.45em]">

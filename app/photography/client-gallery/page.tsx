@@ -19,6 +19,9 @@ type ClientGallery = {
     finished_images: string[];
     payment_verified: boolean;
     payment_url: string;
+    review_rating: number | null;
+    review_text: string;
+    review_submitted_at: string | null;
     is_locked: boolean;
     image_count: number;
     finished_count: number;
@@ -29,6 +32,11 @@ export default function ClientGalleryPage() {
     const [gallery, setGallery] = useState<ClientGallery | null>(null);
     const [selectedImages, setSelectedImages] = useState<string[]>([]);
     const [isApproving, setIsApproving] = useState(false);
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const [reviewRating, setReviewRating] = useState(5);
+    const [reviewText, setReviewText] = useState('');
+    const [reviewMessage, setReviewMessage] = useState('');
+    const [reviewError, setReviewError] = useState('');
     const [approvalMessage, setApprovalMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -36,6 +44,9 @@ export default function ClientGalleryPage() {
     const { language } = useLanguage();
     const { t } = useTranslate(language);
     const selectedImageSet = useMemo(() => new Set(selectedImages), [selectedImages]);
+
+    const getFinishedDownloadUrl = (image: string) =>
+        `/api/galleries/download?galleryId=${gallery?.id || ''}&accessCode=${encodeURIComponent(accessCode.trim())}&file=${encodeURIComponent(image)}`;
 
     useEffect(() => {
         setProfile('photography');
@@ -48,6 +59,10 @@ export default function ClientGalleryPage() {
         setError('');
         setGallery(null);
         setSelectedImages([]);
+        setReviewRating(5);
+        setReviewText('');
+        setReviewMessage('');
+        setReviewError('');
         setApprovalMessage('');
 
         if (!code) {
@@ -71,6 +86,10 @@ export default function ClientGalleryPage() {
 
             setGallery(data.gallery);
             setSelectedImages(data.gallery.approved_images || []);
+            setReviewRating(data.gallery.review_rating || 5);
+            setReviewText(data.gallery.review_text || '');
+            setReviewMessage('');
+            setReviewError('');
         } catch {
             setError(t('clientGallery.openRetryError'));
         } finally {
@@ -83,6 +102,10 @@ export default function ClientGalleryPage() {
         setAccessCode('');
         setError('');
         setSelectedImages([]);
+        setReviewRating(5);
+        setReviewText('');
+        setReviewMessage('');
+        setReviewError('');
         setApprovalMessage('');
     };
 
@@ -136,6 +159,50 @@ export default function ClientGalleryPage() {
             setError(t('clientGallery.approveRetryError'));
         } finally {
             setIsApproving(false);
+        }
+    };
+
+    const submitReview = async () => {
+        if (!gallery || isSubmittingReview) return;
+
+        setIsSubmittingReview(true);
+        setReviewError('');
+        setReviewMessage('');
+
+        try {
+            const res = await fetch('/api/galleries/review', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    accessCode: accessCode.trim(),
+                    galleryId: gallery.id,
+                    rating: reviewRating,
+                    reviewText,
+                }),
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                setReviewError(data.error || t('clientGallery.reviewError'));
+                return;
+            }
+
+            setGallery((current) =>
+                current
+                    ? {
+                        ...current,
+                        review_rating: data.review_rating,
+                        review_text: data.review_text || reviewText.trim(),
+                        review_submitted_at: data.review_submitted_at,
+                    }
+                    : current
+            );
+            setReviewText(data.review_text || reviewText.trim());
+            setReviewMessage(t('clientGallery.reviewThanks'));
+        } catch {
+            setReviewError(t('clientGallery.reviewRetryError'));
+        } finally {
+            setIsSubmittingReview(false);
         }
     };
 
@@ -225,7 +292,7 @@ export default function ClientGalleryPage() {
 
                         {gallery.images.length > 0 ? (
                             <>
-                                <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,240px),1fr))] gap-4">
+                                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
                                     {gallery.images.map((image, index) => {
                                         const isSelected = selectedImageSet.has(image);
 
@@ -236,14 +303,12 @@ export default function ClientGalleryPage() {
                                                 height="auto"
                                                 background="#111"
                                                 borderRadius="2px"
-                                                borderColor={isSelected ? 'rgba(146,1,16,0.75)' : 'rgba(255,255,255,0.08)'}
+                                                borderColor="rgba(255,255,255,0.1)"
                                                 glareOpacity={0.18}
                                                 glareAngle={-30}
                                                 glareSize={180}
                                                 transitionDuration={720}
-                                                className={`aspect-square group transition-colors ${
-                                                    isSelected ? 'border-accent shadow-[0_0_0_1px_rgba(146,1,16,0.45)]' : 'border-white/5'
-                                                }`}
+                                                className="aspect-[4/5] group border-white/10 transition-colors hover:border-white/25"
                                             >
                                                 <button
                                                     type="button"
@@ -265,13 +330,16 @@ export default function ClientGalleryPage() {
                                                     type="button"
                                                     onClick={() => toggleImageSelection(image)}
                                                     aria-pressed={isSelected}
-                                                    className={`absolute left-3 top-3 z-20 rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.2em] transition-colors ${
+                                                    aria-label={isSelected ? t('ui.removeImage') : t('ui.selectImage')}
+                                                    className={`absolute left-3 top-3 z-20 h-6 w-6 rounded-full border transition-all ${
                                                         isSelected
-                                                            ? 'border-accent bg-accent text-black'
-                                                            : 'border-white/20 bg-black/40 text-white/60 hover:border-accent hover:text-accent'
+                                                            ? 'border-white bg-white shadow-[0_0_18px_rgba(255,255,255,0.22)]'
+                                                            : 'border-white/65 bg-black/20 hover:border-white hover:bg-white/10'
                                                     }`}
                                                 >
-                                                    {isSelected ? t('ui.selected') : `${t('ui.image')} ${index + 1}`}
+                                                    <span className="sr-only">
+                                                        {isSelected ? t('ui.removeImage') : t('ui.selectImage')}
+                                                    </span>
                                                 </button>
                                                 <a
                                                     href={image}
@@ -336,19 +404,115 @@ export default function ClientGalleryPage() {
                                 </div>
 
                                 {gallery.payment_verified ? (
-                                    <div className="grid gap-3 sm:grid-cols-2">
-                                        {gallery.finished_images.map((image, index) => (
-                                            <a
-                                                key={`${image}-${index}`}
-                                                href={image}
-                                                download
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="border border-accent/40 bg-accent/10 px-5 py-4 text-[10px] uppercase tracking-[0.28em] text-accent transition-colors hover:bg-accent hover:text-black"
-                                            >
-                                                {t('clientGallery.downloadFinishedWork')} {index + 1}
-                                            </a>
-                                        ))}
+                                    <div className="space-y-8">
+                                        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
+                                            {gallery.finished_images.map((image, index) => (
+                                                <div
+                                                    key={`${image}-${index}`}
+                                                    className="group relative aspect-[4/5] overflow-hidden border border-white/10 bg-black transition-colors hover:border-white/25"
+                                                >
+                                                    <GalleryMedia
+                                                        src={image}
+                                                        alt={`${gallery.client_name} ${t('clientGallery.finishedWorkTitle')} ${index + 1}`}
+                                                        className="pointer-events-none h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                    />
+                                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/0" />
+                                                    <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/55 px-3 py-1 text-[9px] uppercase tracking-[0.18em] text-white/70 backdrop-blur-sm">
+                                                        {t('clientGallery.finishedWorkTitle')} {index + 1}
+                                                    </span>
+                                                    <a
+                                                        href={getFinishedDownloadUrl(image)}
+                                                        className="absolute bottom-3 left-3 right-3 z-10 border border-white/25 bg-white px-3 py-3 text-center text-[10px] font-bold uppercase tracking-[0.24em] text-black transition-colors hover:border-accent hover:bg-accent"
+                                                    >
+                                                        {t('clientGallery.downloadFinishedWork')}
+                                                    </a>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="border-t border-white/10 pt-8 text-left">
+                                            {gallery.review_submitted_at ? (
+                                                <div className="space-y-4 text-center">
+                                                    <p className="text-[10px] uppercase tracking-[0.35em] text-accent">
+                                                        {t('clientGallery.reviewReceived')}
+                                                    </p>
+                                                    <div className="flex justify-center gap-1 text-lg text-accent" aria-label={`${gallery.review_rating || 5} ${t('clientGallery.reviewStars')}`}>
+                                                        {Array.from({ length: 5 }).map((_, index) => (
+                                                            <span key={index} className={index < (gallery.review_rating || 0) ? 'opacity-100' : 'opacity-25'}>
+                                                                &#9733;
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                    <p className="mx-auto max-w-xl text-sm leading-relaxed text-white/55">
+                                                        &quot;{gallery.review_text}&quot;
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-5">
+                                                    <div className="space-y-2 text-center">
+                                                        <p className="text-[10px] uppercase tracking-[0.35em] text-accent">
+                                                            {t('clientGallery.reviewPromptTitle')}
+                                                        </p>
+                                                        <p className="text-sm leading-relaxed text-white/45">
+                                                            {t('clientGallery.reviewPromptDescription')}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex justify-center gap-2" aria-label={t('clientGallery.rateTransaction')}>
+                                                        {Array.from({ length: 5 }).map((_, index) => {
+                                                            const value = index + 1;
+                                                            const isActive = value <= reviewRating;
+                                                            return (
+                                                                <button
+                                                                    key={value}
+                                                                    type="button"
+                                                                    onClick={() => setReviewRating(value)}
+                                                                    className={`text-2xl leading-none transition-colors ${
+                                                                        isActive ? 'text-accent' : 'text-white/25 hover:text-white/60'
+                                                                    }`}
+                                                                    aria-label={`${value} ${t('clientGallery.reviewStars')}`}
+                                                                >
+                                                                    &#9733;
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    <textarea
+                                                        value={reviewText}
+                                                        onChange={(event) => {
+                                                            setReviewText(event.target.value);
+                                                            setReviewError('');
+                                                        }}
+                                                        maxLength={1000}
+                                                        rows={4}
+                                                        placeholder={t('clientGallery.reviewPlaceholder')}
+                                                        className="w-full resize-none border border-white/10 bg-white/[0.04] px-4 py-4 text-sm leading-relaxed text-white outline-none transition-colors placeholder:text-white/25 focus:border-accent"
+                                                    />
+                                                    {reviewError && (
+                                                        <p className="text-center text-xs leading-relaxed text-red-300">
+                                                            {reviewError}
+                                                        </p>
+                                                    )}
+                                                    <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+                                                        <span className="text-[10px] uppercase tracking-[0.2em] text-white/30">
+                                                            {reviewText.length}/1000
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={submitReview}
+                                                            disabled={isSubmittingReview || reviewText.trim().length < 10}
+                                                            className="w-full bg-white px-6 py-4 text-[10px] font-bold uppercase tracking-[0.35em] text-black transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+                                                        >
+                                                            {isSubmittingReview ? t('clientGallery.submittingReview') : t('clientGallery.submitReview')}
+                                                        </button>
+                                                    </div>
+                                                    {reviewMessage && (
+                                                        <p className="text-center text-xs leading-relaxed text-accent">
+                                                            {reviewMessage}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="space-y-3">

@@ -37,6 +37,10 @@ type Gallery = {
   finished_images: string[];
   payment_verified: boolean;
   payment_url: string;
+  review_rating: number | null;
+  review_text: string;
+  review_submitted_at: string | null;
+  review_featured: boolean;
   is_locked: boolean;
 };
 
@@ -1339,14 +1343,55 @@ export default function AdminPage() {
                     <span>Uploads: {gal.images.length}</span>
                     <span>Selected for retouching: {gal.approved_images.length}</span>
                     <span>Finished: {gal.finished_images?.length || 0}</span>
+                    <span className={gal.review_submitted_at ? 'text-accent' : 'text-white/35'}>
+                      {gal.review_submitted_at ? `Reviewed: ${gal.review_rating || 0}/5` : 'No review yet'}
+                    </span>
+                    {gal.review_featured && <span className="text-green-300">Featured on home</span>}
                     <span className={gal.payment_verified ? 'text-green-300' : 'text-white/40'}>
                       {gal.payment_verified ? 'Payment verified' : 'Payment pending'}
                     </span>
                   </div>
-                  {gal.approved_images.length > 0 && (
-                    <div className="space-y-2 border border-accent/20 bg-accent/[0.04] p-3">
-                      <div className="flex items-center justify-between gap-3">
+                  {gal.review_submitted_at && (
+                    <div className="space-y-3 border border-accent/25 bg-accent/[0.04] p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="text-[10px] uppercase tracking-[0.28em] text-accent">
+                          Client review
+                        </p>
+                        <div className="flex flex-wrap items-center justify-end gap-3 text-[10px] uppercase tracking-[0.18em] text-white/45">
+                          <div className="flex items-center gap-3">
+                            <span className="text-accent">
+                              {Array.from({ length: 5 }).map((_, index) => (
+                                <span key={index} className={index < (gal.review_rating || 0) ? 'opacity-100' : 'opacity-25'}>
+                                  &#9733;
+                                </span>
+                              ))}
+                            </span>
+                            <span>{new Date(gal.review_submitted_at).toLocaleDateString()}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateGallery(gal.id.toString(), 'featureReview', { featured: !gal.review_featured })
+                            }
+                            className={`border px-3 py-2 transition-colors ${
+                              gal.review_featured
+                                ? 'border-green-400/40 text-green-300 hover:border-white hover:text-white'
+                                : 'border-accent/50 text-accent hover:bg-accent hover:text-black'
+                            }`}
+                          >
+                            {gal.review_featured ? 'Remove from home' : 'Add to home'}
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-sm leading-relaxed text-white/70">
+                        &quot;{gal.review_text}&quot;
+                      </p>
+                    </div>
+                  )}
+                  {gal.approved_images.length > 0 && (
+                    <div className="space-y-2 border border-white/10 bg-white/[0.02] p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[10px] uppercase tracking-[0.28em] text-white/55">
                           Client selected
                         </p>
                         <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
@@ -1360,7 +1405,7 @@ export default function AdminPage() {
                             href={img}
                             target="_blank"
                             rel="noreferrer"
-                            className="group relative block overflow-hidden border border-accent/30 bg-black"
+                            className="group relative block overflow-hidden border border-white/10 bg-black transition-colors hover:border-white/25"
                             aria-label={`Open selected image ${index + 1}`}
                           >
                             <GalleryMedia
@@ -1369,8 +1414,8 @@ export default function AdminPage() {
                               className="h-20 w-full object-cover"
                               sizes="(min-width: 1280px) 96px, (min-width: 640px) 33vw, 50vw"
                             />
-                            <span className="absolute left-1 top-1 bg-accent px-2 py-1 text-[8px] uppercase tracking-[0.16em] text-black">
-                              Pick {index + 1}
+                            <span className="absolute left-1.5 top-1.5 h-4 w-4 rounded-full border border-white bg-white shadow-[0_0_12px_rgba(255,255,255,0.18)]">
+                              <span className="sr-only">Pick {index + 1}</span>
                             </span>
                           </a>
                         ))}
@@ -1387,14 +1432,16 @@ export default function AdminPage() {
                               <GalleryMedia
                                 src={img}
                                 alt={`${gal.client_name} gallery upload ${index + 1}`}
-                                className={`h-20 w-full object-cover border ${isSelected ? 'border-accent' : 'border-white/10'}`}
+                                className="h-20 w-full border border-white/10 object-cover"
                                 sizes="(min-width: 1280px) 96px, (min-width: 640px) 33vw, 50vw"
                               />
-                              {isSelected && (
-                                <span className="absolute left-1 top-1 bg-accent px-2 py-1 text-[8px] uppercase tracking-[0.16em] text-black">
-                                  Selected
-                                </span>
-                              )}
+                              <span
+                                className={`absolute left-1.5 top-1.5 h-4 w-4 rounded-full border transition-colors ${
+                                  isSelected ? 'border-white bg-white' : 'border-white/65 bg-black/20'
+                                }`}
+                              >
+                                <span className="sr-only">{isSelected ? 'Selected' : 'Not selected'}</span>
+                              </span>
                             </div>
                             <button
                               type="button"

@@ -1,0 +1,61 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db';
+
+function getFileNameFromUrl(url: string, fallback: string) {
+  try {
+    const parsed = new URL(url);
+    const lastSegment = parsed.pathname.split('/').filter(Boolean).pop() || fallback;
+    const cleanSegment = decodeURIComponent(lastSegment.split('?')[0] || fallback);
+    return cleanSegment.includes('.') ? cleanSegment : `${cleanSegment}.jpg`;
+  } catch {
+    return fallback;
+  }
+}
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const accessCode = String(searchParams.get('accessCode') || '').trim();
+  const galleryId = Number(searchParams.get('galleryId'));
+  const fileUrl = String(searchParams.get('file') || '').trim();
+
+  if (!accessCode || !Number.isFinite(galleryId) || !fileUrl) {
+    return NextResponse.json({ error: 'Missing download details.' }, { status: 400 });
+  }
+
+  const { rows } = await query(
+    `SELECT finished_images, payment_verified, is_locked
+     FROM galleries
+     WHERE id = $1 AND access_code = $2
+     LIMIT 1`,
+    [galleryId, accessCode]
+  );
+
+  const gallery = rows[0];
+  if (!gallery) {
+    return NextResponse.json({ error: 'Invalid gallery access.' }, { status: 404 });
+  }
+
+  if (gallery.is_locked) {
+    return NextResponse.json({ error: 'This gallery is currently locked.' }, { status: 403 });
+  }
+
+  const finishedImages = Array.isArray(gallery.finished_images) ? gallery.finished_images : [];
+  if (!gallery.payment_verified || !finishedImages.includes(fileUrl)) {
+    return NextResponse.json({ error: 'This download is not available.' }, { status: 403 });
+  }
+
+  const fileResponse = await fetch(fileUrl);
+  if (!fileResponse.ok || !fileResponse.body) {
+    return NextResponse.json({ error: 'Unable to prepare this download.' }, { status: 502 });
+  }
+
+  const fileName = getFileNameFromUrl(fileUrl, `moyo-finished-work-${galleryId}.jpg`);
+
+  return new NextResponse(fileResponse.body, {
+    headers: {
+      'Content-Type': fileResponse.headers.get('content-type') || 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${fileName.replace(/"/g, '')}"`,
+      'Cache-Control': 'private, no-store',
+    },
+  });
+}

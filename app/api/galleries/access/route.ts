@@ -22,6 +22,9 @@ export async function POST(req: NextRequest) {
             finished_images,
             payment_verified,
             payment_url,
+            review_rating,
+            review_text,
+            review_submitted_at,
             is_locked
      FROM galleries
      WHERE access_code = $1
@@ -53,6 +56,9 @@ export async function POST(req: NextRequest) {
       finished_images: gallery.payment_verified ? finishedImages : [],
       payment_verified: gallery.payment_verified || false,
       payment_url: gallery.payment_url || '',
+      review_rating: gallery.review_rating || null,
+      review_text: gallery.review_text || '',
+      review_submitted_at: gallery.review_submitted_at || null,
       is_locked: gallery.is_locked,
       image_count: allImages.length,
       finished_count: finishedImages.length,

@@ -178,6 +178,17 @@ export async function PUT(req: NextRequest) {
     );
     return NextResponse.json({ gallery: rows[0] });
   }
+  if (action === 'featureReview') {
+    const { rows } = await query(
+      `UPDATE galleries
+       SET review_featured = $1
+       WHERE id = $2
+         AND review_submitted_at IS NOT NULL
+       RETURNING *`,
+      [Boolean(payload?.featured), id]
+    );
+    return NextResponse.json({ gallery: rows[0] });
+  }
 
   // generic update
   const { rows } = await query(
