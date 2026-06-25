@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import GlareHover from '@/components/GlareHover';
+import { useSiteSettings } from '@/lib/useSiteSettings';
 
 type CatalogImage = {
     id: number;
@@ -20,6 +21,7 @@ type CatalogCategory = {
     name: string;
     slug: string;
     description: string;
+    cover_image_url: string;
     images: CatalogImage[];
 };
 
@@ -38,6 +40,98 @@ type PortfolioCardProps = {
     translateText: (text: string) => string;
     onSelect: (item: CatalogGridItem) => void;
 };
+
+type CategoryOverviewCardProps = {
+    category: CatalogCategory;
+    index: number;
+    shouldReduceMotion: boolean | null;
+    enablePointerMotion: boolean;
+    translateText: (text: string) => string;
+    onSelect: (slug: string) => void;
+};
+
+function getCategoryDisplayImage(category: CatalogCategory) {
+    return category.cover_image_url || category.images?.[0]?.image_url || '';
+}
+
+function CategoryOverviewCard({
+    category,
+    index,
+    shouldReduceMotion,
+    enablePointerMotion,
+    translateText,
+    onSelect,
+}: CategoryOverviewCardProps) {
+    const canAnimatePointer = enablePointerMotion && !shouldReduceMotion;
+    const imageUrl = getCategoryDisplayImage(category);
+    const imageCount = category.images?.length || 0;
+
+    return (
+        <motion.button
+            type="button"
+            onClick={() => onSelect(category.slug)}
+            layout={!shouldReduceMotion}
+            variants={{
+                hidden: { opacity: 0, y: 48, filter: 'blur(10px)' },
+                visible: {
+                    opacity: 1,
+                    y: 0,
+                    filter: 'blur(0px)',
+                    transition: {
+                        duration: 0.75,
+                        ease: [0.22, 1, 0.36, 1],
+                    },
+                },
+            }}
+            initial={shouldReduceMotion ? false : "hidden"}
+            whileInView="visible"
+            viewport={{ once: true, margin: "-10% 0px" }}
+            whileHover={canAnimatePointer ? { y: index % 2 === 0 ? -10 : -14 } : undefined}
+            whileTap={shouldReduceMotion ? undefined : { scale: 0.99 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            className="group block min-w-0 w-full cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        >
+            <GlareHover
+                width="100%"
+                height="auto"
+                background="var(--color-surface)"
+                borderRadius="2px"
+                borderColor="rgba(255,255,255,0.08)"
+                glareOpacity={0.16}
+                glareAngle={-30}
+                glareSize={180}
+                transitionDuration={760}
+            >
+                <div className="relative aspect-[4/5] overflow-hidden bg-black">
+                    <motion.img
+                        src={imageUrl}
+                        alt={translateText(category.name)}
+                        className="h-full w-full object-cover will-change-transform"
+                        loading="lazy"
+                        initial={shouldReduceMotion ? false : { scale: 1.04 }}
+                        animate={shouldReduceMotion ? undefined : { scale: 1.01 }}
+                        whileHover={canAnimatePointer ? { scale: 1.08 } : undefined}
+                        transition={{ duration: 1.15, ease: [0.22, 1, 0.36, 1] }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/0" />
+                    <div className="absolute inset-x-0 bottom-0 min-w-0 p-4 sm:p-6">
+                        <h3 className="font-heading text-2xl italic text-white [overflow-wrap:anywhere] sm:text-3xl">
+                            {translateText(category.name)}
+                        </h3>
+                        <p className="mt-3 text-[10px] uppercase tracking-[0.18em] text-white/45 sm:tracking-[0.24em]">
+                            {imageCount} {translateText(imageCount === 1 ? 'image' : 'images')}
+                        </p>
+                    </div>
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-500 ease-out md:group-hover:bg-black/35 md:group-hover:opacity-100">
+                        <span className="translate-y-2 border border-white/40 bg-black/50 px-5 py-3 text-[10px] uppercase tracking-[0.3em] text-white opacity-0 transition-all duration-500 ease-out md:group-hover:translate-y-0 md:group-hover:opacity-100">
+                            {translateText('Explore')}
+                        </span>
+                    </div>
+                </div>
+            </GlareHover>
+        </motion.button>
+    );
+}
 
 function PortfolioCard({
     item,
@@ -101,7 +195,7 @@ function PortfolioCard({
             whileTap={shouldReduceMotion ? undefined : { scale: 0.99 }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             style={canAnimatePointer ? { rotateX, rotateY, transformPerspective: 1200 } : undefined}
-            className="group mb-5 block w-full cursor-pointer break-inside-avoid text-left outline-none focus-visible:ring-2 focus-visible:ring-accent md:mb-8"
+            className="group mb-5 block min-w-0 w-full cursor-pointer break-inside-avoid text-left outline-none focus-visible:ring-2 focus-visible:ring-accent md:mb-8"
         >
             <GlareHover
                 width="100%"
@@ -126,28 +220,21 @@ function PortfolioCard({
                         transition={{ duration: 1.15, ease: [0.22, 1, 0.36, 1] }}
                         style={canAnimatePointer ? { x: imageX, y: imageY } : undefined}
                     />
-                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-500 ease-out md:group-hover:bg-black/40 md:group-hover:opacity-100">
-                        <span className="translate-y-2 border border-white/40 bg-black/50 px-5 py-3 text-[10px] uppercase tracking-[0.3em] text-white opacity-0 transition-all duration-500 ease-out md:group-hover:translate-y-0 md:group-hover:opacity-100">
-                            {translateText('View')}
-                        </span>
-                    </div>
+                    <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-500 ease-out md:group-hover:bg-black/20" />
                 </div>
 
-                <motion.div
-                    className="px-4 py-4 sm:px-5"
-                    initial={false}
-                    whileHover={canAnimatePointer ? { y: -2 } : undefined}
-                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                >
-                    <p className="text-[10px] uppercase tracking-[0.28em] text-accent">
-                        {translateText(item.categoryName)}
-                    </p>
-                    {item.title && (
-                        <h3 className="mt-2 text-lg font-heading text-foreground transition-colors group-hover:text-accent">
+                {item.title && (
+                    <motion.div
+                        className="px-4 py-4 sm:px-5"
+                        initial={false}
+                        whileHover={canAnimatePointer ? { y: -2 } : undefined}
+                        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                        <h3 className="mt-2 text-lg font-heading text-foreground transition-colors [overflow-wrap:anywhere] group-hover:text-accent">
                             {translateText(item.title)}
                         </h3>
-                    )}
-                </motion.div>
+                    </motion.div>
+                )}
             </GlareHover>
         </motion.button>
     );
@@ -156,6 +243,7 @@ function PortfolioCard({
 export default function PhotographyGrid() {
     const { language } = useLanguage();
     const { t, translateText } = useTranslate(language);
+    const settings = useSiteSettings();
     const shouldReduceMotion = useReducedMotion();
     const [enablePointerMotion, setEnablePointerMotion] = useState(false);
     const [categories, setCategories] = useState<CatalogCategory[]>([]);
@@ -184,24 +272,59 @@ export default function PhotographyGrid() {
     }, []);
 
     const items = useMemo(() => {
-        return categories.flatMap((category) =>
-            (category.images || []).map((image) => ({
+        return categories.flatMap((category) => {
+            const orderedImages = [...(category.images || [])].sort((a, b) => {
+                if (!category.cover_image_url) return 0;
+                if (a.image_url === category.cover_image_url) return -1;
+                if (b.image_url === category.cover_image_url) return 1;
+                return 0;
+            });
+
+            return orderedImages.map((image) => ({
                 ...image,
                 categoryName: category.name,
                 categorySlug: category.slug,
                 categoryDescription: category.description,
-            }))
-        );
+            }));
+        });
     }, [categories]);
 
     const visibleItems =
         activeCategory === 'all' ? items : items.filter((item) => item.categorySlug === activeCategory);
+    const overviewCategories = useMemo(
+        () => categories.filter((category) => getCategoryDisplayImage(category)),
+        [categories]
+    );
+    const isOverview = activeCategory === 'all';
+    const hasVisibleContent = isOverview ? overviewCategories.length > 0 : visibleItems.length > 0;
+    const selectedIndex = selectedItem ? visibleItems.findIndex((item) => item.id === selectedItem.id) : -1;
+    const canNavigateSelection = visibleItems.length > 1 && selectedIndex >= 0;
+
+    const showPreviousItem = useCallback(() => {
+        if (!canNavigateSelection) return;
+        const nextIndex = (selectedIndex - 1 + visibleItems.length) % visibleItems.length;
+        setSelectedItem(visibleItems[nextIndex]);
+    }, [canNavigateSelection, selectedIndex, visibleItems]);
+
+    const showNextItem = useCallback(() => {
+        if (!canNavigateSelection) return;
+        const nextIndex = (selectedIndex + 1) % visibleItems.length;
+        setSelectedItem(visibleItems[nextIndex]);
+    }, [canNavigateSelection, selectedIndex, visibleItems]);
 
     useEffect(() => {
         if (!selectedItem) return;
 
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') setSelectedItem(null);
+            if (event.key === 'ArrowLeft') {
+                event.preventDefault();
+                showPreviousItem();
+            }
+            if (event.key === 'ArrowRight') {
+                event.preventDefault();
+                showNextItem();
+            }
         };
 
         document.body.style.overflow = 'hidden';
@@ -211,22 +334,22 @@ export default function PhotographyGrid() {
             document.body.style.overflow = '';
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [selectedItem]);
+    }, [selectedItem, showNextItem, showPreviousItem]);
 
     return (
         <section id="photography" className="bg-background py-20 sm:py-24 md:py-32">
             <div className="container mx-auto px-4 sm:px-6 md:px-12">
-                <div className="mb-10 flex flex-col justify-between gap-6 md:mb-12 md:flex-row md:items-end md:gap-8">
-                    <div className="space-y-4">
-                        <span className="block text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">
-                            {t('photography.selectedPortfolio')}
+                <div className="mb-10 flex min-w-0 flex-col justify-between gap-6 md:mb-12 md:flex-row md:items-end md:gap-8">
+                    <div className="min-w-0 space-y-4">
+                        <span className="block text-accent text-[10px] uppercase tracking-[0.22em] [overflow-wrap:anywhere] md:tracking-[0.5em]">
+                            {translateText(settings.portfolio.eyebrow || t('photography.selectedPortfolio'))}
                         </span>
-                        <h2 className="text-3xl md:text-4xl font-heading text-foreground font-light">
-                            <span className="italic">{t('photography.visualProximity')}</span>
+                        <h2 className="text-3xl md:text-4xl font-heading text-foreground font-light [overflow-wrap:anywhere]">
+                            <span className="italic">{translateText(settings.portfolio.title || t('photography.visualProximity'))}</span>
                         </h2>
                     </div>
-                    <p className="text-foreground/40 text-sm max-w-xs font-body tracking-wide leading-relaxed">
-                        {t('photography.gridDescription')}
+                    <p className="max-w-xs text-sm leading-relaxed tracking-wide text-foreground/40 [overflow-wrap:anywhere] md:text-right">
+                        {translateText(settings.portfolio.description || t('photography.gridDescription'))}
                     </p>
                 </div>
 
@@ -259,18 +382,48 @@ export default function PhotographyGrid() {
                 </div>
 
                 {isLoading && (
-                    <div className="border border-foreground/10 py-20 text-center text-[10px] uppercase tracking-[0.4em] text-foreground/30">
+                    <div className="border border-foreground/10 px-4 py-20 text-center text-[10px] uppercase tracking-[0.2em] text-foreground/30 sm:tracking-[0.4em]">
                         {translateText('Loading portfolio')}
                     </div>
                 )}
 
-                {!isLoading && visibleItems.length === 0 && (
-                    <div className="border border-foreground/10 py-20 text-center text-[10px] uppercase tracking-[0.4em] text-foreground/30">
+                {!isLoading && !hasVisibleContent && (
+                    <div className="border border-foreground/10 px-4 py-20 text-center text-[10px] uppercase tracking-[0.2em] text-foreground/30 sm:tracking-[0.4em]">
                         {translateText('No photography catalog images yet.')}
                     </div>
                 )}
 
-                {visibleItems.length > 0 && (
+                {isOverview && overviewCategories.length > 0 && (
+                    <motion.div
+                        key="category-overview"
+                        className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 md:gap-8"
+                        initial={shouldReduceMotion ? false : "hidden"}
+                        animate="visible"
+                        variants={{
+                            hidden: {},
+                            visible: {
+                                transition: {
+                                    staggerChildren: 0.08,
+                                    delayChildren: 0.05,
+                                },
+                            },
+                        }}
+                    >
+                        {overviewCategories.map((category, index) => (
+                            <CategoryOverviewCard
+                                key={category.id}
+                                category={category}
+                                index={index}
+                                shouldReduceMotion={shouldReduceMotion}
+                                enablePointerMotion={enablePointerMotion}
+                                translateText={translateText}
+                                onSelect={setActiveCategory}
+                            />
+                        ))}
+                    </motion.div>
+                )}
+
+                {!isOverview && visibleItems.length > 0 && (
                     <motion.div
                         key={activeCategory}
                         className="columns-1 gap-5 sm:columns-2 lg:columns-3 md:gap-8"
@@ -329,52 +482,73 @@ export default function PhotographyGrid() {
                             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                             className="relative grid max-h-[92vh] w-full max-w-6xl overflow-hidden border border-white/10 bg-background shadow-2xl lg:grid-cols-[minmax(0,1fr)_320px]"
                         >
+                            {canNavigateSelection && (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            showPreviousItem();
+                                        }}
+                                        className="absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-white/15 bg-black/55 text-xl text-white/75 backdrop-blur-md transition-colors hover:border-accent hover:text-accent sm:left-4 sm:h-12 sm:w-12"
+                                        aria-label={translateText('Previous image')}
+                                    >
+                                        ←
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            showNextItem();
+                                        }}
+                                        className="absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center border border-white/15 bg-black/55 text-xl text-white/75 backdrop-blur-md transition-colors hover:border-accent hover:text-accent sm:right-4 sm:h-12 sm:w-12 lg:right-[340px]"
+                                        aria-label={translateText('Next image')}
+                                    >
+                                        →
+                                    </button>
+                                </>
+                            )}
                             <div className="flex max-h-[62vh] items-center justify-center bg-black lg:max-h-[92vh]">
-                                <img
-                                    src={selectedItem.image_url}
-                                    alt={translateText(selectedItem.alt_text || selectedItem.title || selectedItem.categoryName)}
-                                    className="max-h-[62vh] w-auto max-w-full object-contain lg:max-h-[92vh]"
-                                />
+                                <AnimatePresence mode="wait">
+                                    <motion.img
+                                        key={selectedItem.id}
+                                        src={selectedItem.image_url}
+                                        alt={translateText(selectedItem.alt_text || selectedItem.title || selectedItem.categoryName)}
+                                        className="max-h-[62vh] w-auto max-w-full object-contain lg:max-h-[92vh]"
+                                        initial={shouldReduceMotion ? false : { opacity: 0, x: 24 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={shouldReduceMotion ? undefined : { opacity: 0, x: -24 }}
+                                        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                                    />
+                                </AnimatePresence>
                             </div>
 
-                            <div className="flex flex-col gap-6 overflow-y-auto p-6 sm:p-8">
+                            <div className="flex min-w-0 flex-col gap-6 overflow-y-auto p-5 sm:p-8">
                                 <div className="space-y-3">
-                                    <p className="text-[10px] uppercase tracking-[0.35em] text-accent">
+                                    <p className="text-[10px] uppercase tracking-[0.22em] text-accent [overflow-wrap:anywhere] sm:tracking-[0.35em]">
                                         {translateText(selectedItem.categoryName)}
                                     </p>
-                                    <h2 className="text-3xl font-heading italic text-foreground sm:text-4xl">
+                                    <h2 className="text-3xl font-heading italic text-foreground [overflow-wrap:anywhere] sm:text-4xl">
                                         {translateText(selectedItem.title || selectedItem.categoryName)}
                                     </h2>
                                     {selectedItem.categoryDescription && (
-                                        <p className="text-sm leading-relaxed text-foreground/45">
+                                        <p className="text-sm leading-relaxed text-foreground/45 [overflow-wrap:anywhere]">
                                             {translateText(selectedItem.categoryDescription)}
                                         </p>
                                     )}
                                 </div>
 
                                 {selectedItem.alt_text && (
-                                    <p className="border-t border-foreground/10 pt-5 text-sm leading-relaxed text-foreground/55">
+                                    <p className="border-t border-foreground/10 pt-5 text-sm leading-relaxed text-foreground/55 [overflow-wrap:anywhere]">
                                         {translateText(selectedItem.alt_text)}
                                     </p>
                                 )}
 
-                                <div className="mt-auto flex flex-col gap-3">
-                                    <a
-                                        href={selectedItem.image_url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="border border-accent/50 px-5 py-4 text-center text-[10px] uppercase tracking-[0.28em] text-accent transition-colors hover:bg-accent hover:text-black"
-                                    >
-                                        {translateText('Open Full Image')}
-                                    </a>
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedItem(null)}
-                                        className="border border-foreground/10 px-5 py-4 text-[10px] uppercase tracking-[0.28em] text-foreground/60 transition-colors hover:border-foreground/30 hover:text-foreground"
-                                    >
-                                        {translateText('Close')}
-                                    </button>
-                                </div>
+                                <p className="mt-auto border-t border-foreground/10 pt-5 text-[10px] uppercase tracking-[0.24em] text-foreground/25">
+                                    {canNavigateSelection
+                                        ? `${selectedIndex + 1} / ${visibleItems.length} · ${translateText('Use arrows to browse')}`
+                                        : translateText('Tap outside to close')}
+                                </p>
                             </div>
                         </motion.div>
                     </motion.div>

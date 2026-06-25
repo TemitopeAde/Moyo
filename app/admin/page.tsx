@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import GalleryMedia from '@/components/GalleryMedia';
+import { defaultSiteSettings, type SiteSettings } from '@/lib/siteSettings';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   FiChevronDown,
@@ -25,6 +26,17 @@ type Artwork = {
   category: string;
   is_featured: boolean;
   is_available: boolean;
+};
+
+type DigitalProduct = {
+  id: number;
+  title: string;
+  price: string;
+  details: string;
+  image: string;
+  product_url: string;
+  display_order: number;
+  is_active: boolean;
 };
 
 type Gallery = {
@@ -58,6 +70,7 @@ type PhotographyCatalogCategory = {
   name: string;
   slug: string;
   description: string;
+  cover_image_url: string;
   display_order: number;
   is_active: boolean;
   images: PhotographyCatalogImage[];
@@ -66,19 +79,20 @@ type PhotographyCatalogCategory = {
 type Content = {
   homepage: { heroText: string; heroImage: string };
   about: { text: string; image: string };
+  settings: SiteSettings;
 };
 
 type Contact = { phone: string; email: string; address: string };
 type Social = { id: number; platform: string; url: string; icon?: string };
 type Order = { id: number; items: unknown[]; total_price: number; status: string; customer_email: string };
-type AdminSection = 'artwork' | 'catalog' | 'galleries' | 'content-contact' | 'orders';
+type AdminSection = 'artwork' | 'digital-products' | 'catalog' | 'galleries' | 'content-contact' | 'orders';
 type UploadBatchResult = { urls: string[]; failedFiles: File[] };
 type UploadProgress = { current: number; total: number };
 
-const sectionCard = 'bg-black/20 p-6 md:p-8 border border-white/10 space-y-6';
-const label = 'text-[10px] uppercase tracking-widest text-white/40';
+const sectionCard = 'min-w-0 bg-black/20 p-4 sm:p-6 md:p-8 border border-white/10 space-y-6';
+const label = 'text-[10px] uppercase tracking-[0.18em] text-white/40 sm:tracking-widest';
 const inputClass =
-  'w-full rounded-sm bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-accent outline-none transition-colors';
+  'min-w-0 w-full rounded-sm bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-accent outline-none transition-colors';
 const mediaAccept = 'image/*,video/*';
 const uploadConcurrency = 2;
 const uploadRequestTimeoutMs = 120_000;
@@ -89,6 +103,8 @@ const compressedImageMaxDimension = 2400;
 function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+const adminToggleClass = 'flex min-w-0 items-center justify-between gap-4 border border-white/10 bg-white/[0.03] px-4 py-3 text-xs text-white/60';
 
 function AdminAccordionPanel({
   id,
@@ -101,8 +117,8 @@ function AdminAccordionPanel({
   id: AdminSection;
   title: string;
   summary: string;
-  openSection: AdminSection;
-  onOpen: (section: AdminSection) => void;
+  openSection: AdminSection | null;
+  onOpen: (section: AdminSection | null) => void;
   children: React.ReactNode;
 }) {
   const isOpen = openSection === id;
@@ -110,20 +126,20 @@ function AdminAccordionPanel({
   const buttonId = `admin-panel-${id}-button`;
 
   return (
-    <div className={`border transition-colors ${isOpen ? 'border-accent/35 bg-accent/[0.03]' : 'border-white/10 bg-white/[0.02]'}`}>
+    <div className={`min-w-0 overflow-hidden border transition-colors ${isOpen ? 'border-accent/35 bg-accent/[0.03]' : 'border-white/10 bg-white/[0.02]'}`}>
       <button
         type="button"
         id={buttonId}
         aria-controls={panelId}
         aria-expanded={isOpen}
-        onClick={() => onOpen(id)}
-        className="flex w-full items-center justify-between gap-6 px-5 py-5 text-left transition-colors hover:bg-white/[0.04] md:px-7"
+        onClick={() => onOpen(isOpen ? null : id)}
+        className="flex w-full items-center justify-between gap-4 px-4 py-5 text-left transition-colors hover:bg-white/[0.04] sm:gap-6 sm:px-5 md:px-7"
       >
-        <span className="space-y-1">
-          <span className={`block font-heading text-2xl italic ${isOpen ? 'text-accent' : 'text-white'}`}>
+        <span className="min-w-0 space-y-1">
+          <span className={`block break-words font-heading text-xl italic sm:text-2xl ${isOpen ? 'text-accent' : 'text-white'}`}>
             {title}
           </span>
-          <span className="block text-[10px] uppercase tracking-[0.3em] text-white/35">
+          <span className="block break-words text-[9px] uppercase tracking-[0.18em] text-white/35 sm:text-[10px] sm:tracking-[0.3em]">
             {summary}
           </span>
         </span>
@@ -144,7 +160,7 @@ function AdminAccordionPanel({
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <div className="border-t border-white/10 px-5 py-8 md:px-7">
+            <div className="min-w-0 border-t border-white/10 px-4 py-6 sm:px-5 sm:py-8 md:px-7">
               {children}
             </div>
           </motion.div>
@@ -161,14 +177,16 @@ export default function AdminPage() {
   const [uploadProgress, setUploadProgress] = useState<Record<string, UploadProgress>>({});
   const [uploadingMediaGalleryId, setUploadingMediaGalleryId] = useState<number | null>(null);
   const [uploadingFinishedGalleryId, setUploadingFinishedGalleryId] = useState<number | null>(null);
-  const [openAdminSection, setOpenAdminSection] = useState<AdminSection>('artwork');
+  const [openAdminSection, setOpenAdminSection] = useState<AdminSection | null>(null);
 
   const [artworks, setArtworks] = useState<Artwork[]>([]);
+  const [digitalProducts, setDigitalProducts] = useState<DigitalProduct[]>([]);
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [catalogCategories, setCatalogCategories] = useState<PhotographyCatalogCategory[]>([]);
   const [content, setContent] = useState<Content>({
     homepage: { heroText: '', heroImage: '' },
     about: { text: '', image: '' },
+    settings: defaultSiteSettings,
   });
   const [contact, setContact] = useState<Contact>({ phone: '', email: '', address: '' });
   const [socials, setSocials] = useState<Social[]>([]);
@@ -182,12 +200,31 @@ export default function AdminPage() {
     isFeatured: false,
     isAvailable: true,
   });
+  const [digitalProductForm, setDigitalProductForm] = useState({
+    title: '',
+    price: '',
+    details: '',
+    image: '',
+    productUrl: '',
+    displayOrder: '',
+    isActive: true,
+  });
+  const [editingDigitalProducts, setEditingDigitalProducts] = useState<Record<number, {
+    title: string;
+    price: string;
+    details: string;
+    image: string;
+    productUrl: string;
+    displayOrder: string;
+    isActive: boolean;
+  }>>({});
 
   const [galleryForm, setGalleryForm] = useState({ clientName: '', slug: '', access_code: '' });
   const [catalogCategoryForm, setCatalogCategoryForm] = useState({
     name: '',
     slug: '',
     description: '',
+    cover_image_url: '',
     display_order: '',
   });
   const [catalogImageForm, setCatalogImageForm] = useState({
@@ -200,8 +237,11 @@ export default function AdminPage() {
   const [contentForm, setContentForm] = useState(content);
   const [contactForm, setContactForm] = useState(contact);
   const [socialForm, setSocialForm] = useState({ platform: '', url: '', icon: '' });
+  const [editingSocials, setEditingSocials] = useState<Record<number, Social>>({});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [catalogImageFile, setCatalogImageFile] = useState<File | null>(null);
+  const [digitalProductFile, setDigitalProductFile] = useState<File | null>(null);
+  const [digitalProductAssetFile, setDigitalProductAssetFile] = useState<File | null>(null);
+  const [catalogImageFiles, setCatalogImageFiles] = useState<File[]>([]);
   const [galleryUploads, setGalleryUploads] = useState<Record<string, File[]>>({});
   const [finishedGalleryUploads, setFinishedGalleryUploads] = useState<Record<string, File[]>>({});
   const [galleryPaymentUrls, setGalleryPaymentUrls] = useState<Record<string, string>>({});
@@ -209,6 +249,7 @@ export default function AdminPage() {
   const [authChecking, setAuthChecking] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [digitalProductPreview, setDigitalProductPreview] = useState<string | null>(null);
   const [catalogImagePreview, setCatalogImagePreview] = useState<string | null>(null);
   const catalogImageInputRef = useRef<HTMLInputElement | null>(null);
   const isUploading = (target: string) => Boolean(uploadingTargets[target]);
@@ -250,8 +291,9 @@ export default function AdminPage() {
   const fetchAll = async () => {
     if (!isAuthed) return;
     try {
-      const [artRes, galRes, contentRes, contactRes, socialRes, orderRes] = await Promise.all([
+      const [artRes, digitalRes, galRes, contentRes, contactRes, socialRes, orderRes] = await Promise.all([
         fetch('/api/artworks'),
+        fetch('/api/digital-products'),
         fetch('/api/galleries', { headers }),
         fetch('/api/content'),
         fetch('/api/contact'),
@@ -261,6 +303,7 @@ export default function AdminPage() {
       const catalogRes = await fetch('/api/photography-catalog/categories', { headers });
 
       const artData = await artRes.json();
+      const digitalData = await digitalRes.json();
       const galData = await galRes.json();
       const conData = await contentRes.json();
       const contactData = await contactRes.json();
@@ -269,6 +312,29 @@ export default function AdminPage() {
       const catalogData = await catalogRes.json();
 
       setArtworks(artData.artworks || []);
+      setDigitalProducts(digitalData.products || []);
+      setEditingDigitalProducts(
+        (digitalData.products || []).reduce((acc: Record<number, {
+          title: string;
+          price: string;
+          details: string;
+          image: string;
+          productUrl: string;
+          displayOrder: string;
+          isActive: boolean;
+        }>, product: DigitalProduct) => {
+          acc[product.id] = {
+            title: product.title || '',
+            price: product.price || '',
+            details: product.details || '',
+            image: product.image || '',
+            productUrl: product.product_url || '',
+            displayOrder: String(product.display_order || 0),
+            isActive: product.is_active,
+          };
+          return acc;
+        }, {})
+      );
       setGalleries(galData.galleries || []);
       setGalleryPaymentUrls(
         (galData.galleries || []).reduce((acc: Record<string, string>, gallery: Gallery) => {
@@ -283,6 +349,12 @@ export default function AdminPage() {
       setOrders(orderData.orders || []);
       setContentForm(conData.content || content);
       setContactForm(contactData.contact || contact);
+      setEditingSocials(
+        (socialData.socials || []).reduce((acc: Record<number, Social>, social: Social) => {
+          if (social.id) acc[social.id] = { ...social };
+          return acc;
+        }, {})
+      );
     } catch (error) {
       console.error(error);
       setMessage({ text: 'Failed to load data', type: 'error' });
@@ -454,31 +526,71 @@ export default function AdminPage() {
 
   useEffect(() => {
     return () => {
+      if (digitalProductPreview && digitalProductPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(digitalProductPreview);
+      }
+    };
+  }, [digitalProductPreview]);
+
+  useEffect(() => {
+    return () => {
       if (catalogImagePreview && catalogImagePreview.startsWith('blob:')) {
         URL.revokeObjectURL(catalogImagePreview);
       }
     };
   }, [catalogImagePreview]);
 
-  const handleCatalogImageFileChange = async (file: File | null) => {
-    setCatalogImageFile(file);
-    if (!file) {
+  const handleCatalogImageFileChange = async (files: File[]) => {
+    setCatalogImageFiles(files);
+    if (!files.length) {
       setCatalogImagePreview(catalogImageForm.image_url || null);
       return;
     }
-    const localPreview = URL.createObjectURL(file);
+    const localPreview = URL.createObjectURL(files[0]);
     setCatalogImagePreview(localPreview);
 
     if (!adminKey) {
       setMessage({ text: 'Add admin password first', type: 'error' });
       return;
     }
+  };
 
-    const url = await handleUpload(file, 'catalog-image');
+  const handleDigitalProductFileChange = async (file: File | null) => {
+    setDigitalProductFile(file);
+    if (!file) {
+      setDigitalProductPreview(digitalProductForm.image || null);
+      return;
+    }
+
+    const localPreview = URL.createObjectURL(file);
+    setDigitalProductPreview(localPreview);
+
+    if (!adminKey) {
+      setMessage({ text: 'Add admin password first', type: 'error' });
+      return;
+    }
+
+    const url = await handleUpload(file, 'digital-product-image');
     if (url) {
-      setCatalogImageForm((prev) => ({ ...prev, image_url: url }));
-      setCatalogImagePreview(url);
-      setMessage({ text: 'Catalogue image uploaded from this device', type: 'success' });
+      setDigitalProductForm((prev) => ({ ...prev, image: url }));
+      setDigitalProductPreview(url);
+      setMessage({ text: 'Digital product image uploaded', type: 'success' });
+    }
+  };
+
+  const handleDigitalProductAssetChange = async (file: File | null) => {
+    setDigitalProductAssetFile(file);
+    if (!file) return;
+
+    if (!adminKey) {
+      setMessage({ text: 'Add admin password first', type: 'error' });
+      return;
+    }
+
+    const url = await handleUpload(file, 'digital-product-file');
+    if (url) {
+      setDigitalProductForm((prev) => ({ ...prev, productUrl: url }));
+      setMessage({ text: 'Digital product file uploaded', type: 'success' });
     }
   };
 
@@ -526,6 +638,110 @@ export default function AdminPage() {
   const deleteArtwork = async (id: number) => {
     const res = await fetch(`/api/artworks?id=${id}`, { method: 'DELETE', headers });
     if (res.ok) setArtworks((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const createDigitalProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage(null);
+    if (!adminKey) return setMessage({ text: 'Add admin key first', type: 'error' });
+
+    let imageUrl = digitalProductForm.image;
+    if (digitalProductFile && !imageUrl) {
+      const url = await handleUpload(digitalProductFile, 'digital-product-image');
+      if (!url) return;
+      imageUrl = url;
+    }
+
+    if (!imageUrl) return setMessage({ text: 'Upload an image or paste an image URL', type: 'error' });
+
+    const res = await fetch('/api/digital-products', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        ...digitalProductForm,
+        image: imageUrl,
+        displayOrder: Number(digitalProductForm.displayOrder || 0),
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) return setMessage({ text: data.error || 'Failed to save digital product', type: 'error' });
+
+    setDigitalProducts((prev) => [data.product, ...prev]);
+    setEditingDigitalProducts((prev) => ({
+      ...prev,
+      [data.product.id]: {
+        title: data.product.title || '',
+        price: data.product.price || '',
+        details: data.product.details || '',
+        image: data.product.image || '',
+        productUrl: data.product.product_url || '',
+        displayOrder: String(data.product.display_order || 0),
+        isActive: data.product.is_active,
+      },
+    }));
+    setDigitalProductForm({ title: '', price: '', details: '', image: '', productUrl: '', displayOrder: '', isActive: true });
+    setDigitalProductFile(null);
+    setDigitalProductAssetFile(null);
+    setDigitalProductPreview(null);
+    setMessage({ text: 'Digital product saved', type: 'success' });
+  };
+
+  const updateDigitalProduct = async (id: number, updates?: Partial<{
+    title: string;
+    price: string;
+    details: string;
+    image: string;
+    productUrl: string;
+    displayOrder: string | number;
+    isActive: boolean;
+  }>) => {
+    const current = editingDigitalProducts[id];
+    if (!current && !updates) return;
+
+    const payload = {
+      id,
+      ...(current || {}),
+      ...(updates || {}),
+    };
+
+    const res = await fetch('/api/digital-products', {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        ...payload,
+        displayOrder: Number(payload.displayOrder || 0),
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) return setMessage({ text: data.error || 'Failed to update digital product', type: 'error' });
+
+    setDigitalProducts((prev) => prev.map((product) => (product.id === id ? data.product : product)));
+    setEditingDigitalProducts((prev) => ({
+      ...prev,
+      [id]: {
+        title: data.product.title || '',
+        price: data.product.price || '',
+        details: data.product.details || '',
+        image: data.product.image || '',
+        productUrl: data.product.product_url || '',
+        displayOrder: String(data.product.display_order || 0),
+        isActive: data.product.is_active,
+      },
+    }));
+    setMessage({ text: 'Digital product updated', type: 'success' });
+  };
+
+  const deleteDigitalProduct = async (id: number) => {
+    const res = await fetch(`/api/digital-products?id=${id}`, { method: 'DELETE', headers });
+    if (res.ok) {
+      setDigitalProducts((prev) => prev.filter((product) => product.id !== id));
+      setEditingDigitalProducts((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      setMessage({ text: 'Digital product deleted', type: 'success' });
+    }
   };
 
   const createGallery = async (e: React.FormEvent) => {
@@ -636,8 +852,40 @@ export default function AdminPage() {
     if (!res.ok) return setMessage({ text: data.error || 'Failed to create category', type: 'error' });
 
     setCatalogCategories((prev) => [data.category, ...prev]);
-    setCatalogCategoryForm({ name: '', slug: '', description: '', display_order: '' });
+    setCatalogCategoryForm({ name: '', slug: '', description: '', cover_image_url: '', display_order: '' });
     setMessage({ text: 'Photography category created', type: 'success' });
+  };
+
+  const updateCatalogCategoryCover = async (
+    category: PhotographyCatalogCategory,
+    coverImageUrl: string,
+    options: { silent?: boolean } = {}
+  ) => {
+    const res = await fetch('/api/photography-catalog/categories', {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ ...category, cover_image_url: coverImageUrl }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      if (!options.silent) setMessage({ text: data.error || 'Failed to update display image', type: 'error' });
+      return null;
+    }
+
+    setCatalogCategories((prev) =>
+      prev.map((item) =>
+        item.id === category.id
+          ? { ...item, ...data.category, images: item.images }
+          : item
+      )
+    );
+    if (!options.silent) {
+      setMessage({
+        text: coverImageUrl ? 'Category display image updated' : 'Category display image cleared',
+        type: 'success',
+      });
+    }
+    return data.category as PhotographyCatalogCategory;
   };
 
   const toggleCatalogCategory = async (category: PhotographyCatalogCategory) => {
@@ -672,50 +920,98 @@ export default function AdminPage() {
       return setMessage({ text: 'Choose a category first', type: 'error' });
     }
 
-    let imageUrl = catalogImageForm.image_url;
-    if (catalogImageFile) {
-      const uploadedUrl = await handleUpload(catalogImageFile, 'catalog-image');
-      if (!uploadedUrl) return;
-      imageUrl = uploadedUrl;
+    let imageUrls = catalogImageForm.image_url.trim() ? [catalogImageForm.image_url.trim()] : [];
+    let failedFiles: File[] = [];
+
+    if (catalogImageFiles.length) {
+      const uploaded = await uploadFiles(catalogImageFiles, 'catalog-image');
+      imageUrls = [...imageUrls, ...uploaded.urls];
+      failedFiles = uploaded.failedFiles;
+    }
+    imageUrls = imageUrls.filter(Boolean);
+
+    if (!imageUrls.length) return setMessage({ text: 'Upload images or paste an image URL', type: 'error' });
+
+    const createdImages: PhotographyCatalogImage[] = [];
+    let failedSaves = 0;
+    for (const [index, imageUrl] of imageUrls.entries()) {
+      try {
+        const res = await fetch('/api/photography-catalog/images', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            ...catalogImageForm,
+            category_id: Number(catalogImageForm.category_id),
+            title:
+              imageUrls.length > 1 && catalogImageForm.title
+                ? `${catalogImageForm.title} ${index + 1}`
+                : catalogImageForm.title,
+            image_url: imageUrl,
+            display_order: Number(catalogImageForm.display_order || 0) + index,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to add image');
+        createdImages.push(data.image);
+      } catch (error) {
+        console.error('[admin] catalog image save error', error);
+        failedSaves += 1;
+      }
     }
 
-    if (!imageUrl) return setMessage({ text: 'Upload an image or paste an image URL', type: 'error' });
-
-    const res = await fetch('/api/photography-catalog/images', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        ...catalogImageForm,
-        category_id: Number(catalogImageForm.category_id),
-        image_url: imageUrl,
-        display_order: Number(catalogImageForm.display_order || 0),
-      }),
-    });
-    const data = await res.json();
-    if (!res.ok) return setMessage({ text: data.error || 'Failed to add image', type: 'error' });
+    if (!createdImages.length) {
+      return setMessage({
+        text: failedSaves ? 'Images uploaded, but none could be saved to the catalog' : 'No catalog images were added',
+        type: 'error',
+      });
+    }
 
     setCatalogCategories((prev) =>
       prev.map((category) =>
         category.id === Number(catalogImageForm.category_id)
-          ? { ...category, images: [...(category.images || []), data.image] }
+          ? {
+              ...category,
+              cover_image_url: category.cover_image_url || createdImages[0]?.image_url || '',
+              images: [...(category.images || []), ...createdImages],
+            }
           : category
       )
     );
+    const selectedCategory = catalogCategories.find((category) => category.id === Number(catalogImageForm.category_id));
+    if (selectedCategory && !selectedCategory.cover_image_url && createdImages[0]) {
+      await updateCatalogCategoryCover(selectedCategory, createdImages[0].image_url, { silent: true });
+    }
     setCatalogImageForm({ category_id: catalogImageForm.category_id, title: '', alt_text: '', image_url: '', display_order: '' });
-    setCatalogImageFile(null);
+    setCatalogImageFiles(failedFiles);
+    if (catalogImageInputRef.current && !failedFiles.length) catalogImageInputRef.current.value = '';
     setCatalogImagePreview(null);
-    setMessage({ text: 'Catalog image added', type: 'success' });
+    setMessage({
+      text: `${createdImages.length} catalog ${createdImages.length === 1 ? 'image' : 'images'} added${
+        failedFiles.length ? `, ${failedFiles.length} ${failedFiles.length === 1 ? 'upload failed' : 'uploads failed'}` : ''
+      }${failedSaves ? `, ${failedSaves} ${failedSaves === 1 ? 'save failed' : 'saves failed'}` : ''}`,
+      type: failedFiles.length || failedSaves ? 'error' : 'success',
+    });
   };
 
   const deleteCatalogImage = async (id: number) => {
+    const currentCategory = catalogCategories.find((category) => category.images.some((image) => image.id === id));
+    const currentImage = currentCategory?.images.find((image) => image.id === id);
     const res = await fetch(`/api/photography-catalog/images?id=${id}`, { method: 'DELETE', headers });
     if (res.ok) {
+      const remainingImages = currentCategory?.images.filter((image) => image.id !== id) || [];
       setCatalogCategories((prev) =>
         prev.map((category) => ({
           ...category,
+          cover_image_url:
+            category.id === currentCategory?.id && category.cover_image_url === currentImage?.image_url
+              ? remainingImages[0]?.image_url || ''
+              : category.cover_image_url,
           images: category.images.filter((image) => image.id !== id),
         }))
       );
+      if (currentCategory && currentCategory.cover_image_url === currentImage?.image_url) {
+        await updateCatalogCategoryCover(currentCategory, remainingImages[0]?.image_url || '', { silent: true });
+      }
       setMessage({ text: 'Catalog image deleted', type: 'success' });
     }
   };
@@ -743,13 +1039,35 @@ export default function AdminPage() {
     const data = await res.json();
     if (res.ok) {
       setSocials((p) => [data.social, ...p]);
+      setEditingSocials((prev) => ({ ...prev, [data.social.id]: data.social }));
       setSocialForm({ platform: '', url: '', icon: '' });
+    }
+  };
+
+  const updateSocial = async (id: number) => {
+    const draft = editingSocials[id];
+    if (!draft) return;
+    const res = await fetch('/api/socials', { method: 'PUT', headers, body: JSON.stringify(draft) });
+    const data = await res.json();
+    if (res.ok) {
+      setSocials((prev) => prev.map((social) => (social.id === id ? data.social : social)));
+      setEditingSocials((prev) => ({ ...prev, [id]: data.social }));
+      setMessage({ text: 'Social link updated', type: 'success' });
+    } else {
+      setMessage({ text: data.error || 'Failed to update social link', type: 'error' });
     }
   };
 
   const deleteSocial = async (id: string) => {
     const res = await fetch(`/api/socials?id=${id}`, { method: 'DELETE', headers });
-    if (res.ok) setSocials((p) => p.filter((s) => s.id !== Number(id)));
+    if (res.ok) {
+      setSocials((p) => p.filter((s) => s.id !== Number(id)));
+      setEditingSocials((prev) => {
+        const next = { ...prev };
+        delete next[Number(id)];
+        return next;
+      });
+    }
   };
 
   const updateOrder = async (id: string, status: string) => {
@@ -769,7 +1087,7 @@ export default function AdminPage() {
               className="w-full max-w-md space-y-6 bg-surface/40 border border-white/10 p-8 backdrop-blur-md"
             >
               <div className="space-y-2 text-center">
-                <p className="text-accent text-[10px] tracking-[0.5em] uppercase">Admin Access</p>
+                <p className="text-accent text-[10px] tracking-[0.28em] uppercase sm:tracking-[0.5em]">Admin Access</p>
                 <h1 className="text-3xl font-heading italic text-white">Enter page password</h1>
                 <p className="text-white/50 text-sm">Required to unlock the control panel.</p>
               </div>
@@ -785,7 +1103,7 @@ export default function AdminPage() {
               <button
                 type="submit"
                 disabled={authChecking}
-                className="w-full bg-accent text-black py-3 text-[11px] uppercase tracking-[0.4em] font-semibold disabled:opacity-50"
+                className="w-full bg-accent text-black py-3 text-[11px] uppercase tracking-[0.24em] font-semibold disabled:opacity-50 sm:tracking-[0.4em]"
               >
                 {authChecking ? 'Checking...' : 'Unlock'}
               </button>
@@ -809,43 +1127,43 @@ export default function AdminPage() {
     <main className="bg-background min-h-screen text-foreground font-body">
       <Navbar />
 
-      <section className="pt-36 md:pt-52 pb-20 container mx-auto px-6 md:px-12">
-        <header className="mb-16 space-y-4">
-          <span className="text-accent text-[10px] tracking-[0.5em] uppercase">Control Panel</span>
+      <section className="container mx-auto min-w-0 px-4 pb-20 pt-32 sm:px-6 md:px-12 md:pt-52">
+        <header className="mb-12 min-w-0 space-y-4 md:mb-16">
+          <span className="text-accent text-[10px] tracking-[0.28em] uppercase sm:tracking-[0.5em]">Control Panel</span>
           <h1 className="text-4xl md:text-5xl font-heading text-white italic">Admin</h1>
-          <p className="text-white/40 max-w-2xl text-sm leading-relaxed">
-            Manage artworks, galleries, site copy, contact, socials and orders. All changes persist to the database and
+          <p className="max-w-2xl text-sm leading-relaxed text-white/40 [overflow-wrap:anywhere]">
+            Manage artworks, digital products, galleries, site copy, contact, socials and orders. All changes persist to the database and
             reflect on the live site.
           </p>
         </header>
 
-        <div className="mb-10 grid gap-4 md:grid-cols-4">
-          <div className="md:col-span-3 flex flex-wrap gap-3 text-xs text-white/50">
-            <span className="px-3 py-2 border border-white/10 bg-white/5 uppercase tracking-[0.25em]">
+        <div className="mb-10 grid min-w-0 gap-4 md:grid-cols-4">
+          <div className="flex min-w-0 flex-wrap gap-3 text-xs text-white/50 md:col-span-3">
+            <span className="px-3 py-2 border border-white/10 bg-white/5 uppercase tracking-[0.16em] sm:tracking-[0.25em]">
               Connected to MongoDB
             </span>
-            <span className="px-3 py-2 border border-white/10 bg-white/5 uppercase tracking-[0.25em]">
+            <span className="px-3 py-2 border border-white/10 bg-white/5 uppercase tracking-[0.16em] sm:tracking-[0.25em]">
               Cloudinary uploads
             </span>
-            <span className="px-3 py-2 border border-white/10 bg-white/5 uppercase tracking-[0.25em]">
+            <span className="px-3 py-2 border border-white/10 bg-white/5 uppercase tracking-[0.16em] sm:tracking-[0.25em]">
               API protected
             </span>
             <Link
               href="/admin/newsletter"
-              className="px-3 py-2 border border-accent/30 bg-accent/10 text-accent uppercase tracking-[0.25em] hover:border-accent hover:bg-accent hover:text-black transition-colors"
+              className="px-3 py-2 border border-accent/30 bg-accent/10 text-accent uppercase tracking-[0.16em] hover:border-accent hover:bg-accent hover:text-black transition-colors sm:tracking-[0.25em]"
             >
               Newsletter Studio
             </Link>
             <button
               type="button"
               onClick={() => setOpenAdminSection('catalog')}
-              className="inline-flex items-center gap-2 px-3 py-2 border border-accent/30 bg-accent/10 text-accent uppercase tracking-[0.25em] hover:border-accent hover:bg-accent hover:text-black transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-2 border border-accent/30 bg-accent/10 text-accent uppercase tracking-[0.16em] hover:border-accent hover:bg-accent hover:text-black transition-colors sm:tracking-[0.25em]"
             >
               <FiImage aria-hidden="true" />
               Upload Catalogue
             </button>
           </div>
-          <div className="flex gap-2 items-center">
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
             <input
               type="password"
               className={`${inputClass} text-xs`}
@@ -864,7 +1182,7 @@ export default function AdminPage() {
                 setMessage(null);
                 localStorage.removeItem('moyo-admin-key');
               }}
-              className="text-[10px] uppercase tracking-[0.3em] px-3 py-2 border border-white/10 text-white/60 hover:text-white"
+              className="text-[10px] uppercase tracking-[0.2em] px-3 py-2 border border-white/10 text-white/60 hover:text-white sm:tracking-[0.3em]"
             >
               Lock
             </button>
@@ -895,7 +1213,7 @@ export default function AdminPage() {
             openSection={openAdminSection}
             onOpen={setOpenAdminSection}
           >
-          <section className="grid lg:grid-cols-2 gap-12 items-start">
+          <section className="grid min-w-0 gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
             <div className={sectionCard}>
               <h2 className="text-2xl font-heading text-white italic">Artwork</h2>
               <form className="space-y-4" onSubmit={handleArtworkSubmit}>
@@ -984,14 +1302,14 @@ export default function AdminPage() {
                 <button
                   type="submit"
                   disabled={isUploading('artwork-image')}
-                  className="w-full bg-accent hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                  className="w-full bg-accent hover:bg-white text-black py-4 px-5 text-[10px] uppercase tracking-[0.22em] font-medium transition-all flex items-center justify-center gap-4 disabled:opacity-50 sm:px-8 sm:tracking-[0.4em]"
                 >
                   {isUploading('artwork-image') ? 'Uploading...' : 'Save Artwork'}
                 </button>
               </form>
             </div>
             <div className="space-y-4 max-h-[640px] overflow-y-auto pr-2">
-              <h3 className="text-[10px] uppercase tracking-[0.5em] text-accent">Existing</h3>
+              <h3 className="text-[10px] uppercase tracking-[0.28em] text-accent sm:tracking-[0.5em]">Existing</h3>
               {artworks.map((art) => (
                 <div key={art.id} className="bg-surface/20 border border-white/5 p-4 flex gap-4 items-center group">
                   <div className="w-20 h-20 bg-neutral-950 overflow-hidden">
@@ -1025,6 +1343,262 @@ export default function AdminPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          </section>
+          </AdminAccordionPanel>
+
+          {/* Digital Products */}
+          <AdminAccordionPanel
+            id="digital-products"
+            title="Digital Products"
+            summary={`${digitalProducts.length} ${digitalProducts.length === 1 ? 'product' : 'products'}`}
+            openSection={openAdminSection}
+            onOpen={setOpenAdminSection}
+          >
+          <section className="grid gap-12 lg:grid-cols-2 lg:items-start">
+            <div className={sectionCard}>
+              <h2 className="text-2xl font-heading text-white italic">Digital Products</h2>
+              <form className="space-y-4" onSubmit={createDigitalProduct}>
+                <div className="space-y-2">
+                  <label className={label}>Title</label>
+                  <input
+                    className={inputClass}
+                    value={digitalProductForm.title}
+                    onChange={(e) => setDigitalProductForm({ ...digitalProductForm, title: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className={label}>Price</label>
+                    <input
+                      className={inputClass}
+                      placeholder="$45.00"
+                      value={digitalProductForm.price}
+                      onChange={(e) => setDigitalProductForm({ ...digitalProductForm, price: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={label}>Display Order</label>
+                    <input
+                      type="number"
+                      className={inputClass}
+                      value={digitalProductForm.displayOrder}
+                      onChange={(e) => setDigitalProductForm({ ...digitalProductForm, displayOrder: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className={label}>Details</label>
+                  <input
+                    className={inputClass}
+                    placeholder="10 Lightroom Presets"
+                    value={digitalProductForm.details}
+                    onChange={(e) => setDigitalProductForm({ ...digitalProductForm, details: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className={label}>Purchase / Download URL</label>
+                  <label className="relative flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-sm border-2 border-dashed border-white/10 bg-white/[0.04] p-6 text-center transition-colors hover:border-accent/50">
+                    <input
+                      type="file"
+                      disabled={isUploading('digital-product-file')}
+                      onChange={(e) => handleDigitalProductAssetChange(e.target.files?.[0] || null)}
+                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+                    />
+                    <FiUpload className="text-xl text-white/25" aria-hidden="true" />
+                    <span className="text-[10px] uppercase tracking-[0.24em] text-white/45">
+                      {isUploading('digital-product-file')
+                        ? getUploadProgressLabel('digital-product-file', 'Uploading product file')
+                        : digitalProductAssetFile
+                          ? digitalProductAssetFile.name
+                          : 'Upload product file'}
+                    </span>
+                    <span className="text-xs text-white/30">Presets, PDF, ZIP, video, or delivery file</span>
+                  </label>
+                  <input
+                    className={inputClass}
+                    placeholder="uploaded file URL, checkout, Gumroad, Dropbox..."
+                    value={digitalProductForm.productUrl}
+                    onChange={(e) => setDigitalProductForm({ ...digitalProductForm, productUrl: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className={label}>Product Image</label>
+                  <label className="relative flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-sm border-2 border-dashed border-white/10 bg-white/[0.04] p-6 text-center transition-colors hover:border-accent/50">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={isUploading('digital-product-image')}
+                      onChange={(e) => handleDigitalProductFileChange(e.target.files?.[0] || null)}
+                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+                    />
+                    <FiUpload className="text-xl text-white/25" aria-hidden="true" />
+                    <span className="text-[10px] uppercase tracking-[0.24em] text-white/45">
+                      {isUploading('digital-product-image')
+                        ? getUploadProgressLabel('digital-product-image', 'Uploading image')
+                        : digitalProductFile
+                          ? digitalProductFile.name
+                          : 'Upload product image'}
+                    </span>
+                  </label>
+                  <input
+                    className={inputClass}
+                    placeholder="or paste image URL"
+                    value={digitalProductForm.image}
+                    onChange={(e) => {
+                      setDigitalProductForm({ ...digitalProductForm, image: e.target.value });
+                      if (!digitalProductFile) setDigitalProductPreview(e.target.value || null);
+                    }}
+                  />
+                  {digitalProductPreview && (
+                    <div className="overflow-hidden border border-white/10 bg-white/[0.04]">
+                      <img src={digitalProductPreview} alt="Digital product preview" className="h-48 w-full object-cover" />
+                      <div className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/50">
+                        Product preview
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <label className="flex items-center gap-2 text-xs text-white/70">
+                  <input
+                    type="checkbox"
+                    checked={digitalProductForm.isActive}
+                    onChange={(e) => setDigitalProductForm({ ...digitalProductForm, isActive: e.target.checked })}
+                  />
+                  Show on homepage
+                </label>
+                <button
+                  type="submit"
+                  disabled={isUploading('digital-product-image')}
+                  className="flex w-full items-center justify-center gap-4 bg-accent px-5 py-4 text-[10px] font-medium uppercase tracking-[0.22em] text-black transition-all hover:bg-white disabled:opacity-50 sm:px-8 sm:tracking-[0.4em]"
+                >
+                  {isUploading('digital-product-image') ? 'Uploading...' : 'Save Digital Product'}
+                </button>
+              </form>
+            </div>
+
+            <div className="max-h-[760px] space-y-4 overflow-y-auto pr-2">
+              <h3 className="text-[10px] uppercase tracking-[0.28em] text-accent sm:tracking-[0.5em]">Existing Products</h3>
+              {digitalProducts.map((product) => {
+                const draft = editingDigitalProducts[product.id] || {
+                  title: product.title || '',
+                  price: product.price || '',
+                  details: product.details || '',
+                  image: product.image || '',
+                  productUrl: product.product_url || '',
+                  displayOrder: String(product.display_order || 0),
+                  isActive: product.is_active,
+                };
+
+                return (
+                  <div key={product.id} className="space-y-4 border border-white/5 bg-surface/20 p-4">
+                    <div className="grid gap-4 sm:grid-cols-[112px_1fr]">
+                      <div className="h-32 overflow-hidden bg-neutral-950 sm:h-28">
+                        <img src={draft.image || product.image} alt={draft.title || product.title} className="h-full w-full object-cover" />
+                      </div>
+                      <div className="grid gap-3">
+                        <input
+                          className={inputClass}
+                          value={draft.title}
+                          onChange={(e) =>
+                            setEditingDigitalProducts((prev) => ({
+                              ...prev,
+                              [product.id]: { ...draft, title: e.target.value },
+                            }))
+                          }
+                        />
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <input
+                            className={inputClass}
+                            value={draft.price}
+                            onChange={(e) =>
+                              setEditingDigitalProducts((prev) => ({
+                                ...prev,
+                                [product.id]: { ...draft, price: e.target.value },
+                              }))
+                            }
+                          />
+                          <input
+                            type="number"
+                            className={inputClass}
+                            value={draft.displayOrder}
+                            onChange={(e) =>
+                              setEditingDigitalProducts((prev) => ({
+                                ...prev,
+                                [product.id]: { ...draft, displayOrder: e.target.value },
+                              }))
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <input
+                      className={inputClass}
+                      placeholder="Details"
+                      value={draft.details}
+                      onChange={(e) =>
+                        setEditingDigitalProducts((prev) => ({
+                          ...prev,
+                          [product.id]: { ...draft, details: e.target.value },
+                        }))
+                      }
+                    />
+                    <input
+                      className={inputClass}
+                      placeholder="Image URL"
+                      value={draft.image}
+                      onChange={(e) =>
+                        setEditingDigitalProducts((prev) => ({
+                          ...prev,
+                          [product.id]: { ...draft, image: e.target.value },
+                        }))
+                      }
+                    />
+                    <input
+                      className={inputClass}
+                      placeholder="Purchase / Download URL"
+                      value={draft.productUrl}
+                      onChange={(e) =>
+                        setEditingDigitalProducts((prev) => ({
+                          ...prev,
+                          [product.id]: { ...draft, productUrl: e.target.value },
+                        }))
+                      }
+                    />
+                    <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.2em]">
+                      <button
+                        type="button"
+                        onClick={() => updateDigitalProduct(product.id)}
+                        className="border border-accent/50 px-3 py-2 text-accent transition-colors hover:bg-accent hover:text-black"
+                      >
+                        Update
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateDigitalProduct(product.id, { isActive: !draft.isActive })}
+                        className={`border px-3 py-2 transition-colors ${
+                          draft.isActive ? 'border-accent text-accent' : 'border-white/10 text-white/50'
+                        }`}
+                      >
+                        {draft.isActive ? 'Visible' : 'Hidden'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteDigitalProduct(product.id)}
+                        className="ml-auto inline-flex items-center gap-2 border border-red-500/40 px-3 py-2 text-red-300 transition-colors hover:bg-red-500 hover:text-white"
+                      >
+                        <FiTrash2 aria-hidden="true" />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+              {digitalProducts.length === 0 && (
+                <p className="border border-white/10 p-6 text-xs text-white/40">No digital products yet.</p>
+              )}
             </div>
           </section>
           </AdminAccordionPanel>
@@ -1079,16 +1653,25 @@ export default function AdminPage() {
                     onChange={(e) => setCatalogCategoryForm({ ...catalogCategoryForm, description: e.target.value })}
                   />
                 </div>
+                <div className="space-y-2">
+                  <label className={label}>Display Image URL (optional)</label>
+                  <input
+                    className={inputClass}
+                    placeholder="Choose from uploaded images later, or paste a URL now"
+                    value={catalogCategoryForm.cover_image_url}
+                    onChange={(e) => setCatalogCategoryForm({ ...catalogCategoryForm, cover_image_url: e.target.value })}
+                  />
+                </div>
                 <button
                   type="submit"
-                  className="w-full bg-accent hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all"
+                  className="w-full bg-accent hover:bg-white text-black py-4 px-5 text-[10px] uppercase tracking-[0.22em] font-medium transition-all sm:px-8 sm:tracking-[0.4em]"
                 >
                   Create Category
                 </button>
               </form>
 
               <form className="pt-6 border-t border-white/5 space-y-4" onSubmit={createCatalogImage}>
-                <h3 className="text-[10px] uppercase tracking-[0.4em] text-accent">Add Image To Category</h3>
+                <h3 className="text-[10px] uppercase tracking-[0.24em] text-accent sm:tracking-[0.4em]">Add Image To Category</h3>
                 <div className="space-y-2">
                   <label className={label}>Category</label>
                   <select
@@ -1138,7 +1721,8 @@ export default function AdminPage() {
                     ref={catalogImageInputRef}
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleCatalogImageFileChange(e.target.files?.[0] || null)}
+                    multiple
+                    onChange={(e) => handleCatalogImageFileChange(Array.from(e.target.files || []))}
                     className="hidden"
                   />
                   <button
@@ -1149,24 +1733,26 @@ export default function AdminPage() {
                   >
                     <FiUpload className="text-xl text-white/25" aria-hidden="true" />
                     <span className="text-[10px] uppercase tracking-[0.24em] text-white/45">
-                      {isUploading('catalog-image') ? 'Uploading from device...' : catalogImageFile ? catalogImageFile.name : 'Upload from this device'}
+                      {isUploading('catalog-image')
+                        ? getUploadProgressLabel('catalog-image', 'Uploading catalogue')
+                        : getSelectedFileLabel(catalogImageFiles, 'Upload multiple from this device')}
                     </span>
-                    <span className="text-xs text-white/30">Desktop, phone gallery, or camera roll</span>
+                    <span className="text-xs text-white/30">Desktop, phone gallery, or camera roll. Multiple images supported.</span>
                   </button>
                   <input
                     className={inputClass}
-                    placeholder="uploaded image URL will appear here"
+                    placeholder="or paste one image URL"
                     value={catalogImageForm.image_url}
                     onChange={(e) => {
                       setCatalogImageForm({ ...catalogImageForm, image_url: e.target.value });
-                      if (!catalogImageFile) setCatalogImagePreview(e.target.value || null);
+                      if (!catalogImageFiles.length) setCatalogImagePreview(e.target.value || null);
                     }}
                   />
                   {catalogImagePreview && (
                     <div className="overflow-hidden border border-white/10 bg-white/[0.04]">
                       <img src={catalogImagePreview} alt="Catalogue preview" className="h-48 w-full object-cover" />
                       <div className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/50">
-                        Catalogue preview
+                        {catalogImageFiles.length > 1 ? `First preview of ${catalogImageFiles.length} selected images` : 'Catalogue preview'}
                       </div>
                     </div>
                   )}
@@ -1174,25 +1760,40 @@ export default function AdminPage() {
                 <button
                   type="submit"
                   disabled={isUploading('catalog-image')}
-                  className="w-full bg-white/10 hover:bg-white/20 text-white py-3 text-[10px] uppercase tracking-[0.3em] disabled:opacity-50"
+                  className="w-full bg-white/10 hover:bg-white/20 text-white py-3 text-[10px] uppercase tracking-[0.2em] disabled:opacity-50 sm:tracking-[0.3em]"
                 >
-                  {isUploading('catalog-image') ? 'Uploading...' : 'Add Catalog Image'}
+                  {isUploading('catalog-image') ? getUploadProgressLabel('catalog-image', 'Uploading') : 'Add Catalog Images'}
                 </button>
               </form>
             </div>
 
             <div className="space-y-4 max-h-[760px] overflow-y-auto pr-2">
-              <h3 className="text-[10px] uppercase tracking-[0.5em] text-accent">Catalog Categories</h3>
+              <h3 className="text-[10px] uppercase tracking-[0.28em] text-accent sm:tracking-[0.5em]">Catalog Categories</h3>
               {catalogCategories.map((category) => (
                 <div key={category.id} className="bg-surface/20 border border-white/5 p-4 space-y-4">
                   <div className="flex items-start justify-between gap-4">
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <p className="text-white font-heading italic">{category.name}</p>
                       <p className="text-[10px] text-white/40 uppercase tracking-widest">
                         slug: {category.slug} • images: {category.images?.length || 0}
                       </p>
                       {category.description && (
                         <p className="mt-2 text-xs text-white/50 leading-relaxed">{category.description}</p>
+                      )}
+                      {(category.cover_image_url || category.images?.[0]?.image_url) && (
+                        <div className="mt-4 flex items-center gap-3 border border-white/10 bg-white/[0.03] p-2">
+                          <img
+                            src={category.cover_image_url || category.images?.[0]?.image_url}
+                            alt={`${category.name} display image`}
+                            className="h-14 w-14 shrink-0 object-cover"
+                          />
+                          <div className="min-w-0">
+                            <p className="text-[10px] uppercase tracking-[0.24em] text-accent">Display image</p>
+                            <p className="mt-1 truncate text-xs text-white/35">
+                              {category.cover_image_url ? 'Chosen manually' : 'Using first image until you choose one'}
+                            </p>
+                          </div>
+                        </div>
                       )}
                     </div>
                     <div className="flex gap-2">
@@ -1214,9 +1815,29 @@ export default function AdminPage() {
                       </button>
                     </div>
                   </div>
+                  <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                    <input
+                      className={inputClass}
+                      placeholder="Paste or replace display image URL"
+                      value={category.cover_image_url || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setCatalogCategories((prev) =>
+                          prev.map((item) => (item.id === category.id ? { ...item, cover_image_url: value } : item))
+                        );
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => updateCatalogCategoryCover(category, category.cover_image_url || '')}
+                      className="border border-accent/40 px-4 py-3 text-[10px] uppercase tracking-[0.22em] text-accent transition-colors hover:bg-accent hover:text-black"
+                    >
+                      Save Display
+                    </button>
+                  </div>
 
                   {category.images?.length > 0 ? (
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                       {category.images.map((image) => (
                         <div key={image.id} className="relative group overflow-hidden border border-white/10 bg-black">
                           <img
@@ -1228,8 +1849,22 @@ export default function AdminPage() {
                             type="button"
                             onClick={() => deleteCatalogImage(image.id)}
                             className="absolute right-2 top-2 bg-black/70 p-2 text-red-300 opacity-0 transition-opacity group-hover:opacity-100"
+                            aria-label="Delete catalog image"
                           >
                             <FiTrash2 />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => updateCatalogCategoryCover(category, image.image_url)}
+                            className={`absolute left-2 top-2 flex items-center gap-1 border px-2 py-1 text-[9px] uppercase tracking-[0.16em] transition-colors ${
+                              category.cover_image_url === image.image_url
+                                ? 'border-accent bg-accent text-black'
+                                : 'border-white/20 bg-black/70 text-white/70 hover:border-accent hover:text-accent'
+                            }`}
+                            aria-label={`Use ${image.title || category.name} as display image`}
+                          >
+                            <FiImage aria-hidden="true" />
+                            {category.cover_image_url === image.image_url ? 'Display' : 'Set'}
                           </button>
                           {image.title && (
                             <p className="px-2 py-2 text-[10px] text-white/60 truncate">{image.title}</p>
@@ -1299,7 +1934,7 @@ export default function AdminPage() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-accent hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all"
+                  className="w-full bg-accent hover:bg-white text-black py-4 px-5 text-[10px] uppercase tracking-[0.22em] font-medium transition-all sm:px-8 sm:tracking-[0.4em]"
                 >
                   Create Gallery
                 </button>
@@ -1307,7 +1942,7 @@ export default function AdminPage() {
             </div>
             <div className="space-y-4 max-h-[640px] overflow-y-auto pr-2">
               <div className="flex items-center justify-between gap-4">
-                <h3 className="text-[10px] uppercase tracking-[0.5em] text-accent">Existing</h3>
+                <h3 className="text-[10px] uppercase tracking-[0.28em] text-accent sm:tracking-[0.5em]">Existing</h3>
                 <button
                   type="button"
                   onClick={fetchAll}
@@ -1489,7 +2124,7 @@ export default function AdminPage() {
                           { images: gal.approved_images }
                         )
                       }
-                      className="text-[10px] uppercase tracking-[0.3em] px-3 py-2 border border-white/10 text-white/45 transition-colors hover:border-red-500 hover:text-red-300"
+                      className="text-[10px] uppercase tracking-[0.18em] px-3 py-2 border border-white/10 text-white/45 transition-colors hover:border-red-500 hover:text-red-300 sm:tracking-[0.3em]"
                     >
                       Clear Client Selection
                     </button>
@@ -1595,6 +2230,138 @@ export default function AdminPage() {
             <div className={sectionCard}>
               <h2 className="text-2xl font-heading text-white italic">Homepage & About</h2>
               <div className="space-y-3">
+                <h3 className="text-[10px] uppercase tracking-[0.24em] text-accent sm:tracking-[0.4em]">Entry Page</h3>
+                <label className={label}>Entry Title</label>
+                <input
+                  className={inputClass}
+                  value={contentForm.settings.entry.title}
+                  onChange={(e) =>
+                    setContentForm({
+                      ...contentForm,
+                      settings: {
+                        ...contentForm.settings,
+                        entry: { ...contentForm.settings.entry, title: e.target.value },
+                      },
+                    })
+                  }
+                />
+                <label className={label}>Entry Tagline</label>
+                <textarea
+                  className={`${inputClass} min-h-[80px]`}
+                  value={contentForm.settings.entry.tagline}
+                  onChange={(e) =>
+                    setContentForm({
+                      ...contentForm,
+                      settings: {
+                        ...contentForm.settings,
+                        entry: { ...contentForm.settings.entry, tagline: e.target.value },
+                      },
+                    })
+                  }
+                />
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className={label}>Desktop Background</label>
+                    <input
+                      className={inputClass}
+                      value={contentForm.settings.entry.desktopImage}
+                      onChange={(e) =>
+                        setContentForm({
+                          ...contentForm,
+                          settings: {
+                            ...contentForm.settings,
+                            entry: { ...contentForm.settings.entry, desktopImage: e.target.value },
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={label}>Mobile Background</label>
+                    <input
+                      className={inputClass}
+                      value={contentForm.settings.entry.mobileImage}
+                      onChange={(e) =>
+                        setContentForm({
+                          ...contentForm,
+                          settings: {
+                            ...contentForm.settings,
+                            entry: { ...contentForm.settings.entry, mobileImage: e.target.value },
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className={label}>Philosophy Label</label>
+                    <input
+                      className={inputClass}
+                      value={contentForm.settings.entry.philosophyLabel}
+                      onChange={(e) =>
+                        setContentForm({
+                          ...contentForm,
+                          settings: {
+                            ...contentForm.settings,
+                            entry: { ...contentForm.settings.entry, philosophyLabel: e.target.value },
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={label}>Philosophy Text</label>
+                    <input
+                      className={inputClass}
+                      value={contentForm.settings.entry.philosophyText}
+                      onChange={(e) =>
+                        setContentForm({
+                          ...contentForm,
+                          settings: {
+                            ...contentForm.settings,
+                            entry: { ...contentForm.settings.entry, philosophyText: e.target.value },
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={label}>Location Label</label>
+                    <input
+                      className={inputClass}
+                      value={contentForm.settings.entry.locationLabel}
+                      onChange={(e) =>
+                        setContentForm({
+                          ...contentForm,
+                          settings: {
+                            ...contentForm.settings,
+                            entry: { ...contentForm.settings.entry, locationLabel: e.target.value },
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={label}>Location Text</label>
+                    <input
+                      className={inputClass}
+                      value={contentForm.settings.entry.locationText}
+                      onChange={(e) =>
+                        setContentForm({
+                          ...contentForm,
+                          settings: {
+                            ...contentForm.settings,
+                            entry: { ...contentForm.settings.entry, locationText: e.target.value },
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-[10px] uppercase tracking-[0.24em] text-accent sm:tracking-[0.4em]">Photography Hero</h3>
                 <label className={label}>Hero Text</label>
                 <textarea
                   className={`${inputClass} min-h-[120px]`}
@@ -1607,8 +2374,37 @@ export default function AdminPage() {
                   value={contentForm.homepage.heroImage}
                   onChange={(e) => setContentForm({ ...contentForm, homepage: { ...contentForm.homepage, heroImage: e.target.value } })}
                 />
+                <label className={label}>Hero Subtext</label>
+                <textarea
+                  className={`${inputClass} min-h-[80px]`}
+                  value={contentForm.settings.photography.heroSubtext}
+                  onChange={(e) =>
+                    setContentForm({
+                      ...contentForm,
+                      settings: {
+                        ...contentForm.settings,
+                        photography: { ...contentForm.settings.photography, heroSubtext: e.target.value },
+                      },
+                    })
+                  }
+                />
+                <label className={label}>Hero Button</label>
+                <input
+                  className={inputClass}
+                  value={contentForm.settings.photography.heroCta}
+                  onChange={(e) =>
+                    setContentForm({
+                      ...contentForm,
+                      settings: {
+                        ...contentForm.settings,
+                        photography: { ...contentForm.settings.photography, heroCta: e.target.value },
+                      },
+                    })
+                  }
+                />
               </div>
               <div className="space-y-3">
+                <h3 className="text-[10px] uppercase tracking-[0.24em] text-accent sm:tracking-[0.4em]">About Section</h3>
                 <label className={label}>About Text</label>
                 <textarea
                   className={`${inputClass} min-h-[120px]`}
@@ -1622,9 +2418,284 @@ export default function AdminPage() {
                   onChange={(e) => setContentForm({ ...contentForm, about: { ...contentForm.about, image: e.target.value } })}
                 />
               </div>
+              <div className="space-y-3 border-t border-white/5 pt-6">
+                <h3 className="text-[10px] uppercase tracking-[0.24em] text-accent sm:tracking-[0.4em]">Photography Page Visibility</h3>
+                {[
+                  ['showPortfolio', 'Portfolio'],
+                  ['showAbout', 'About'],
+                  ['showDigitalProducts', 'Digital Products'],
+                  ['showBooking', 'Booking'],
+                  ['showReviews', 'Reviews'],
+                  ['showNewsletter', 'Newsletter'],
+                ].map(([key, text]) => (
+                  <label key={key} className={adminToggleClass}>
+                    <span className="min-w-0 break-words uppercase tracking-[0.16em] sm:tracking-[0.22em]">{text}</span>
+                    <input
+                      type="checkbox"
+                      checked={contentForm.settings.photography[key as keyof SiteSettings['photography']] as boolean}
+                      onChange={(e) =>
+                        setContentForm({
+                          ...contentForm,
+                          settings: {
+                            ...contentForm.settings,
+                            photography: {
+                              ...contentForm.settings.photography,
+                              [key]: e.target.checked,
+                            },
+                          },
+                        })
+                      }
+                    />
+                  </label>
+                ))}
+              </div>
+              <div className="grid gap-4 border-t border-white/5 pt-6">
+                <h3 className="text-[10px] uppercase tracking-[0.24em] text-accent sm:tracking-[0.4em]">Section Copy</h3>
+                <div className="space-y-2">
+                  <label className={label}>Portfolio Eyebrow</label>
+                  <input
+                    className={inputClass}
+                    value={contentForm.settings.portfolio.eyebrow}
+                    onChange={(e) =>
+                      setContentForm({
+                        ...contentForm,
+                        settings: {
+                          ...contentForm.settings,
+                          portfolio: { ...contentForm.settings.portfolio, eyebrow: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                  <label className={label}>Portfolio Title</label>
+                  <input
+                    className={inputClass}
+                    value={contentForm.settings.portfolio.title}
+                    onChange={(e) =>
+                      setContentForm({
+                        ...contentForm,
+                        settings: {
+                          ...contentForm.settings,
+                          portfolio: { ...contentForm.settings.portfolio, title: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                  <label className={label}>Portfolio Description</label>
+                  <textarea
+                    className={`${inputClass} min-h-[80px]`}
+                    value={contentForm.settings.portfolio.description}
+                    onChange={(e) =>
+                      setContentForm({
+                        ...contentForm,
+                        settings: {
+                          ...contentForm.settings,
+                          portfolio: { ...contentForm.settings.portfolio, description: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className={label}>Digital Product Eyebrow</label>
+                  <input
+                    className={inputClass}
+                    value={contentForm.settings.digitalProducts.eyebrow}
+                    onChange={(e) =>
+                      setContentForm({
+                        ...contentForm,
+                        settings: {
+                          ...contentForm.settings,
+                          digitalProducts: { ...contentForm.settings.digitalProducts, eyebrow: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                  <label className={label}>Digital Product Title</label>
+                  <input
+                    className={inputClass}
+                    value={contentForm.settings.digitalProducts.title}
+                    onChange={(e) =>
+                      setContentForm({
+                        ...contentForm,
+                        settings: {
+                          ...contentForm.settings,
+                          digitalProducts: { ...contentForm.settings.digitalProducts, title: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                  <label className={label}>Digital Product Description</label>
+                  <textarea
+                    className={`${inputClass} min-h-[80px]`}
+                    value={contentForm.settings.digitalProducts.description}
+                    onChange={(e) =>
+                      setContentForm({
+                        ...contentForm,
+                        settings: {
+                          ...contentForm.settings,
+                          digitalProducts: { ...contentForm.settings.digitalProducts, description: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className={label}>Booking Eyebrow</label>
+                  <input
+                    className={inputClass}
+                    value={contentForm.settings.booking.eyebrow}
+                    onChange={(e) =>
+                      setContentForm({
+                        ...contentForm,
+                        settings: {
+                          ...contentForm.settings,
+                          booking: { ...contentForm.settings.booking, eyebrow: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                  <label className={label}>Booking Title</label>
+                  <input
+                    className={inputClass}
+                    value={contentForm.settings.booking.title}
+                    onChange={(e) =>
+                      setContentForm({
+                        ...contentForm,
+                        settings: {
+                          ...contentForm.settings,
+                          booking: { ...contentForm.settings.booking, title: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                  <label className={label}>Booking Description</label>
+                  <textarea
+                    className={`${inputClass} min-h-[80px]`}
+                    value={contentForm.settings.booking.description}
+                    onChange={(e) =>
+                      setContentForm({
+                        ...contentForm,
+                        settings: {
+                          ...contentForm.settings,
+                          booking: { ...contentForm.settings.booking, description: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className={label}>Newsletter Eyebrow</label>
+                  <input
+                    className={inputClass}
+                    value={contentForm.settings.newsletter.eyebrow}
+                    onChange={(e) =>
+                      setContentForm({
+                        ...contentForm,
+                        settings: {
+                          ...contentForm.settings,
+                          newsletter: { ...contentForm.settings.newsletter, eyebrow: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                  <label className={label}>Newsletter Title</label>
+                  <input
+                    className={inputClass}
+                    value={contentForm.settings.newsletter.photographyTitle}
+                    onChange={(e) =>
+                      setContentForm({
+                        ...contentForm,
+                        settings: {
+                          ...contentForm.settings,
+                          newsletter: { ...contentForm.settings.newsletter, photographyTitle: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                  <label className={label}>Newsletter Description</label>
+                  <textarea
+                    className={`${inputClass} min-h-[80px]`}
+                    value={contentForm.settings.newsletter.photographyDescription}
+                    onChange={(e) =>
+                      setContentForm({
+                        ...contentForm,
+                        settings: {
+                          ...contentForm.settings,
+                          newsletter: { ...contentForm.settings.newsletter, photographyDescription: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                  <label className={label}>Newsletter Button</label>
+                  <input
+                    className={inputClass}
+                    value={contentForm.settings.newsletter.photographyButton}
+                    onChange={(e) =>
+                      setContentForm({
+                        ...contentForm,
+                        settings: {
+                          ...contentForm.settings,
+                          newsletter: { ...contentForm.settings.newsletter, photographyButton: e.target.value },
+                        },
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="space-y-3 border-t border-white/5 pt-6">
+                <h3 className="text-[10px] uppercase tracking-[0.24em] text-accent sm:tracking-[0.4em]">Footer</h3>
+                <label className={label}>Footer Tagline</label>
+                <textarea
+                  className={`${inputClass} min-h-[80px]`}
+                  value={contentForm.settings.footer.tagline}
+                  onChange={(e) =>
+                    setContentForm({
+                      ...contentForm,
+                      settings: {
+                        ...contentForm.settings,
+                        footer: { ...contentForm.settings.footer, tagline: e.target.value },
+                      },
+                    })
+                  }
+                />
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className={label}>Privacy Label</label>
+                    <input
+                      className={inputClass}
+                      value={contentForm.settings.footer.privacyLabel}
+                      onChange={(e) =>
+                        setContentForm({
+                          ...contentForm,
+                          settings: {
+                            ...contentForm.settings,
+                            footer: { ...contentForm.settings.footer, privacyLabel: e.target.value },
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={label}>Terms Label</label>
+                    <input
+                      className={inputClass}
+                      value={contentForm.settings.footer.termsLabel}
+                      onChange={(e) =>
+                        setContentForm({
+                          ...contentForm,
+                          settings: {
+                            ...contentForm.settings,
+                            footer: { ...contentForm.settings.footer, termsLabel: e.target.value },
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
               <button
                 onClick={saveContent}
-                className="w-full bg-accent hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all"
+                className="w-full bg-accent hover:bg-white text-black py-4 px-5 text-[10px] uppercase tracking-[0.24em] font-medium transition-all sm:px-8 sm:tracking-[0.4em]"
               >
                 Save Content
               </button>
@@ -1653,15 +2724,15 @@ export default function AdminPage() {
                 />
                 <button
                   onClick={saveContact}
-                  className="w-full bg-accent hover:bg-white text-black py-4 px-8 text-[10px] uppercase tracking-[0.4em] font-medium transition-all"
+                  className="w-full bg-accent hover:bg-white text-black py-4 px-5 text-[10px] uppercase tracking-[0.24em] font-medium transition-all sm:px-8 sm:tracking-[0.4em]"
                 >
                   Save Contact
                 </button>
               </div>
 
               <div className="pt-6 border-t border-white/5 space-y-3">
-                <h3 className="text-[10px] uppercase tracking-[0.4em] text-accent">Social Links</h3>
-                <div className="grid grid-cols-3 gap-3">
+                <h3 className="text-[10px] uppercase tracking-[0.24em] text-accent sm:tracking-[0.4em]">Social Links</h3>
+                <div className="grid gap-3 sm:grid-cols-3">
                   <input
                     className={inputClass}
                     placeholder="Platform"
@@ -1683,18 +2754,51 @@ export default function AdminPage() {
                 </div>
                 <button
                   onClick={addSocial}
-                  className="w-full bg-white/10 hover:bg-white/20 text-white py-3 text-[10px] uppercase tracking-[0.3em]"
+                  className="w-full bg-white/10 hover:bg-white/20 text-white py-3 text-[10px] uppercase tracking-[0.22em] sm:tracking-[0.3em]"
                 >
                   Add Social
                 </button>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
+                <div className="space-y-2 max-h-72 overflow-y-auto sm:max-h-40">
                   {socials.map((s) => (
-                    <div key={s.id} className="flex items-center justify-between border border-white/10 px-3 py-2 text-xs">
-                      <span>{s.platform}</span>
-                      <div className="flex items-center gap-2">
-                        <a href={s.url} className="text-accent underline" target="_blank" rel="noreferrer">
+                    <div key={s.id} className="grid min-w-0 gap-2 border border-white/10 p-3 text-xs lg:grid-cols-[1fr_1.5fr_0.8fr_auto]">
+                      <input
+                        className={`${inputClass} py-2 text-xs`}
+                        value={editingSocials[s.id]?.platform || ''}
+                        onChange={(e) =>
+                          setEditingSocials((prev) => ({
+                            ...prev,
+                            [s.id]: { ...(prev[s.id] || s), platform: e.target.value },
+                          }))
+                        }
+                      />
+                      <input
+                        className={`${inputClass} py-2 text-xs`}
+                        value={editingSocials[s.id]?.url || ''}
+                        onChange={(e) =>
+                          setEditingSocials((prev) => ({
+                            ...prev,
+                            [s.id]: { ...(prev[s.id] || s), url: e.target.value },
+                          }))
+                        }
+                      />
+                      <input
+                        className={`${inputClass} py-2 text-xs`}
+                        placeholder="instagram"
+                        value={editingSocials[s.id]?.icon || ''}
+                        onChange={(e) =>
+                          setEditingSocials((prev) => ({
+                            ...prev,
+                            [s.id]: { ...(prev[s.id] || s), icon: e.target.value },
+                          }))
+                        }
+                      />
+                      <div className="flex flex-wrap items-center justify-start gap-3 lg:justify-end">
+                        <a href={editingSocials[s.id]?.url || s.url} className="break-all text-accent underline" target="_blank" rel="noreferrer">
                           View
                         </a>
+                        <button onClick={() => updateSocial(s.id)} className="text-white/70 hover:text-white">
+                          Save
+                        </button>
                         <button onClick={() => deleteSocial(s.id.toString())} className="text-red-400 hover:text-red-200">
                           <FiTrash2 />
                         </button>

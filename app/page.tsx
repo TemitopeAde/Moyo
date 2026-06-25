@@ -8,18 +8,20 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import Shuffle from '@/components/Shuffle';
+import { useSiteSettings } from '@/lib/useSiteSettings';
 
 export default function GlobalEntryPage() {
   const { language } = useLanguage();
   const { t } = useTranslate(language);
+  const settings = useSiteSettings();
 
   return (
     <main className="relative flex min-h-[100svh] w-full flex-col items-center justify-start overflow-hidden bg-background px-5 pb-16 pt-[48svh] text-center selection:bg-accent selection:text-black sm:px-6 sm:pt-[47svh] md:pt-[49svh] lg:pt-[48svh] xl:pt-[47svh]">
       {/* Cinematic Background Layer */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <InteractiveImageScene
-          imageSrc="/homepage-desktop.jpg"
-          mobileImageSrc="/homepage-mobile.jpg"
+          imageSrc={settings.entry.desktopImage}
+          mobileImageSrc={settings.entry.mobileImage}
           className="z-0 opacity-55 grayscale"
         />
         <ThreeAtmosphere preset="entry" className="z-10 opacity-80 mix-blend-screen" />
@@ -38,19 +40,18 @@ export default function GlobalEntryPage() {
         >
           <Shuffle
             tag="h1"
-            text="Ijabiken Moyo"
+            text={settings.entry.title}
             duration={0.62}
             stagger={0.045}
             triggerOnce={true}
             triggerOnHover={true}
             respectReducedMotion={true}
-            className="w-full max-w-full text-center text-[clamp(1.65rem,6vw,3.1rem)] font-semibold uppercase leading-none tracking-[0.08em] text-foreground sm:tracking-[0.16em] md:tracking-[0.2em]"
+            className="w-full max-w-full text-center text-[clamp(1.55rem,6vw,3.1rem)] font-semibold uppercase leading-tight tracking-[0.06em] text-foreground [overflow-wrap:anywhere] sm:tracking-[0.16em] sm:leading-none md:tracking-[0.2em]"
             style={{ fontFamily: 'var(--font-body)' }}
           />
 
-          <p className="mx-auto max-w-3xl text-[9px] uppercase leading-relaxed tracking-[0.18em] text-foreground/60 sm:text-[10px] sm:tracking-[0.28em] md:text-xs md:tracking-[0.36em]">
-            {t('home.tagline_part1')} <br className="hidden md:block" />
-            <span className="text-foreground">{t('common.photography')}</span> {t('home.tagline_part2')} <span className="text-foreground">{t('common.fineArt')}</span>.
+          <p className="mx-auto max-w-3xl text-[9px] uppercase leading-relaxed tracking-[0.14em] text-foreground/60 [overflow-wrap:anywhere] sm:text-[10px] sm:tracking-[0.24em] md:text-xs md:tracking-[0.32em]">
+            {settings.entry.tagline}
           </p>
 
           <div className="mx-auto h-px w-16 bg-accent/50" />
@@ -68,8 +69,8 @@ export default function GlobalEntryPage() {
         transition={{ delay: 2, duration: 1 }}
         className="absolute bottom-8 left-10 text-left hidden md:block"
       >
-        <p className="text-[9px] tracking-[0.5em] uppercase text-foreground/20 mb-2 font-medium">{t('home.philosophy')}</p>
-        <p className="text-[10px] tracking-[0.3em] uppercase text-foreground/40 italic">{t('home.philosophyText')}</p>
+        <p className="text-[9px] tracking-[0.5em] uppercase text-foreground/20 mb-2 font-medium">{settings.entry.philosophyLabel || t('home.philosophy')}</p>
+        <p className="max-w-xs text-[10px] tracking-[0.24em] uppercase text-foreground/40 italic [overflow-wrap:anywhere]">{settings.entry.philosophyText || t('home.philosophyText')}</p>
       </motion.div>
 
       <motion.div
@@ -78,8 +79,8 @@ export default function GlobalEntryPage() {
         transition={{ delay: 2.2, duration: 1 }}
         className="absolute bottom-8 right-10 text-right hidden md:block"
       >
-        <p className="text-[9px] tracking-[0.5em] uppercase text-foreground/20 mb-2 font-medium">{t('home.location')}</p>
-        <p className="text-[10px] tracking-[0.3em] uppercase text-foreground/40">{t('home.locationText')}</p>
+        <p className="text-[9px] tracking-[0.5em] uppercase text-foreground/20 mb-2 font-medium">{settings.entry.locationLabel || t('home.location')}</p>
+        <p className="max-w-xs text-[10px] tracking-[0.24em] uppercase text-foreground/40 [overflow-wrap:anywhere]">{settings.entry.locationText || t('home.locationText')}</p>
       </motion.div>
 
       {/* Audio/Status Indicator (Faux) */}

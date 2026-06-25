@@ -51,13 +51,14 @@ export async function POST(req: NextRequest) {
   }
 
   const { rows } = await query(
-    `INSERT INTO photography_categories (name, slug, description, display_order, is_active)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO photography_categories (name, slug, description, cover_image_url, display_order, is_active)
+     VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING *`,
     [
       name,
       slug,
       String(body.description || '').trim(),
+      String(body.cover_image_url || '').trim(),
       Number(body.display_order || 0),
       body.is_active ?? true,
     ]
@@ -81,13 +82,14 @@ export async function PUT(req: NextRequest) {
 
   const { rows } = await query(
     `UPDATE photography_categories
-     SET name=$1, slug=$2, description=$3, display_order=$4, is_active=$5, updated_at=NOW()
-     WHERE id=$6
+     SET name=$1, slug=$2, description=$3, cover_image_url=$4, display_order=$5, is_active=$6, updated_at=NOW()
+     WHERE id=$7
      RETURNING *`,
     [
       name,
       slug,
       String(body.description || '').trim(),
+      String(body.cover_image_url || '').trim(),
       Number(body.display_order || 0),
       body.is_active ?? true,
       id,

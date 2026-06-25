@@ -52,7 +52,8 @@ async function ensureTables() {
       homepage_hero_text TEXT DEFAULT '',
       homepage_hero_image TEXT DEFAULT '',
       about_text TEXT DEFAULT '',
-      about_image TEXT DEFAULT ''
+      about_image TEXT DEFAULT '',
+      site_settings JSONB DEFAULT '{}'::JSONB
     );
 
     CREATE TABLE IF NOT EXISTS contact (
@@ -79,6 +80,19 @@ async function ensureTables() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
+    CREATE TABLE IF NOT EXISTS digital_products (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      price TEXT NOT NULL,
+      details TEXT DEFAULT '',
+      image TEXT NOT NULL,
+      product_url TEXT DEFAULT '',
+      display_order INTEGER DEFAULT 0,
+      is_active BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
     CREATE TABLE IF NOT EXISTS newsletter_subscribers (
       id SERIAL PRIMARY KEY,
       email TEXT NOT NULL,
@@ -96,6 +110,7 @@ async function ensureTables() {
       name TEXT NOT NULL,
       slug TEXT UNIQUE NOT NULL,
       description TEXT DEFAULT '',
+      cover_image_url TEXT DEFAULT '',
       display_order INTEGER DEFAULT 0,
       is_active BOOLEAN DEFAULT TRUE,
       created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -130,6 +145,24 @@ async function ensureTables() {
     SET images = COALESCE(images, ARRAY[]::TEXT[]),
         approved_images = COALESCE(approved_images, ARRAY[]::TEXT[]),
         finished_images = COALESCE(finished_images, ARRAY[]::TEXT[]);
+  `);
+
+  await pool.query(`
+    ALTER TABLE digital_products
+      ADD COLUMN IF NOT EXISTS product_url TEXT DEFAULT '',
+      ADD COLUMN IF NOT EXISTS display_order INTEGER DEFAULT 0,
+      ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE,
+      ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+  `);
+
+  await pool.query(`
+    ALTER TABLE photography_categories
+      ADD COLUMN IF NOT EXISTS cover_image_url TEXT DEFAULT '';
+  `);
+
+  await pool.query(`
+    ALTER TABLE content
+      ADD COLUMN IF NOT EXISTS site_settings JSONB DEFAULT '{}'::JSONB;
   `);
 
   // seed singleton rows

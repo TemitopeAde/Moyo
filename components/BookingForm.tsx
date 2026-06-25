@@ -1,16 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import GlareHover from '@/components/GlareHover';
+import { useSiteSettings } from '@/lib/useSiteSettings';
 
 export default function BookingForm() {
     const [formData, setFormData] = useState({ name: '', email: '', service: 'portrait', message: '' });
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+    const [contact, setContact] = useState({ email: 'ijabikenm@gmail.com', phone: '+2348148192201' });
     const { language } = useLanguage();
-    const { t } = useTranslate(language);
+    const { t, translateText } = useTranslate(language);
+    const settings = useSiteSettings();
 
     const services = [
         { id: 'editorial', label: t('services.editorial') },
@@ -19,7 +22,17 @@ export default function BookingForm() {
         { id: 'commission', label: t('services.artCommission') },
     ];
 
-
+    useEffect(() => {
+        fetch('/api/contact')
+            .then((res) => res.json())
+            .then((data) => {
+                setContact({
+                    email: data.contact?.email || 'ijabikenm@gmail.com',
+                    phone: data.contact?.phone || '+2348148192201',
+                });
+            })
+            .catch(() => null);
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -52,29 +65,29 @@ export default function BookingForm() {
     return (
         <section id="contact" className="border-t border-foreground/5 bg-background py-24 md:py-32 lg:py-40">
             <div className="container mx-auto px-6 md:px-12 max-w-6xl">
-                <div className="grid gap-14 lg:grid-cols-2 lg:gap-24">
-                    <div className="space-y-8 lg:space-y-12">
+                <div className="grid min-w-0 gap-14 lg:grid-cols-2 lg:gap-24">
+                    <div className="min-w-0 space-y-8 lg:space-y-12">
                         <div className="space-y-4">
-                            <span className="block text-[10px] font-medium uppercase tracking-[0.3em] text-accent md:tracking-[0.5em]">
-                                {t('booking.collaboration')}
+                            <span className="block text-[10px] font-medium uppercase tracking-[0.22em] text-accent [overflow-wrap:anywhere] md:tracking-[0.5em]">
+                                {translateText(settings.booking.eyebrow || t('booking.collaboration'))}
                             </span>
-                            <h2 className="text-3xl font-heading font-light italic leading-tight text-foreground sm:text-4xl md:text-5xl">
-                                {t('booking.heading')}
+                            <h2 className="text-3xl font-heading font-light italic leading-tight text-foreground [overflow-wrap:anywhere] sm:text-4xl md:text-5xl">
+                                {translateText(settings.booking.title || t('booking.heading'))}
                             </h2>
                         </div>
 
-                        <p className="max-w-md text-base leading-relaxed tracking-wide text-foreground/40 md:text-lg">
-                            {t('booking.description')}
+                        <p className="max-w-md text-base leading-relaxed tracking-wide text-foreground/40 [overflow-wrap:anywhere] md:text-lg">
+                            {translateText(settings.booking.description || t('booking.description'))}
                         </p>
 
                         <div className="space-y-6 border-t border-foreground/5 pt-8 md:pt-12">
                             <div className="space-y-2">
-                                <p className="text-[10px] tracking-[0.3em] uppercase text-foreground/20">{t('booking.email')}</p>
-                                <a href="mailto:ijabikenm@gmail.com" className="block break-words font-heading text-xl text-foreground underline decoration-white/10 underline-offset-8 transition-colors hover:text-accent sm:text-2xl">ijabikenm@gmail.com</a>
+                                <p className="text-[10px] tracking-[0.22em] uppercase text-foreground/20 sm:tracking-[0.3em]">{t('booking.email')}</p>
+                                <a href={`mailto:${contact.email}`} className="block break-all font-heading text-xl text-foreground underline decoration-white/10 underline-offset-8 transition-colors hover:text-accent sm:text-2xl">{contact.email}</a>
                             </div>
                             <div className="space-y-2">
-                                <p className="text-[10px] tracking-[0.3em] uppercase text-foreground/20">{t('booking.studio')}</p>
-                                <span className="block text-sm text-foreground/40 font-body tracking-widest uppercase">+2348148192201</span>
+                                <p className="text-[10px] tracking-[0.22em] uppercase text-foreground/20 sm:tracking-[0.3em]">{t('booking.studio')}</p>
+                                <span className="block text-sm text-foreground/40 font-body tracking-widest uppercase [overflow-wrap:anywhere]">{contact.phone}</span>
                             </div>
                         </div>
                     </div>
@@ -155,7 +168,7 @@ export default function BookingForm() {
                                 <button
                                     type="submit"
                                     disabled={status === 'loading'}
-                                    className="w-full bg-white px-4 py-5 text-[10px] font-bold uppercase tracking-[0.28em] text-background transition-colors duration-500 hover:bg-accent hover:text-background disabled:opacity-50 sm:tracking-[0.5em]"
+                                    className="w-full bg-white px-4 py-5 text-[10px] font-bold uppercase tracking-[0.18em] text-background transition-colors duration-500 hover:bg-accent hover:text-background disabled:opacity-50 sm:tracking-[0.5em]"
                                 >
                                     {status === 'loading' ? t('ui.sending') : t('booking.sendInquiry')}
                                 </button>

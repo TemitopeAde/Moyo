@@ -8,6 +8,7 @@ export async function GET() {
       c.name,
       c.slug,
       c.description,
+      c.cover_image_url,
       c.display_order,
       c.is_active,
       COALESCE(

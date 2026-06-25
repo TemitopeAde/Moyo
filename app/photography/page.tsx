@@ -11,9 +11,11 @@ import BookingForm from '@/components/BookingForm';
 import DigitalProducts from '@/components/DigitalProducts';
 import ClientReview from '@/components/ClientReview';
 import { useProfile } from '@/context/ProfileContext';
+import { useSiteSettings } from '@/lib/useSiteSettings';
 
 export default function PhotographyPage() {
     const { setProfile } = useProfile();
+    const settings = useSiteSettings();
 
     useEffect(() => {
         setProfile('photography');
@@ -24,19 +26,21 @@ export default function PhotographyPage() {
             <Navbar />
             <Hero profileType="photography" />
 
-            <PhotographyGrid />
+            {settings.photography.showPortfolio && <PhotographyGrid />}
 
-            <AboutSection profileType="photography" />
+            {settings.photography.showAbout && <AboutSection profileType="photography" />}
 
-            <DigitalProducts />
+            {settings.photography.showDigitalProducts && <DigitalProducts />}
 
-            <BookingForm />
+            {settings.photography.showBooking && <BookingForm />}
 
-            <ClientReview />
+            {settings.photography.showReviews && <ClientReview />}
 
-            <section className="py-40 bg-background flex flex-col items-center border-t border-white/5">
-                <NewsletterForm profileType="photography" />
-            </section>
+            {settings.photography.showNewsletter && (
+                <section className="py-40 bg-background flex flex-col items-center border-t border-white/5">
+                    <NewsletterForm profileType="photography" />
+                </section>
+            )}
 
             <Footer />
         </main>
