@@ -95,6 +95,7 @@ const inputClass =
   'min-w-0 w-full rounded-sm bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-accent outline-none transition-colors';
 const mediaAccept = 'image/*,video/*';
 const uploadConcurrency = 2;
+const uploadSaveChunkSize = 25;
 const uploadRequestTimeoutMs = 120_000;
 const maxCloudinaryFreeUploadBytes = 10 * 1024 * 1024;
 const compressedImageQuality = 0.82;
@@ -102,6 +103,20 @@ const compressedImageMaxDimension = 2400;
 
 function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function fileIdentity(file: File) {
+  return `${file.name}-${file.size}-${file.lastModified}`;
+}
+
+function mergeSelectedFiles(existing: File[] | undefined, incoming: File[]) {
+  const seen = new Set((existing || []).map(fileIdentity));
+  return [...(existing || []), ...incoming.filter((file) => {
+    const key = fileIdentity(file);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  })];
 }
 
 function isCompressibleImage(file: File) {
@@ -683,12 +698,13 @@ export default function AdminPage() {
   }, [catalogImagePreview]);
 
   const handleCatalogImageFileChange = async (files: File[]) => {
-    setCatalogImageFiles(files);
-    if (!files.length) {
+    const nextFiles = mergeSelectedFiles(catalogImageFiles, files);
+    setCatalogImageFiles(nextFiles);
+    if (!nextFiles.length) {
       setCatalogImagePreview(catalogImageForm.image_url || null);
       return;
     }
-    const localPreview = URL.createObjectURL(files[0]);
+    const localPreview = URL.createObjectURL(nextFiles[0]);
     setCatalogImagePreview(localPreview);
 
     if (!adminKey) {
@@ -925,6 +941,19 @@ export default function AdminPage() {
     }
   };
 
+  const updateGalleryImagesInChunks = async (id: number, action: 'addImages' | 'addFinishedImages', urls: string[]) => {
+    let updatedGallery: Gallery | null = null;
+
+    for (let start = 0; start < urls.length; start += uploadSaveChunkSize) {
+      const chunk = urls.slice(start, start + uploadSaveChunkSize);
+      const nextGallery = await updateGallery(id.toString(), action, { images: chunk });
+      if (!nextGallery) return null;
+      updatedGallery = nextGallery;
+    }
+
+    return updatedGallery;
+  };
+
   const uploadGalleryImage = async (id: number) => {
     const files = galleryUploads[id] || [];
     if (!files.length) return setMessage({ text: 'Choose client media files first', type: 'error' });
@@ -933,7 +962,7 @@ export default function AdminPage() {
     try {
       const { urls, failedFiles } = await uploadFiles(files, target);
       if (!urls.length) return;
-      const updatedGallery = await updateGallery(id.toString(), 'addImages', { images: urls });
+      const updatedGallery = await updateGalleryImagesInChunks(id, 'addImages', urls);
       if (!updatedGallery) return;
       setGalleryUploads((prev) => ({ ...prev, [id]: failedFiles }));
       setMessage({
@@ -953,7 +982,7 @@ export default function AdminPage() {
     try {
       const { urls, failedFiles } = await uploadFiles(files, target);
       if (!urls.length) return;
-      const updatedGallery = await updateGallery(id.toString(), 'addFinishedImages', { images: urls });
+      const updatedGallery = await updateGalleryImagesInChunks(id, 'addFinishedImages', urls);
       if (!updatedGallery) return;
       setFinishedGalleryUploads((prev) => ({ ...prev, [id]: failedFiles }));
       setMessage({
@@ -1864,7 +1893,10 @@ export default function AdminPage() {
                     type="file"
                     accept="image/*"
                     multiple
-                    onChange={(e) => handleCatalogImageFileChange(Array.from(e.target.files || []))}
+                    onChange={(e) => {
+                      handleCatalogImageFileChange(Array.from(e.target.files || []));
+                      e.currentTarget.value = '';
+                    }}
                     className="hidden"
                   />
                   <button
@@ -1906,6 +1938,19 @@ export default function AdminPage() {
                 >
                   {isUploading('catalog-image') ? getUploadProgressLabel('catalog-image', 'Uploading') : 'Add Catalog Images'}
                 </button>
+                {catalogImageFiles.length > 0 && (
+                  <button
+                    type="button"
+                    disabled={isUploading('catalog-image')}
+                    onClick={() => {
+                      setCatalogImageFiles([]);
+                      setCatalogImagePreview(catalogImageForm.image_url || null);
+                    }}
+                    className="w-full border border-white/10 py-3 text-[10px] uppercase tracking-[0.2em] text-white/40 transition-colors hover:border-red-500 hover:text-red-300 disabled:opacity-50 sm:tracking-[0.3em]"
+                  >
+                    Clear Selected Images
+                  </button>
+                )}
               </form>
             </div>
 
@@ -2234,16 +2279,20 @@ export default function AdminPage() {
                       })}
                     </div>
                   )}
-                  <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
+                  <div className="grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-center">
                     <label className="relative block cursor-pointer border border-dashed border-white/10 bg-white/[0.03] px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-white/45 transition-colors hover:border-accent/50">
                       <input
                         type="file"
                         accept={mediaAccept}
                         multiple
                         disabled={isMediaUploading}
-                        onChange={(e) =>
-                          setGalleryUploads((prev) => ({ ...prev, [gal.id]: Array.from(e.target.files || []) }))
-                        }
+                        onChange={(e) => {
+                          setGalleryUploads((prev) => ({
+                            ...prev,
+                            [gal.id]: mergeSelectedFiles(prev[gal.id], Array.from(e.target.files || [])),
+                          }));
+                          e.currentTarget.value = '';
+                        }}
                         className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                       />
                       {getSelectedFileLabel(galleryUploads[gal.id], 'Choose client media files')}
@@ -2255,6 +2304,14 @@ export default function AdminPage() {
                       className="px-4 py-3 border border-white/10 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       {isMediaUploading ? getUploadProgressLabel(mediaTarget, 'Uploading media') : 'Upload Media'}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isMediaUploading || !(galleryUploads[gal.id]?.length)}
+                      onClick={() => setGalleryUploads((prev) => ({ ...prev, [gal.id]: [] }))}
+                      className="px-4 py-3 border border-white/10 text-[10px] uppercase tracking-[0.2em] text-white/40 transition-colors hover:border-red-500 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Clear Queue
                     </button>
                   </div>
                   {gal.approved_images.length > 0 && (
@@ -2272,16 +2329,20 @@ export default function AdminPage() {
                     </button>
                   )}
                   <div className="space-y-3 border-t border-white/5 pt-4">
-                    <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
+                    <div className="grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-center">
                       <label className="relative block cursor-pointer border border-dashed border-white/10 bg-white/[0.03] px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-white/45 transition-colors hover:border-accent/50">
                         <input
                           type="file"
                           accept={mediaAccept}
                           multiple
                           disabled={isFinishedUploading}
-                          onChange={(e) =>
-                            setFinishedGalleryUploads((prev) => ({ ...prev, [gal.id]: Array.from(e.target.files || []) }))
-                          }
+                          onChange={(e) => {
+                            setFinishedGalleryUploads((prev) => ({
+                              ...prev,
+                              [gal.id]: mergeSelectedFiles(prev[gal.id], Array.from(e.target.files || [])),
+                            }));
+                            e.currentTarget.value = '';
+                          }}
                           className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                         />
                         {getSelectedFileLabel(finishedGalleryUploads[gal.id], 'Choose finished work files')}
@@ -2293,6 +2354,14 @@ export default function AdminPage() {
                         className="px-4 py-3 border border-white/10 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         {isFinishedUploading ? getUploadProgressLabel(finishedTarget, 'Uploading finished') : 'Upload Finished'}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isFinishedUploading || !(finishedGalleryUploads[gal.id]?.length)}
+                        onClick={() => setFinishedGalleryUploads((prev) => ({ ...prev, [gal.id]: [] }))}
+                        className="px-4 py-3 border border-white/10 text-[10px] uppercase tracking-[0.2em] text-white/40 transition-colors hover:border-red-500 hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        Clear Queue
                       </button>
                     </div>
                     {gal.finished_images?.length > 0 && (
