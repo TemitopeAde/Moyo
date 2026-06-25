@@ -60,7 +60,7 @@ export default function Footer() {
                         <div className="space-y-6">
                             <span className="text-[10px] tracking-[0.3em] uppercase text-foreground/20 block font-medium">{t('common.contact')}</span>
                             <p className="text-[10px] tracking-widest uppercase text-foreground/60 leading-relaxed">
-                                ijabkenm@gmail.com <br />
+                                ijabikenm@gmail.com <br />
                                 +2348148192201
                             </p>
                         </div>

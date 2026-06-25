@@ -5,7 +5,7 @@ import { requireAdmin } from '@/lib/auth';
 const DEFAULT_CONTACT = {
   id: 1,
   phone: '+2348148192201',
-  email: 'ijabkenm@gmail.com',
+  email: 'ijabikenm@gmail.com',
   address: '',
 };
 

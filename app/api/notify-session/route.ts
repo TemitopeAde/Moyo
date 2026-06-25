@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 
-const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'ijabkenm@gmail.com';
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'ijabikenm@gmail.com';
 
 export async function POST(req: Request) {
   try {

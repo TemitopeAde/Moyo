@@ -70,7 +70,7 @@ export default function BookingForm() {
                         <div className="space-y-6 border-t border-foreground/5 pt-8 md:pt-12">
                             <div className="space-y-2">
                                 <p className="text-[10px] tracking-[0.3em] uppercase text-foreground/20">{t('booking.email')}</p>
-                                <a href="mailto:ijabkenm@gmail.com" className="block break-words font-heading text-xl text-foreground underline decoration-white/10 underline-offset-8 transition-colors hover:text-accent sm:text-2xl">ijabkenm@gmail.com</a>
+                                <a href="mailto:ijabikenm@gmail.com" className="block break-words font-heading text-xl text-foreground underline decoration-white/10 underline-offset-8 transition-colors hover:text-accent sm:text-2xl">ijabikenm@gmail.com</a>
                             </div>
                             <div className="space-y-2">
                                 <p className="text-[10px] tracking-[0.3em] uppercase text-foreground/20">{t('booking.studio')}</p>

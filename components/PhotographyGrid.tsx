@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import GlareHover from '@/components/GlareHover';
@@ -32,6 +32,7 @@ type CatalogGridItem = CatalogImage & {
 export default function PhotographyGrid() {
     const { language } = useLanguage();
     const { t, translateText } = useTranslate(language);
+    const shouldReduceMotion = useReducedMotion();
     const [categories, setCategories] = useState<CatalogCategory[]>([]);
     const [activeCategory, setActiveCategory] = useState('all');
     const [isLoading, setIsLoading] = useState(true);
@@ -135,56 +136,101 @@ export default function PhotographyGrid() {
                 )}
 
                 {visibleItems.length > 0 && (
-                    <div className="columns-1 gap-5 sm:columns-2 lg:columns-3 md:gap-8">
-                        {visibleItems.map((item, index) => (
-                            <motion.button
-                                key={item.id}
-                                type="button"
-                                onClick={() => setSelectedItem(item)}
-                                initial={{ opacity: 0, y: 40 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 1, delay: index * 0.06 }}
-                                className="group mb-5 block w-full cursor-pointer break-inside-avoid text-left outline-none focus-visible:ring-2 focus-visible:ring-accent md:mb-8"
-                            >
-                                <GlareHover
-                                    width="100%"
-                                    height="auto"
-                                    background="var(--color-surface)"
-                                    borderRadius="2px"
-                                    borderColor="rgba(255,255,255,0.08)"
-                                    glareOpacity={0.18}
-                                    glareAngle={-30}
-                                    glareSize={180}
-                                    transitionDuration={760}
+                    <motion.div
+                        key={activeCategory}
+                        className="columns-1 gap-5 sm:columns-2 lg:columns-3 md:gap-8"
+                        initial={shouldReduceMotion ? false : "hidden"}
+                        animate="visible"
+                        variants={{
+                            hidden: {},
+                            visible: {
+                                transition: {
+                                    staggerChildren: 0.08,
+                                    delayChildren: 0.05,
+                                },
+                            },
+                        }}
+                    >
+                        <AnimatePresence mode="popLayout">
+                            {visibleItems.map((item, index) => (
+                                <motion.button
+                                    key={`${activeCategory}-${item.id}`}
+                                    type="button"
+                                    onClick={() => setSelectedItem(item)}
+                                    layout={!shouldReduceMotion}
+                                    variants={{
+                                        hidden: { opacity: 0, y: 48, filter: 'blur(10px)' },
+                                        visible: {
+                                            opacity: 1,
+                                            y: 0,
+                                            filter: 'blur(0px)',
+                                            transition: {
+                                                duration: 0.75,
+                                                ease: [0.22, 1, 0.36, 1],
+                                            },
+                                        },
+                                    }}
+                                    initial={shouldReduceMotion ? false : "hidden"}
+                                    whileInView="visible"
+                                    exit={shouldReduceMotion ? undefined : { opacity: 0, y: 24, filter: 'blur(8px)', transition: { duration: 0.28 } }}
+                                    viewport={{ once: true, margin: "-10% 0px" }}
+                                    whileHover={shouldReduceMotion ? undefined : { y: index % 2 === 0 ? -10 : -14 }}
+                                    whileTap={shouldReduceMotion ? undefined : { scale: 0.985 }}
+                                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                                    className="group mb-5 block w-full cursor-pointer break-inside-avoid text-left outline-none focus-visible:ring-2 focus-visible:ring-accent md:mb-8"
                                 >
-                                    <div className="relative overflow-hidden">
-                                        <img
-                                            src={item.image_url}
-                                            alt={translateText(item.alt_text || item.title || item.categoryName)}
-                                            className="h-auto w-full transition-transform duration-1000 group-hover:scale-[1.02]"
-                                            loading="lazy"
-                                        />
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-100 transition-colors duration-500 group-hover:bg-black/35 sm:opacity-0 sm:group-hover:opacity-100">
-                                            <span className="border border-white/40 bg-black/50 px-5 py-3 text-[10px] uppercase tracking-[0.3em] text-white">
-                                                {translateText('View')}
-                                            </span>
+                                    <GlareHover
+                                        width="100%"
+                                        height="auto"
+                                        background="var(--color-surface)"
+                                        borderRadius="2px"
+                                        borderColor="rgba(255,255,255,0.08)"
+                                        glareOpacity={0.18}
+                                        glareAngle={-30}
+                                        glareSize={180}
+                                        transitionDuration={760}
+                                    >
+                                        <div className="relative overflow-hidden">
+                                            <motion.img
+                                                src={item.image_url}
+                                                alt={translateText(item.alt_text || item.title || item.categoryName)}
+                                                className={`h-auto w-full will-change-transform transition-transform duration-[1400ms] ease-out ${
+                                                    index % 2 === 0
+                                                        ? 'group-hover:scale-[1.08] group-hover:-translate-y-3'
+                                                        : 'group-hover:scale-[1.08] group-hover:translate-y-3'
+                                                }`}
+                                                loading="lazy"
+                                                initial={shouldReduceMotion ? false : { scale: 1.045, y: 0 }}
+                                                animate={shouldReduceMotion ? undefined : { scale: 1.015, y: 0 }}
+                                                transition={{ duration: 1.15, ease: [0.22, 1, 0.36, 1] }}
+                                            />
+                                            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/10 opacity-100 transition-all duration-500 ease-out group-hover:bg-black/40 sm:opacity-0 sm:group-hover:opacity-100">
+                                                <span className="translate-y-2 border border-white/40 bg-black/50 px-5 py-3 text-[10px] uppercase tracking-[0.3em] text-white opacity-0 transition-all duration-500 ease-out group-hover:translate-y-0 group-hover:opacity-100 sm:opacity-0">
+                                                    {translateText('View')}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div className="px-4 py-4 sm:px-5">
-                                        <p className="text-[10px] uppercase tracking-[0.28em] text-accent">
-                                            {translateText(item.categoryName)}
-                                        </p>
-                                        {item.title && (
-                                            <h3 className="mt-2 text-lg font-heading text-foreground transition-colors group-hover:text-accent">
-                                                {translateText(item.title)}
-                                            </h3>
-                                        )}
-                                    </div>
-                                </GlareHover>
-                            </motion.button>
-                        ))}
-                    </div>
+                                        <motion.div
+                                            className="px-4 py-4 sm:px-5"
+                                            initial={false}
+                                            whileHover={shouldReduceMotion ? undefined : { y: -2 }}
+                                            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                                        >
+                                            <p className="text-[10px] uppercase tracking-[0.28em] text-accent">
+                                                {translateText(item.categoryName)}
+                                            </p>
+                                            {item.title && (
+                                                <h3 className="mt-2 text-lg font-heading text-foreground transition-colors group-hover:text-accent">
+                                                    {translateText(item.title)}
+                                                </h3>
+                                            )}
+                                        </motion.div>
+                                    </GlareHover>
+                                </motion.button>
+                            ))}
+                        </AnimatePresence>
+                    </motion.div>
                 )}
             </div>
 

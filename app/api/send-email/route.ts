@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer';
 
 export const runtime = 'nodejs';
 
-const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'ijabkenm@gmail.com';
+const CONTACT_EMAIL = process.env.CONTACT_EMAIL || 'ijabikenm@gmail.com';
 
 function normalizeString(value: unknown) {
     return typeof value === 'string' ? value.trim() : '';
