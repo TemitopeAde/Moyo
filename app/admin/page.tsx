@@ -104,6 +104,84 @@ function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function isCompressibleImage(file: File) {
+  return ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
+}
+
+function loadUploadImage(file: File) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    const url = URL.createObjectURL(file);
+
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error(`Could not prepare ${file.name}`));
+    };
+    image.src = url;
+  });
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number) {
+  return new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, type, quality);
+  });
+}
+
+async function prepareUploadFile(file: File) {
+  if (!isCompressibleImage(file)) {
+    return { file, changed: false };
+  }
+
+  try {
+    const image = await loadUploadImage(file);
+    const maxSide = Math.max(image.naturalWidth, image.naturalHeight);
+    const shouldResize = maxSide > compressedImageMaxDimension;
+    const shouldCompress = file.size > maxCloudinaryFreeUploadBytes || shouldResize;
+
+    if (!shouldCompress) {
+      return { file, changed: false };
+    }
+
+    const scale = shouldResize ? compressedImageMaxDimension / maxSide : 1;
+    const width = Math.max(1, Math.round(image.naturalWidth * scale));
+    const height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext('2d', { alpha: false });
+    if (!context) {
+      return { file, changed: false };
+    }
+
+    context.fillStyle = '#000';
+    context.fillRect(0, 0, width, height);
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(image, 0, 0, width, height);
+
+    const blob = await canvasToBlob(canvas, 'image/jpeg', compressedImageQuality);
+    if (!blob || blob.size >= file.size) {
+      return { file, changed: false };
+    }
+
+    const preparedName = file.name.replace(/\.[^.]+$/, '') || 'upload';
+    return {
+      file: new File([blob], `${preparedName}.jpg`, { type: 'image/jpeg', lastModified: file.lastModified }),
+      changed: true,
+      originalSize: file.size,
+      preparedSize: blob.size,
+    };
+  } catch (error) {
+    console.warn('[admin] upload preparation skipped', error);
+    return { file, changed: false };
+  }
+}
+
 const adminToggleClass = 'flex min-w-0 items-center justify-between gap-4 border border-white/10 bg-white/[0.03] px-4 py-3 text-xs text-white/60';
 
 function AdminAccordionPanel({
@@ -423,19 +501,82 @@ export default function AdminPage() {
       setUploadProgress((prev) => ({ ...prev, [target]: { current: completedCount, total: files.length } }));
 
       const uploadSingleFile = async (file: File, index: number) => {
+        const prepared = await prepareUploadFile(file);
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', prepared.file);
         const controller = new AbortController();
         const timeout = window.setTimeout(() => controller.abort(), uploadRequestTimeoutMs);
 
         try {
+          if (prepared.changed && prepared.originalSize && prepared.preparedSize) {
+            console.log('[admin] upload optimized', {
+              file: file.name,
+              originalSize: formatFileSize(prepared.originalSize),
+              preparedSize: formatFileSize(prepared.preparedSize),
+            });
+          }
+
+          try {
+            const signatureRes = await fetch('/api/upload/signature', {
+              method: 'POST',
+              headers: { 'x-admin-key': adminKey },
+              signal: controller.signal,
+            });
+            const signatureData = (await signatureRes.json().catch(() => null)) as {
+              directUpload?: boolean;
+              cloudName?: string;
+              apiKey?: string;
+              folder?: string;
+              timestamp?: number;
+              signature?: string;
+            } | null;
+
+            if (
+              signatureRes.ok &&
+              signatureData?.directUpload &&
+              signatureData.cloudName &&
+              signatureData.apiKey &&
+              signatureData.folder &&
+              signatureData.timestamp &&
+              signatureData.signature
+            ) {
+              const cloudinaryForm = new FormData();
+              cloudinaryForm.append('file', prepared.file);
+              cloudinaryForm.append('api_key', signatureData.apiKey);
+              cloudinaryForm.append('folder', signatureData.folder);
+              cloudinaryForm.append('timestamp', String(signatureData.timestamp));
+              cloudinaryForm.append('signature', signatureData.signature);
+
+              const directRes = await fetch(`https://api.cloudinary.com/v1_1/${signatureData.cloudName}/auto/upload`, {
+                method: 'POST',
+                body: cloudinaryForm,
+                signal: controller.signal,
+              });
+              const directData = await directRes.json().catch(() => ({}));
+              const directUrl = typeof directData.secure_url === 'string' ? directData.secure_url : null;
+
+              console.log('[admin] direct upload response', {
+                status: directRes.status,
+                file: file.name,
+                uploaded: directUrl ? 1 : 0,
+                error: directData.error?.message,
+              });
+
+              if (directRes.ok && directUrl) {
+                return { url: directUrl, file, index };
+              }
+            }
+          } catch (directError) {
+            console.warn('[admin] direct upload unavailable, falling back to server upload', directError);
+          }
+
           const res = await fetch('/api/upload', {
             method: 'POST',
             headers: { 'x-admin-key': adminKey },
             body: formData,
             signal: controller.signal,
           });
-          const data = await res.json();
+          const data = await res.json().catch(() => ({}));
           const urls = Array.isArray(data.urls) ? data.urls : data.url ? [data.url] : [];
           const url = urls[0] || null;
 
@@ -443,6 +584,7 @@ export default function AdminPage() {
             status: res.status,
             file: file.name,
             uploaded: url ? 1 : 0,
+            error: data.error,
           });
 
           return res.ok && url ? { url, file, index } : { url: null, file, index };
@@ -475,7 +617,7 @@ export default function AdminPage() {
 
       if (failedFiles.length > 0) {
         setMessage({
-          text: `${failedFiles.length} ${failedFiles.length === 1 ? 'file failed' : 'files failed'} to upload`,
+          text: `${failedFiles.length} ${failedFiles.length === 1 ? 'file failed' : 'files failed'} to upload. Very large videos or non-image files may need a smaller export.`,
           type: 'error',
         });
       }

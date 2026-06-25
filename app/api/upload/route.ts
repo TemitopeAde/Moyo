@@ -6,6 +6,7 @@ import path from 'path';
 import { requireAdmin } from '@/lib/auth';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 export const maxDuration = 120;
 
 const cloudinaryConfigured = Boolean(
@@ -13,7 +14,8 @@ const cloudinaryConfigured = Boolean(
     process.env.CLOUDINARY_API_KEY &&
     process.env.CLOUDINARY_API_SECRET
 );
-const cloudinaryUploadTimeoutMs = 90_000;
+const cloudinaryUploadTimeoutMs = 110_000;
+const maxServerUploadBytes = 100 * 1024 * 1024;
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -48,6 +50,10 @@ async function uploadFile(file: File) {
     type: file.type,
     size: file.size,
   });
+  if (file.size > maxServerUploadBytes) {
+    throw new Error(`${file.name} is larger than ${Math.round(maxServerUploadBytes / (1024 * 1024))}MB`);
+  }
+
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
 
@@ -121,17 +127,34 @@ export async function POST(req: NextRequest) {
     const urls = results
       .filter((result): result is PromiseFulfilledResult<string> => result.status === 'fulfilled')
       .map((result) => result.value);
-    const failedIndexes = results
-      .map((result, index) => (result.status === 'rejected' ? index : -1))
-      .filter((index) => index >= 0);
+    const failures = results
+      .map((result, index) => {
+        if (result.status !== 'rejected') return null;
+        const file = files[index];
+        return {
+          index,
+          name: file?.name || `file-${index + 1}`,
+          message: result.reason instanceof Error ? result.reason.message : 'Upload failed',
+        };
+      })
+      .filter((failure): failure is { index: number; name: string; message: string } => Boolean(failure));
+    const failedIndexes = failures.map((failure) => failure.index);
     const failedCount = results.length - urls.length;
 
     if (!urls.length) {
-      return NextResponse.json({ error: 'Upload failed', failedCount, failedIndexes }, { status: 500 });
+      return NextResponse.json(
+        {
+          error: failures[0]?.message || 'Upload failed',
+          failedCount,
+          failedIndexes,
+          failures,
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json(
-      { url: urls[0], urls, uploadedCount: urls.length, failedCount, failedIndexes },
+      { url: urls[0], urls, uploadedCount: urls.length, failedCount, failedIndexes, failures },
       { status: failedCount ? 207 : 200 }
     );
   } catch (error) {

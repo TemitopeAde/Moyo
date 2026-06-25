@@ -12,8 +12,14 @@ import { useSiteSettings } from '@/lib/useSiteSettings';
 
 export default function GlobalEntryPage() {
   const { language } = useLanguage();
-  const { t } = useTranslate(language);
+  const { t, translateText } = useTranslate(language);
   const settings = useSiteSettings();
+  const entryTitle = translateText(settings.entry.title || 'Ijabiken Moyo');
+  const entryTagline = translateText(settings.entry.tagline || t('home.tagline'));
+  const philosophyLabel = translateText(settings.entry.philosophyLabel || t('home.philosophy'));
+  const philosophyText = translateText(settings.entry.philosophyText || t('home.philosophyText'));
+  const locationLabel = translateText(settings.entry.locationLabel || t('home.location'));
+  const locationText = translateText(settings.entry.locationText || t('home.locationText'));
 
   return (
     <main className="relative flex min-h-[100svh] w-full flex-col items-center justify-start overflow-hidden bg-background px-5 pb-16 pt-[48svh] text-center selection:bg-accent selection:text-black sm:px-6 sm:pt-[47svh] md:pt-[49svh] lg:pt-[48svh] xl:pt-[47svh]">
@@ -40,7 +46,7 @@ export default function GlobalEntryPage() {
         >
           <Shuffle
             tag="h1"
-            text={settings.entry.title}
+            text={entryTitle}
             duration={0.62}
             stagger={0.045}
             triggerOnce={true}
@@ -51,7 +57,7 @@ export default function GlobalEntryPage() {
           />
 
           <p className="mx-auto max-w-3xl text-[9px] uppercase leading-relaxed tracking-[0.14em] text-foreground/60 [overflow-wrap:anywhere] sm:text-[10px] sm:tracking-[0.24em] md:text-xs md:tracking-[0.32em]">
-            {settings.entry.tagline}
+            {entryTagline}
           </p>
 
           <div className="mx-auto h-px w-16 bg-accent/50" />
@@ -69,8 +75,8 @@ export default function GlobalEntryPage() {
         transition={{ delay: 2, duration: 1 }}
         className="absolute bottom-8 left-10 text-left hidden md:block"
       >
-        <p className="text-[9px] tracking-[0.5em] uppercase text-foreground/20 mb-2 font-medium">{settings.entry.philosophyLabel || t('home.philosophy')}</p>
-        <p className="max-w-xs text-[10px] tracking-[0.24em] uppercase text-foreground/40 italic [overflow-wrap:anywhere]">{settings.entry.philosophyText || t('home.philosophyText')}</p>
+        <p className="text-[9px] tracking-[0.5em] uppercase text-foreground/20 mb-2 font-medium">{philosophyLabel}</p>
+        <p className="max-w-xs text-[10px] tracking-[0.24em] uppercase text-foreground/40 italic [overflow-wrap:anywhere]">{philosophyText}</p>
       </motion.div>
 
       <motion.div
@@ -79,8 +85,8 @@ export default function GlobalEntryPage() {
         transition={{ delay: 2.2, duration: 1 }}
         className="absolute bottom-8 right-10 text-right hidden md:block"
       >
-        <p className="text-[9px] tracking-[0.5em] uppercase text-foreground/20 mb-2 font-medium">{settings.entry.locationLabel || t('home.location')}</p>
-        <p className="max-w-xs text-[10px] tracking-[0.24em] uppercase text-foreground/40 [overflow-wrap:anywhere]">{settings.entry.locationText || t('home.locationText')}</p>
+        <p className="text-[9px] tracking-[0.5em] uppercase text-foreground/20 mb-2 font-medium">{locationLabel}</p>
+        <p className="max-w-xs text-[10px] tracking-[0.24em] uppercase text-foreground/40 [overflow-wrap:anywhere]">{locationText}</p>
       </motion.div>
 
       {/* Audio/Status Indicator (Faux) */}

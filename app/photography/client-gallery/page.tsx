@@ -42,7 +42,7 @@ export default function ClientGalleryPage() {
     const [error, setError] = useState('');
     const { setProfile } = useProfile();
     const { language } = useLanguage();
-    const { t } = useTranslate(language);
+    const { t, translateText } = useTranslate(language);
     const selectedImageSet = useMemo(() => new Set(selectedImages), [selectedImages]);
 
     const getFinishedDownloadUrl = (image: string) =>
@@ -444,7 +444,7 @@ export default function ClientGalleryPage() {
                                                         ))}
                                                     </div>
                                                     <p className="mx-auto max-w-xl text-sm leading-relaxed text-white/55">
-                                                        &quot;{gallery.review_text}&quot;
+                                                        &quot;{translateText(gallery.review_text)}&quot;
                                                     </p>
                                                 </div>
                                             ) : (

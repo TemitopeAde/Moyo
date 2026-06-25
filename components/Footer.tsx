@@ -22,7 +22,7 @@ const iconMap: Record<string, ReactNode> = {
 
 export default function Footer() {
     const { language } = useLanguage();
-    const { t } = useTranslate(language);
+    const { t, translateText } = useTranslate(language);
     const settings = useSiteSettings();
     const [contact, setContact] = useState({ email: 'ijabikenm@gmail.com', phone: '+2348148192201' });
     const [socials, setSocials] = useState<Social[]>(
@@ -63,7 +63,7 @@ export default function Footer() {
                             />
                         </Link>
                         <p className="max-w-[220px] whitespace-pre-line text-xs uppercase leading-relaxed tracking-[0.18em] text-foreground/30 [overflow-wrap:anywhere] sm:tracking-widest">
-                            {settings.footer.tagline || t('footer.tagline')}
+                            {translateText(settings.footer.tagline || t('footer.tagline'))}
                         </p>
                     </div>
 
@@ -86,7 +86,7 @@ export default function Footer() {
                                         href={link.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        aria-label={link.platform}
+                                        aria-label={translateText(link.platform)}
                                         className="text-foreground/60 hover:text-accent transition-colors"
                                     >
                                         {iconMap[(link.icon || link.platform || '').toLowerCase()] || <FaLink size={16} />}
@@ -110,8 +110,8 @@ export default function Footer() {
                         © 2026 IJABIKEN MOYO. {t('footer.rights')}
                     </p>
                     <div className="flex flex-wrap justify-center gap-6 text-[9px] uppercase tracking-[0.2em] text-foreground/20 md:gap-8 md:tracking-[0.4em]">
-                        <a href="#" className="hover:text-foreground transition-colors">{settings.footer.privacyLabel || t('footer.privacy')}</a>
-                        <a href="#" className="hover:text-foreground transition-colors">{settings.footer.termsLabel || t('footer.terms')}</a>
+                        <a href="#" className="hover:text-foreground transition-colors">{translateText(settings.footer.privacyLabel || t('footer.privacy'))}</a>
+                        <a href="#" className="hover:text-foreground transition-colors">{translateText(settings.footer.termsLabel || t('footer.terms'))}</a>
                     </div>
                 </div>
             </div>
