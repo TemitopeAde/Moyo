@@ -184,7 +184,7 @@ export default function NewsletterAdminPage() {
         <div className="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="space-y-4">
             <span className="text-accent text-[10px] uppercase tracking-[0.5em]">Newsletter Admin</span>
-            <h1 className="text-5xl font-heading italic text-white md:text-7xl">Send updates</h1>
+            <h1 className="text-5xl font-heading italic text-white md:text-6xl">Send updates</h1>
             <p className="max-w-2xl text-sm leading-relaxed text-white/40">
               View active subscribers and send email campaigns to photography, fine art, or both lists.
             </p>

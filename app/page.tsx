@@ -44,7 +44,7 @@ export default function GlobalEntryPage() {
             triggerOnce={true}
             triggerOnHover={true}
             respectReducedMotion={true}
-            className="w-full max-w-full text-center text-[clamp(2rem,9vw,4.35rem)] font-semibold uppercase leading-none tracking-[0.08em] text-foreground sm:tracking-[0.16em] md:tracking-[0.2em]"
+            className="w-full max-w-full text-center text-[clamp(1.85rem,7vw,3.75rem)] font-semibold uppercase leading-none tracking-[0.08em] text-foreground sm:tracking-[0.16em] md:tracking-[0.2em]"
             style={{ fontFamily: 'var(--font-body)' }}
           />
 

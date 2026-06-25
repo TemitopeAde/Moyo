@@ -23,7 +23,7 @@ export default function Exhibitions() {
                     {/* Header */}
                     <div className="md:w-1/3 space-y-6">
                         <span className="block text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">{t('exhibitions.timeline')}</span>
-                        <h2 className="text-4xl font-heading font-light text-foreground md:text-6xl">
+                        <h2 className="text-4xl font-heading font-light text-foreground md:text-5xl">
                             {/* Splitting for style if possible, or just rendering */}
                             <span className="italic">{t('exhibitions.selectedExhibitions')}</span>
                         </h2>

@@ -59,7 +59,7 @@ export default function BookingsPage() {
                 >
                     <div className="space-y-4 text-center">
                         <span className="text-accent text-[10px] tracking-[0.5em] uppercase">{t('bookingsPage.privateBooking')}</span>
-                        <h1 className="text-4xl md:text-6xl font-heading text-foreground">{t('bookingsPage.captureVision')}</h1>
+                        <h1 className="text-4xl md:text-5xl font-heading text-foreground">{t('bookingsPage.captureVision')}</h1>
                         <p className="text-foreground/50 font-body">
                             {t('bookingsPage.inquiryDescription')}
                         </p>

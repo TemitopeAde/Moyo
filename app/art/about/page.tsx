@@ -25,7 +25,7 @@ export default function ArtAboutPage() {
                     <div className="space-y-10 lg:col-span-7 lg:space-y-16">
                         <header className="space-y-6">
                             <span className="text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">{t('profilePage.biography')}</span>
-                            <h1 className="text-5xl font-heading italic text-white md:text-8xl">{t('profilePage.artist')}</h1>
+                            <h1 className="text-5xl font-heading italic text-white md:text-6xl">{t('profilePage.artist')}</h1>
                         </header>
 
                         <motion.div

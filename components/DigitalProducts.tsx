@@ -21,7 +21,7 @@ export default function DigitalProducts() {
                 <header className="mb-14 flex flex-col items-start justify-between gap-8 md:mb-24 md:flex-row md:items-end">
                     <div className="space-y-4">
                         <span className="text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">{t('shop.creativeToolkit')}</span>
-                        <h2 className="text-4xl font-heading italic text-white sm:text-5xl md:text-7xl">{t('shop.digitalShop')}</h2>
+                        <h2 className="text-4xl font-heading italic text-white sm:text-5xl md:text-6xl">{t('shop.digitalShop')}</h2>
                     </div>
                     <p className="max-w-xs border-l border-white/10 pb-2 pl-6 text-[10px] uppercase tracking-[0.22em] text-white/40 md:max-w-[200px] md:tracking-[0.3em]">
                         {t('shop.description')}

@@ -35,7 +35,7 @@ export default function FineArtPage() {
                     <header className="mb-14 flex flex-col items-start justify-between gap-8 md:mb-24 md:flex-row md:items-end">
                         <div className="space-y-4">
                             <span className="text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">{t('artPage.collection')}</span>
-                            <h2 className="text-4xl font-heading italic text-foreground sm:text-5xl md:text-7xl">{t('artPage.selectedWorks')}</h2>
+                            <h2 className="text-4xl font-heading italic text-foreground sm:text-5xl md:text-6xl">{t('artPage.selectedWorks')}</h2>
                         </div>
                         <Link href="/art/works" className="group flex items-center gap-4 text-[10px] uppercase tracking-[0.24em] text-foreground/40 transition-colors duration-500 hover:text-foreground md:tracking-[0.4em]">
                             {t('artPage.viewArchive')} <span className="group-hover:translate-x-2 transition-transform rtl:group-hover:-translate-x-2 ">→</span>

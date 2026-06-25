@@ -39,7 +39,7 @@ export default function WorksPage() {
             <div className="pt-36 md:pt-52 pb-20 container mx-auto px-6 md:px-12">
                 <header className="mb-24 space-y-4">
                     <span className="text-accent text-[10px] tracking-[0.5em] uppercase">{t('artPage.collection')}</span>
-                    <h1 className="text-5xl md:text-7xl font-heading text-white italic">{t('artPage.selectedWorks')}</h1>
+                    <h1 className="text-5xl md:text-6xl font-heading text-white italic">{t('artPage.selectedWorks')}</h1>
                     <p className="text-white/40 max-w-lg font-body text-sm leading-relaxed pt-4">
                         {t('worksPage.archiveDescription')}
                     </p>

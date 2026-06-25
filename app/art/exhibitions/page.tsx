@@ -23,7 +23,7 @@ export default function ArtExhibitionsPage() {
                     className="mb-24 space-y-4 text-center max-w-2xl mx-auto"
                 >
                     <span className="text-accent text-[10px] tracking-[0.5em] uppercase">{t('artExhibitionsPage.venerations')}</span>
-                    <h1 className="text-5xl md:text-8xl font-heading text-white">{t('artExhibitionsPage.title')}</h1>
+                    <h1 className="text-5xl md:text-6xl font-heading text-white">{t('artExhibitionsPage.title')}</h1>
                     <p className="text-white/40 font-body tracking-widest uppercase text-[10px] pt-4">
                         {t('artExhibitionsPage.presentations')}
                     </p>

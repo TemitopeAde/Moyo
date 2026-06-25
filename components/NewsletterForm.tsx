@@ -72,7 +72,7 @@ export default function NewsletterForm({ profileType }: NewsletterFormProps) {
         >
             <div className="space-y-4">
                 <span className="text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">{t('newsletter.title')}</span>
-                <h2 className="text-4xl font-heading text-foreground md:text-6xl">{title}</h2>
+                <h2 className="text-4xl font-heading text-foreground md:text-5xl">{title}</h2>
                 <p className="leading-relaxed tracking-wide text-foreground/40">
                     {description}
                 </p>

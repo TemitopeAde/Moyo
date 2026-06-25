@@ -85,7 +85,7 @@ export default function PhotographyGrid() {
                         <span className="block text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">
                             {t('photography.selectedPortfolio')}
                         </span>
-                        <h2 className="text-4xl md:text-6xl font-heading text-foreground font-light">
+                        <h2 className="text-4xl md:text-5xl font-heading text-foreground font-light">
                             <span className="italic">{t('photography.visualProximity')}</span>
                         </h2>
                     </div>
