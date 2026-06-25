@@ -87,7 +87,7 @@ export default function Hero({ profileType }: HeroProps) {
             </div>
 
             {/* Content */}
-            <div className="relative z-30 mt-8 w-full max-w-5xl text-center md:mt-12">
+            <div className="relative z-30 mt-8 w-full max-w-6xl text-center md:mt-12">
                 <div className="space-y-6 md:space-y-8">
 
                     <div className="overflow-hidden">
@@ -101,7 +101,7 @@ export default function Hero({ profileType }: HeroProps) {
                         </motion.p>
                     </div>
 
-                    <h2 className="text-[clamp(2.35rem,12vw,4.6rem)] md:text-7xl lg:text-8xl font-heading text-foreground leading-[1.08] font-light">
+                    <h2 className="text-[clamp(2.8rem,6.2vw,5.25rem)] font-heading text-foreground leading-[1.08] font-light">
                         {parts.map((p: string, i: number) => (
                             <MaskedLine
                                 key={i}
