@@ -143,7 +143,7 @@ export default function Navbar() {
                     initial={isInitialLoad ? { opacity: 0 } : false}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5, delay: isInitialLoad ? 1.0 : 0, staggerChildren: 0.1, ease: "easeOut" }}
-                    className="relative z-10 ml-auto hidden min-w-0 items-center gap-4 lg:flex xl:gap-6"
+                    className="relative z-10 ml-auto hidden min-w-0 items-center gap-4 xl:flex xl:gap-6"
                 >
                     <div className="flex min-w-0 items-center gap-3 text-[8px] font-body tracking-[0.14em] text-foreground/60 xl:gap-5 xl:text-[9px] xl:tracking-[0.18em]">
                         {links.map((link) => (
@@ -183,20 +183,20 @@ export default function Navbar() {
                     </div>
                 </motion.div>
 
-                <div className="relative z-10 ml-auto flex items-center gap-1.5 sm:gap-2 lg:hidden">
-                    <ThemeToggle className="h-11 w-11" />
-                    <LanguageSwitcher className="h-11 px-3" />
+                <div className="relative z-10 ml-auto flex items-center gap-1 sm:gap-2 xl:hidden">
+                    <ThemeToggle className="h-10 w-10 sm:h-11 sm:w-11 [&_svg]:h-4 [&_svg]:w-4" />
+                    <LanguageSwitcher className="h-10 px-2.5 text-[9px] sm:h-11 sm:px-3" />
 
                     {/* Mobile Menu Toggle */}
                     <button
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                         type="button"
-                        className="group relative z-[90] flex h-11 w-11 flex-col items-end justify-center gap-1.5 rounded-md border border-transparent transition-colors duration-300 hover:border-foreground/10 hover:bg-white/10 focus:outline-none"
+                        className="group relative z-[90] flex h-10 w-10 flex-col items-end justify-center gap-1.5 rounded-md border border-transparent transition-colors duration-300 hover:border-foreground/10 hover:bg-white/10 focus:outline-none sm:h-11 sm:w-11"
                         aria-label={mobileMenuOpen ? t('ui.closeMenu') : t('ui.openMenu')}
                     >
                         <motion.div
                             animate={mobileMenuOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
-                            className="h-[1px] w-8 bg-foreground transition-colors duration-300 group-hover:bg-accent"
+                            className="h-[1px] w-7 bg-foreground transition-colors duration-300 group-hover:bg-accent sm:w-8"
                         />
                         <motion.div
                             animate={mobileMenuOpen ? { opacity: 0 } : { opacity: 1 }}
@@ -218,7 +218,7 @@ export default function Navbar() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: '-100%' }}
                         transition={{ duration: 0.5, ease: [0.19, 1, 0.22, 1] }}
-                        className="fixed inset-0 z-[70] bg-black/95 backdrop-blur-3xl lg:hidden overflow-y-auto"
+                        className="fixed inset-0 z-[70] overflow-y-auto bg-black/95 backdrop-blur-3xl xl:hidden"
                     >
                         <div className="flex min-h-screen flex-col items-center justify-center space-y-10 px-5 py-28 sm:p-8">
 

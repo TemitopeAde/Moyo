@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import GlareHover from '@/components/GlareHover';
@@ -29,10 +29,135 @@ type CatalogGridItem = CatalogImage & {
     categoryDescription: string;
 };
 
+type PortfolioCardProps = {
+    item: CatalogGridItem;
+    index: number;
+    activeCategory: string;
+    shouldReduceMotion: boolean | null;
+    enablePointerMotion: boolean;
+    translateText: (text: string) => string;
+    onSelect: (item: CatalogGridItem) => void;
+};
+
+function PortfolioCard({
+    item,
+    index,
+    activeCategory,
+    shouldReduceMotion,
+    enablePointerMotion,
+    translateText,
+    onSelect,
+}: PortfolioCardProps) {
+    const canAnimatePointer = enablePointerMotion && !shouldReduceMotion;
+    const pointerX = useMotionValue(0);
+    const pointerY = useMotionValue(0);
+    const smoothX = useSpring(pointerX, { stiffness: 90, damping: 22, mass: 0.35 });
+    const smoothY = useSpring(pointerY, { stiffness: 90, damping: 22, mass: 0.35 });
+    const rotateX = useTransform(smoothY, [-1, 1], [3.5, -3.5]);
+    const rotateY = useTransform(smoothX, [-1, 1], [-3.5, 3.5]);
+    const imageX = useTransform(smoothX, [-1, 1], ['-3.5%', '3.5%']);
+    const imageY = useTransform(smoothY, [-1, 1], ['-3%', '3%']);
+
+    const handlePointerMove = (event: React.PointerEvent<HTMLButtonElement>) => {
+        if (!canAnimatePointer || event.pointerType !== 'mouse') return;
+
+        const rect = event.currentTarget.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
+        const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+        pointerX.set(x);
+        pointerY.set(y);
+    };
+
+    const handlePointerLeave = () => {
+        pointerX.set(0);
+        pointerY.set(0);
+    };
+
+    return (
+        <motion.button
+            key={`${activeCategory}-${item.id}`}
+            type="button"
+            onClick={() => onSelect(item)}
+            onPointerMove={handlePointerMove}
+            onPointerLeave={handlePointerLeave}
+            layout={!shouldReduceMotion}
+            variants={{
+                hidden: { opacity: 0, y: 48, filter: 'blur(10px)' },
+                visible: {
+                    opacity: 1,
+                    y: 0,
+                    filter: 'blur(0px)',
+                    transition: {
+                        duration: 0.75,
+                        ease: [0.22, 1, 0.36, 1],
+                    },
+                },
+            }}
+            initial={shouldReduceMotion ? false : "hidden"}
+            whileInView="visible"
+            exit={shouldReduceMotion ? undefined : { opacity: 0, y: 24, filter: 'blur(8px)', transition: { duration: 0.28 } }}
+            viewport={{ once: true, margin: "-10% 0px" }}
+            whileHover={canAnimatePointer ? { y: index % 2 === 0 ? -10 : -14 } : undefined}
+            whileTap={shouldReduceMotion ? undefined : { scale: 0.99 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            style={canAnimatePointer ? { rotateX, rotateY, transformPerspective: 1200 } : undefined}
+            className="group mb-5 block w-full cursor-pointer break-inside-avoid text-left outline-none focus-visible:ring-2 focus-visible:ring-accent md:mb-8"
+        >
+            <GlareHover
+                width="100%"
+                height="auto"
+                background="var(--color-surface)"
+                borderRadius="2px"
+                borderColor="rgba(255,255,255,0.08)"
+                glareOpacity={0.18}
+                glareAngle={-30}
+                glareSize={180}
+                transitionDuration={760}
+            >
+                <div className="relative overflow-hidden">
+                    <motion.img
+                        src={item.image_url}
+                        alt={translateText(item.alt_text || item.title || item.categoryName)}
+                        className="h-auto w-full will-change-transform"
+                        loading="lazy"
+                        initial={shouldReduceMotion ? false : { scale: 1.045, y: 0 }}
+                        animate={shouldReduceMotion ? undefined : { scale: 1.015, y: 0 }}
+                        whileHover={canAnimatePointer ? { scale: 1.08, y: index % 2 === 0 ? -12 : 12 } : undefined}
+                        transition={{ duration: 1.15, ease: [0.22, 1, 0.36, 1] }}
+                        style={canAnimatePointer ? { x: imageX, y: imageY } : undefined}
+                    />
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-500 ease-out md:group-hover:bg-black/40 md:group-hover:opacity-100">
+                        <span className="translate-y-2 border border-white/40 bg-black/50 px-5 py-3 text-[10px] uppercase tracking-[0.3em] text-white opacity-0 transition-all duration-500 ease-out md:group-hover:translate-y-0 md:group-hover:opacity-100">
+                            {translateText('View')}
+                        </span>
+                    </div>
+                </div>
+
+                <motion.div
+                    className="px-4 py-4 sm:px-5"
+                    initial={false}
+                    whileHover={canAnimatePointer ? { y: -2 } : undefined}
+                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                >
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-accent">
+                        {translateText(item.categoryName)}
+                    </p>
+                    {item.title && (
+                        <h3 className="mt-2 text-lg font-heading text-foreground transition-colors group-hover:text-accent">
+                            {translateText(item.title)}
+                        </h3>
+                    )}
+                </motion.div>
+            </GlareHover>
+        </motion.button>
+    );
+}
+
 export default function PhotographyGrid() {
     const { language } = useLanguage();
     const { t, translateText } = useTranslate(language);
     const shouldReduceMotion = useReducedMotion();
+    const [enablePointerMotion, setEnablePointerMotion] = useState(false);
     const [categories, setCategories] = useState<CatalogCategory[]>([]);
     const [activeCategory, setActiveCategory] = useState('all');
     const [isLoading, setIsLoading] = useState(true);
@@ -46,6 +171,16 @@ export default function PhotographyGrid() {
             })
             .catch((err) => console.error('Failed to fetch photography catalog', err))
             .finally(() => setIsLoading(false));
+    }, []);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
+        const updatePointerMotion = () => setEnablePointerMotion(mediaQuery.matches);
+
+        updatePointerMotion();
+        mediaQuery.addEventListener('change', updatePointerMotion);
+
+        return () => mediaQuery.removeEventListener('change', updatePointerMotion);
     }, []);
 
     const items = useMemo(() => {
@@ -79,8 +214,8 @@ export default function PhotographyGrid() {
     }, [selectedItem]);
 
     return (
-        <section id="photography" className="bg-background py-24 md:py-32">
-            <div className="container mx-auto px-6 md:px-12">
+        <section id="photography" className="bg-background py-20 sm:py-24 md:py-32">
+            <div className="container mx-auto px-4 sm:px-6 md:px-12">
                 <div className="mb-10 flex flex-col justify-between gap-6 md:mb-12 md:flex-row md:items-end md:gap-8">
                     <div className="space-y-4">
                         <span className="block text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">
@@ -95,11 +230,11 @@ export default function PhotographyGrid() {
                     </p>
                 </div>
 
-                <div className="mb-10 flex flex-wrap gap-3 md:mb-12">
+                <div className="mb-10 flex flex-wrap gap-2 sm:gap-3 md:mb-12">
                     <button
                         type="button"
                         onClick={() => setActiveCategory('all')}
-                        className={`px-4 py-3 text-[10px] uppercase tracking-[0.2em] border transition-colors sm:px-5 sm:tracking-[0.3em] ${
+                        className={`px-3 py-2.5 text-[9px] uppercase tracking-[0.16em] border transition-colors sm:px-5 sm:py-3 sm:text-[10px] sm:tracking-[0.3em] ${
                             activeCategory === 'all'
                                 ? 'border-accent bg-accent text-black'
                                 : 'border-foreground/10 text-foreground/50 hover:border-accent hover:text-accent'
@@ -112,7 +247,7 @@ export default function PhotographyGrid() {
                             key={category.id}
                             type="button"
                             onClick={() => setActiveCategory(category.slug)}
-                            className={`px-4 py-3 text-[10px] uppercase tracking-[0.2em] border transition-colors sm:px-5 sm:tracking-[0.3em] ${
+                            className={`px-3 py-2.5 text-[9px] uppercase tracking-[0.16em] border transition-colors sm:px-5 sm:py-3 sm:text-[10px] sm:tracking-[0.3em] ${
                                 activeCategory === category.slug
                                     ? 'border-accent bg-accent text-black'
                                     : 'border-foreground/10 text-foreground/50 hover:border-accent hover:text-accent'
@@ -153,81 +288,16 @@ export default function PhotographyGrid() {
                     >
                         <AnimatePresence mode="popLayout">
                             {visibleItems.map((item, index) => (
-                                <motion.button
+                                <PortfolioCard
                                     key={`${activeCategory}-${item.id}`}
-                                    type="button"
-                                    onClick={() => setSelectedItem(item)}
-                                    layout={!shouldReduceMotion}
-                                    variants={{
-                                        hidden: { opacity: 0, y: 48, filter: 'blur(10px)' },
-                                        visible: {
-                                            opacity: 1,
-                                            y: 0,
-                                            filter: 'blur(0px)',
-                                            transition: {
-                                                duration: 0.75,
-                                                ease: [0.22, 1, 0.36, 1],
-                                            },
-                                        },
-                                    }}
-                                    initial={shouldReduceMotion ? false : "hidden"}
-                                    whileInView="visible"
-                                    exit={shouldReduceMotion ? undefined : { opacity: 0, y: 24, filter: 'blur(8px)', transition: { duration: 0.28 } }}
-                                    viewport={{ once: true, margin: "-10% 0px" }}
-                                    whileHover={shouldReduceMotion ? undefined : { y: index % 2 === 0 ? -10 : -14 }}
-                                    whileTap={shouldReduceMotion ? undefined : { scale: 0.985 }}
-                                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                                    className="group mb-5 block w-full cursor-pointer break-inside-avoid text-left outline-none focus-visible:ring-2 focus-visible:ring-accent md:mb-8"
-                                >
-                                    <GlareHover
-                                        width="100%"
-                                        height="auto"
-                                        background="var(--color-surface)"
-                                        borderRadius="2px"
-                                        borderColor="rgba(255,255,255,0.08)"
-                                        glareOpacity={0.18}
-                                        glareAngle={-30}
-                                        glareSize={180}
-                                        transitionDuration={760}
-                                    >
-                                        <div className="relative overflow-hidden">
-                                            <motion.img
-                                                src={item.image_url}
-                                                alt={translateText(item.alt_text || item.title || item.categoryName)}
-                                                className={`h-auto w-full will-change-transform transition-transform duration-[1400ms] ease-out ${
-                                                    index % 2 === 0
-                                                        ? 'group-hover:scale-[1.08] group-hover:-translate-y-3'
-                                                        : 'group-hover:scale-[1.08] group-hover:translate-y-3'
-                                                }`}
-                                                loading="lazy"
-                                                initial={shouldReduceMotion ? false : { scale: 1.045, y: 0 }}
-                                                animate={shouldReduceMotion ? undefined : { scale: 1.015, y: 0 }}
-                                                transition={{ duration: 1.15, ease: [0.22, 1, 0.36, 1] }}
-                                            />
-                                            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/10 opacity-100 transition-all duration-500 ease-out group-hover:bg-black/40 sm:opacity-0 sm:group-hover:opacity-100">
-                                                <span className="translate-y-2 border border-white/40 bg-black/50 px-5 py-3 text-[10px] uppercase tracking-[0.3em] text-white opacity-0 transition-all duration-500 ease-out group-hover:translate-y-0 group-hover:opacity-100 sm:opacity-0">
-                                                    {translateText('View')}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <motion.div
-                                            className="px-4 py-4 sm:px-5"
-                                            initial={false}
-                                            whileHover={shouldReduceMotion ? undefined : { y: -2 }}
-                                            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                                        >
-                                            <p className="text-[10px] uppercase tracking-[0.28em] text-accent">
-                                                {translateText(item.categoryName)}
-                                            </p>
-                                            {item.title && (
-                                                <h3 className="mt-2 text-lg font-heading text-foreground transition-colors group-hover:text-accent">
-                                                    {translateText(item.title)}
-                                                </h3>
-                                            )}
-                                        </motion.div>
-                                    </GlareHover>
-                                </motion.button>
+                                    item={item}
+                                    index={index}
+                                    activeCategory={activeCategory}
+                                    shouldReduceMotion={shouldReduceMotion}
+                                    enablePointerMotion={enablePointerMotion}
+                                    translateText={translateText}
+                                    onSelect={setSelectedItem}
+                                />
                             ))}
                         </AnimatePresence>
                     </motion.div>
