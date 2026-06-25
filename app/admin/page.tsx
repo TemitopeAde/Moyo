@@ -812,7 +812,7 @@ export default function AdminPage() {
       <section className="pt-36 md:pt-52 pb-20 container mx-auto px-6 md:px-12">
         <header className="mb-16 space-y-4">
           <span className="text-accent text-[10px] tracking-[0.5em] uppercase">Control Panel</span>
-          <h1 className="text-5xl md:text-6xl font-heading text-white italic">Admin</h1>
+          <h1 className="text-4xl md:text-5xl font-heading text-white italic">Admin</h1>
           <p className="text-white/40 max-w-2xl text-sm leading-relaxed">
             Manage artworks, galleries, site copy, contact, socials and orders. All changes persist to the database and
             reflect on the live site.

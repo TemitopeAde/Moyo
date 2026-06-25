@@ -29,7 +29,7 @@ export default function ArtCommissionsPage() {
                 >
                     <header className="space-y-6 text-center">
                         <span className="text-accent text-[10px] tracking-[0.5em] uppercase">{t('commissionsPage.bespoke')}</span>
-                        <h1 className="text-5xl md:text-6xl font-heading text-white font-light italic">{t('commissionsPage.title')}</h1>
+                        <h1 className="text-4xl md:text-5xl font-heading text-white font-light italic">{t('commissionsPage.title')}</h1>
                         <p className="text-white/50 font-body text-lg max-w-2xl mx-auto tracking-wide">
                             {t('commissionsPage.description')}
                         </p>

@@ -277,7 +277,7 @@ export default function ClientGalleryPage() {
                             <span className="text-accent text-[10px] tracking-[0.5em] uppercase">
                                 {gallery.slug}
                             </span>
-                            <h1 className="text-4xl md:text-5xl font-heading text-white italic">
+                            <h1 className="text-3xl md:text-4xl font-heading text-white italic">
                                 {gallery.client_name}
                             </h1>
                             <p className="text-white/40 text-sm italic">

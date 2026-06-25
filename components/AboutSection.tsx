@@ -71,7 +71,7 @@ export default function AboutSection({ profileType }: AboutSectionProps) {
                 >
                     <div className="space-y-4">
                         <span className="text-accent text-[10px] tracking-[0.28em] uppercase md:tracking-[0.4em]">{t('common.practice')}</span>
-                        <h2 className="text-4xl font-heading leading-tight md:text-5xl">
+                        <h2 className="text-3xl font-heading leading-tight md:text-4xl">
                             {headline}
                         </h2>
                     </div>

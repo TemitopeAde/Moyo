@@ -26,7 +26,7 @@ export default function ArtShopPage() {
                 <header className="mb-24 flex flex-col md:flex-row justify-between items-end gap-8">
                     <div className="space-y-4">
                         <span className="text-accent text-[10px] tracking-[0.5em] uppercase">{t('artShopPage.editions')}</span>
-                        <h1 className="text-5xl md:text-6xl font-heading text-white italic leading-tight">{t('artShopPage.title')}</h1>
+                        <h1 className="text-4xl md:text-5xl font-heading text-white italic leading-tight">{t('artShopPage.title')}</h1>
                     </div>
                     <p className="text-white/40 text-[10px] tracking-[0.3em] uppercase max-w-[200px] border-l border-white/10 pl-6 pb-2">
                         {t('artShopPage.shipping')}

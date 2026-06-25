@@ -101,7 +101,7 @@ export default function Hero({ profileType }: HeroProps) {
                         </motion.p>
                     </div>
 
-                    <h2 className="text-[clamp(2.35rem,5vw,4.35rem)] font-heading text-foreground leading-[1.08] font-light">
+                    <h2 className="text-[clamp(2.15rem,4.45vw,3.75rem)] font-heading text-foreground leading-[1.08] font-light">
                         {parts.map((p: string, i: number) => (
                             <MaskedLine
                                 key={i}

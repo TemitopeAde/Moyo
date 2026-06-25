@@ -54,7 +54,7 @@ export default function PhotographyAboutPage() {
                     <div className="space-y-10 lg:col-span-6 lg:space-y-16">
                         <header className="space-y-6">
                             <span className="text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">{t('profilePage.philosophy')}</span>
-                            <h1 className="text-5xl font-heading text-white md:text-6xl">{t('profilePage.lens')}</h1>
+                            <h1 className="text-4xl font-heading text-white md:text-5xl">{t('profilePage.lens')}</h1>
                         </header>
 
                         <div className="space-y-8 text-base leading-relaxed text-white/50 md:space-y-12 md:text-xl">

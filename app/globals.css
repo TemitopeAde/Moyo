@@ -50,6 +50,16 @@
   --animate-slow-pan: slowPan 20s ease-in-out infinite alternate;
 }
 
+html {
+  font-size: 93.75%;
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 87.5%;
+  }
+}
+
 @keyframes fadeUp {
   from {
     opacity: 0;

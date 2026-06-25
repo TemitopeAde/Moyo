@@ -58,7 +58,7 @@ export default function BookingForm() {
                             <span className="block text-[10px] font-medium uppercase tracking-[0.3em] text-accent md:tracking-[0.5em]">
                                 {t('booking.collaboration')}
                             </span>
-                            <h2 className="text-4xl font-heading font-light italic leading-tight text-foreground sm:text-5xl md:text-6xl">
+                            <h2 className="text-3xl font-heading font-light italic leading-tight text-foreground sm:text-4xl md:text-5xl">
                                 {t('booking.heading')}
                             </h2>
                         </div>
