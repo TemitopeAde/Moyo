@@ -82,7 +82,7 @@ export default function Navbar() {
         <>
             <nav
                 className={cn(
-                    'fixed left-0 right-0 top-0 z-[80] flex min-h-18 items-center justify-between gap-4 border-b px-4 backdrop-blur-xl transition-all duration-700 ease-in-out sm:min-h-20 sm:px-6 md:min-h-24 md:px-8 xl:gap-10 xl:px-12',
+                    'fixed left-0 right-0 top-0 z-[80] flex min-h-14 items-center justify-between gap-3 border-b px-4 backdrop-blur-xl transition-all duration-700 ease-in-out sm:min-h-16 sm:px-5 md:min-h-18 md:px-7 xl:gap-7 xl:px-10',
                     scrolled ? 'border-foreground/10 bg-background/85 shadow-[0_18px_60px_rgba(0,0,0,0.08)]' : 'border-transparent bg-background/20'
                 )}
             >
@@ -100,7 +100,7 @@ export default function Navbar() {
                             width={160}
                             height={160}
                             priority
-                            className="theme-logo h-9 w-9 object-contain transition-opacity duration-300 group-hover:opacity-80 sm:h-12 sm:w-12 md:h-14 md:w-14 lg:h-16 lg:w-16"
+                            className="theme-logo h-8 w-8 object-contain transition-opacity duration-300 group-hover:opacity-80 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-11 lg:w-11"
                         />
                     </Link>
                 </motion.div>
@@ -110,12 +110,12 @@ export default function Navbar() {
                     initial={isInitialLoad ? { opacity: 0 } : false}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5, delay: isInitialLoad ? 0.9 : 0, ease: "easeOut" }}
-                    className="entry-selector-frost relative z-10 hidden items-center rounded-full px-2 py-1 gap-1 xl:flex"
+                    className="entry-selector-frost relative z-10 hidden items-center gap-1 rounded-full px-1.5 py-1 xl:flex"
                 >
                     <Link
                         href="/photography"
                         className={cn(
-                            "relative whitespace-nowrap px-4 py-1.5 rounded-full text-[10px] tracking-widest uppercase transition-colors duration-500",
+                            "relative whitespace-nowrap rounded-full px-3.5 py-1.5 text-[9px] uppercase tracking-[0.16em] transition-colors duration-500",
                             profile === 'photography' ? "text-background" : "text-foreground/40 hover:text-foreground"
                         )}
                     >
@@ -127,7 +127,7 @@ export default function Navbar() {
                     <Link
                         href="/art"
                         className={cn(
-                            "relative whitespace-nowrap px-4 py-1.5 rounded-full text-[10px] tracking-widest uppercase transition-colors duration-500",
+                            "relative whitespace-nowrap rounded-full px-3.5 py-1.5 text-[9px] uppercase tracking-[0.16em] transition-colors duration-500",
                             profile === 'art' ? "text-background" : "text-foreground/40 hover:text-foreground"
                         )}
                     >
@@ -143,9 +143,9 @@ export default function Navbar() {
                     initial={isInitialLoad ? { opacity: 0 } : false}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5, delay: isInitialLoad ? 1.0 : 0, staggerChildren: 0.1, ease: "easeOut" }}
-                    className="relative z-10 ml-auto hidden min-w-0 items-center gap-5 lg:flex xl:gap-8"
+                    className="relative z-10 ml-auto hidden min-w-0 items-center gap-4 lg:flex xl:gap-6"
                 >
-                    <div className="flex min-w-0 items-center gap-3 text-[9px] font-body tracking-[0.12em] text-foreground/60 xl:gap-6 xl:text-[10px] xl:tracking-[0.2em]">
+                    <div className="flex min-w-0 items-center gap-3 text-[8px] font-body tracking-[0.14em] text-foreground/60 xl:gap-5 xl:text-[9px] xl:tracking-[0.18em]">
                         {links.map((link) => (
                             <Link
                                 key={link.name}
@@ -160,22 +160,22 @@ export default function Navbar() {
                         ))}
                     </div>
 
-                    <div className="h-10 w-px shrink-0 bg-foreground/10" />
+                    <div className="h-8 w-px shrink-0 bg-foreground/10" />
 
-                    <div className="flex items-center gap-2 xl:gap-3">
-                        <ThemeToggle className="h-14 w-14 rounded-lg border-foreground/10" />
-                        <LanguageSwitcher className="h-14 rounded-lg border-foreground/10 px-4 xl:px-5" />
+                    <div className="flex items-center gap-2 xl:gap-2.5">
+                        <ThemeToggle className="h-11 w-11 rounded-md border-foreground/10 [&_svg]:h-4 [&_svg]:w-4" />
+                        <LanguageSwitcher className="h-11 rounded-md border-foreground/10 px-3 text-[9px] xl:px-4" />
                         {profile === 'photography' ? (
                             <Link
                                 href="/photography/bookings"
-                                className="inline-flex h-14 shrink-0 items-center justify-center rounded-lg border border-foreground bg-foreground px-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-background transition-all duration-300 hover:border-accent hover:bg-accent hover:text-background xl:px-7"
+                                className="inline-flex h-11 shrink-0 items-center justify-center rounded-md border border-foreground bg-foreground px-5 text-[9px] font-semibold uppercase tracking-[0.18em] text-background transition-all duration-300 hover:border-accent hover:bg-accent hover:text-background xl:px-6"
                             >
                                 {t('common.bookNow')}
                             </Link>
                         ) : (
                             <Link
                                 href="/art/newsletter"
-                                className="inline-flex h-14 shrink-0 items-center justify-center rounded-lg border border-foreground/20 px-6 text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground transition-all duration-300 hover:border-accent hover:text-accent xl:px-7"
+                                className="inline-flex h-11 shrink-0 items-center justify-center rounded-md border border-foreground/20 px-5 text-[9px] font-semibold uppercase tracking-[0.18em] text-foreground transition-all duration-300 hover:border-accent hover:text-accent xl:px-6"
                             >
                                 {t('common.newsletter')}
                             </Link>
