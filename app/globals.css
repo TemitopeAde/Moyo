@@ -210,7 +210,10 @@ body {
   height: 1px;
   pointer-events: none;
   opacity: 0;
-  color: var(--color-foreground);
+  --cursor-stroke: var(--foreground);
+  --cursor-fill: var(--background);
+  --cursor-mark: var(--accent);
+  color: var(--cursor-stroke);
   filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45));
   transition: opacity 220ms ease, filter 220ms ease;
 }
@@ -229,20 +232,23 @@ body {
   overflow: visible;
   transform: translate(-8px, -6px) rotate(-8deg);
   transform-origin: 30% 20%;
-  transition: color 220ms ease, transform 220ms ease;
+  transition: transform 220ms ease;
 }
 
 .custom-cursor__hand-fill {
-  color: var(--color-background);
+  color: var(--cursor-fill);
+  fill: var(--cursor-fill);
   opacity: 0.92;
 }
 
 .custom-cursor__hand-stroke {
-  color: var(--color-foreground);
+  color: var(--cursor-stroke);
+  stroke: var(--cursor-stroke);
 }
 
 .custom-cursor__click-mark {
-  color: var(--color-accent);
+  color: var(--cursor-mark);
+  stroke: var(--cursor-mark);
   opacity: 0.52;
   transform-box: fill-box;
   transform-origin: center;
@@ -254,7 +260,6 @@ body {
 }
 
 .custom-cursor.is-interactive .custom-cursor__icon {
-  color: var(--color-accent);
   transform: translate(-8px, -6px) rotate(-8deg) scale(1.12);
 }
 
