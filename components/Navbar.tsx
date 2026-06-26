@@ -27,7 +27,7 @@ export default function Navbar() {
     });
     const { profile, setProfile } = useProfile(); // We need setProfile for the mobile switcher
     const { language } = useLanguage();
-    const { t } = useTranslate(language);
+    const { t, translateText } = useTranslate(language);
     const pathname = usePathname();
     const router = useRouter();
 
@@ -63,6 +63,7 @@ export default function Navbar() {
 
     const photographyLinks = [
         { name: t('common.photography'), href: '/photography' },
+        { name: translateText('Portfolio'), href: '/photography/portfolio' },
         { name: t('common.bookings'), href: '/photography/bookings' },
         { name: t('common.clientGallery'), href: '/photography/client-gallery' },
         { name: t('common.about'), href: '/photography/about' },
@@ -148,7 +149,7 @@ export default function Navbar() {
                     <div className="flex min-w-0 items-center gap-3 text-[8px] font-body tracking-[0.14em] text-foreground/60 xl:gap-5 xl:text-[9px] xl:tracking-[0.18em]">
                         {links.map((link) => (
                             <Link
-                                key={link.name}
+                                key={link.href}
                                 href={link.href}
                                 className={cn(
                                     "whitespace-nowrap hover:text-foreground transition-colors duration-300 uppercase",
@@ -250,7 +251,7 @@ export default function Navbar() {
                             <div className="flex flex-col items-center space-y-6">
                                 {links.map((link, i) => (
                                     <motion.div
-                                        key={link.name}
+                                        key={link.href}
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.2 + (i * 0.1) }}
