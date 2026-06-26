@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import ThreeAtmosphere from '@/components/ThreeAtmosphere';
 import HeroImageMotion from '@/components/HeroImageMotion';
 import { useSiteSettings } from '@/lib/useSiteSettings';
+import { getStorageItem, setStorageItem } from '@/lib/browserStorage';
 
 // Exported Masked Line inside Hero so we don't need another file optionally,
 // or we can import from MaskedText
@@ -25,9 +26,9 @@ export default function Hero({ profileType }: HeroProps) {
 
     const [isInitialLoad] = useState(() => {
         if (typeof window === 'undefined') return false;
-        const played = sessionStorage.getItem('moreli_intro_played');
+        const played = getStorageItem('session', 'moreli_intro_played');
         if (!played) {
-            sessionStorage.setItem('moreli_intro_played', 'true');
+            setStorageItem('session', 'moreli_intro_played', 'true');
             return true;
         }
         return false;

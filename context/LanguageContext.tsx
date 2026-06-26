@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { getStorageItem, setStorageItem } from '@/lib/browserStorage';
 
 export type LanguageCode = 'EN' | 'FR' | 'ES' | 'DE' | 'PT' | 'AR' | 'ZH' | 'YO' | 'IG' | 'HA';
 const LANGUAGE_CODES: LanguageCode[] = ['EN', 'FR', 'ES', 'DE', 'PT', 'AR', 'ZH', 'YO', 'IG', 'HA'];
@@ -15,7 +16,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: ReactNode }) {
     const [language, setLanguage] = useState<LanguageCode>(() => {
         if (typeof window === 'undefined') return 'EN';
-        const saved = localStorage.getItem('moyo_lang');
+        const saved = getStorageItem('local', 'moyo_lang');
         return LANGUAGE_CODES.includes(saved as LanguageCode) ? (saved as LanguageCode) : 'EN';
     });
 
@@ -26,7 +27,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
     const handleSetLanguage = (lang: LanguageCode) => {
         setLanguage(lang);
-        localStorage.setItem('moyo_lang', lang);
+        setStorageItem('local', 'moyo_lang', lang);
     };
 
     return (

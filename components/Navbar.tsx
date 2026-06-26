@@ -12,15 +12,16 @@ import LanguageSwitcher from './LanguageSwitcher';
 import ThemeToggle from './ThemeToggle';
 import { motion, AnimatePresence } from 'framer-motion';
 import { socialLinks } from '@/lib/socialLinks';
+import { getStorageItem, setStorageItem } from '@/lib/browserStorage';
 
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [isInitialLoad] = useState(() => {
         if (typeof window === 'undefined') return false;
-        const played = sessionStorage.getItem('moreli_nav_played');
+        const played = getStorageItem('session', 'moreli_nav_played');
         if (!played) {
-            sessionStorage.setItem('moreli_nav_played', 'true');
+            setStorageItem('session', 'moreli_nav_played', 'true');
             return true;
         }
         return false;
