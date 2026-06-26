@@ -6,6 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import { useEffect, useState } from 'react';
 import ThreeAtmosphere from '@/components/ThreeAtmosphere';
+import HeroImageMotion from '@/components/HeroImageMotion';
 import { useSiteSettings } from '@/lib/useSiteSettings';
 
 // Exported Masked Line inside Hero so we don't need another file optionally,
@@ -83,11 +84,13 @@ export default function Hero({ profileType }: HeroProps) {
                         willChange: 'transform, opacity'
                     }}
                 />
+                {profileType === 'photography' && <HeroImageMotion />}
                 <ThreeAtmosphere
                     preset={profileType}
                     className="z-10 opacity-80 mix-blend-screen"
                 />
-                <div className="absolute inset-0 bg-background/65 z-20" />
+                <div className="absolute inset-0 bg-background/70 z-20" />
+                <div className="absolute inset-0 z-20 bg-radial-[at_50%_52%] from-background/62 via-background/42 to-background/82" />
             </div>
 
             {/* Content */}
