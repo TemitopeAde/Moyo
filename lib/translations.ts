@@ -3473,6 +3473,43 @@ const translationFallbacks: Record<LanguageCode, keyof typeof localizedTranslati
     HA: 'HA',
 };
 
+const defaultSiteSettingTranslationPaths: Record<string, string> = {
+    "visual storytelling across photography and fine art": "footer.tagline",
+    philosophy: "home.philosophy",
+    location: "home.location",
+    "portraits, editorial, and commissioned work crafted with precision": "hero.photographySub",
+    "book a session": "hero.ctaPhotography",
+    "selected portfolio": "photography.selectedPortfolio",
+    "visual proximity": "photography.visualProximity",
+    "a selection of works focusing on the interplay of texture, light, and solitude": "photography.gridDescription",
+    "creative toolkit": "shop.creativeToolkit",
+    "digital shop": "shop.digitalShop",
+    "tools, presets, and visual resources for photographers and collectors": "shop.description",
+    collaboration: "booking.collaboration",
+    "let us create something with intention": "booking.heading",
+    "share the mood, timing, and purpose of the work. the studio will respond with availability and next steps": "booking.description",
+    newsletter: "newsletter.title",
+    "join the mailing list for updates on new projects, studio openings, and booking availability": "newsletter.photography.description",
+    subscribe: "newsletter.photography.button",
+    privacy: "footer.privacy",
+    terms: "footer.terms",
+};
+
+function getLocalizedTranslation(path: string, lang: LanguageCode): string {
+    const keys = path.split('.');
+    let result: unknown = localizedTranslations[translationFallbacks[lang]];
+
+    for (const key of keys) {
+        if (result && typeof result === 'object' && key in result) {
+            result = (result as Record<string, unknown>)[key];
+        } else {
+            return '';
+        }
+    }
+
+    return typeof result === 'string' ? result : '';
+}
+
 export function useTranslate(lang: LanguageCode) {
     const t = (path: string): string => {
         const keys = path.split('.');
@@ -3534,6 +3571,12 @@ export function translateDynamicText(value: string | null | undefined, lang: Lan
     const normalizedValue = normalizeDynamicText(value);
     const exact = dictionary[normalizedValue];
     if (exact) return exact;
+
+    const defaultSettingPath = defaultSiteSettingTranslationPaths[normalizedValue];
+    if (defaultSettingPath) {
+        const defaultSettingTranslation = getLocalizedTranslation(defaultSettingPath, lang);
+        if (defaultSettingTranslation) return defaultSettingTranslation;
+    }
 
     const words = value.match(/[A-Za-z][A-Za-z'-]*/g) ?? [];
     const canTranslateWithoutMixing = words.every((word) => {
