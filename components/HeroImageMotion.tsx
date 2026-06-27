@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { isVideoMedia } from '@/components/GalleryMedia';
+import { getCloudinaryPreviewUrl, getImagePreviewSrcSet } from '@/lib/mediaUrl';
 
 type CatalogImage = {
     image_url?: string;
@@ -173,7 +174,9 @@ export default function HeroImageMotion() {
                             >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
-                                    src={src}
+                                    src={getCloudinaryPreviewUrl(src, { width: 640 })}
+                                    srcSet={getImagePreviewSrcSet(src, [320, 640, 960])}
+                                    sizes="(min-width: 1280px) 24vw, (min-width: 768px) 30vw, 76vw"
                                     alt=""
                                     className="h-full w-full object-cover"
                                     loading="eager"

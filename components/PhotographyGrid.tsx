@@ -6,6 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import GlareHover from '@/components/GlareHover';
 import { useSiteSettings } from '@/lib/useSiteSettings';
+import { getCloudinaryPreviewUrl, getImagePreviewSrcSet } from '@/lib/mediaUrl';
 
 type CatalogImage = {
     id: number;
@@ -104,10 +105,13 @@ function CategoryOverviewCard({
             >
                 <div className="relative aspect-[4/5] overflow-hidden bg-black">
                     <motion.img
-                        src={imageUrl}
+                        src={getCloudinaryPreviewUrl(imageUrl, { width: 900 })}
+                        srcSet={getImagePreviewSrcSet(imageUrl, [450, 900, 1350])}
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                         alt={translateText(category.name)}
                         className="h-full w-full object-cover will-change-transform"
                         loading="lazy"
+                        decoding="async"
                         initial={shouldReduceMotion ? false : { scale: 1.04 }}
                         animate={shouldReduceMotion ? undefined : { scale: 1.01 }}
                         whileHover={canAnimatePointer ? { scale: 1.08 } : undefined}
@@ -210,10 +214,13 @@ function PortfolioCard({
             >
                 <div className="relative overflow-hidden">
                     <motion.img
-                        src={item.image_url}
+                        src={getCloudinaryPreviewUrl(item.image_url, { width: 900, crop: 'fit' })}
+                        srcSet={getImagePreviewSrcSet(item.image_url, [450, 900, 1350])}
+                        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                         alt={translateText(item.alt_text || item.title || item.categoryName)}
                         className="h-auto w-full will-change-transform"
                         loading="lazy"
+                        decoding="async"
                         initial={shouldReduceMotion ? false : { scale: 1.045, y: 0 }}
                         animate={shouldReduceMotion ? undefined : { scale: 1.015, y: 0 }}
                         whileHover={canAnimatePointer ? { scale: 1.08, y: index % 2 === 0 ? -12 : 12 } : undefined}
@@ -512,9 +519,12 @@ export default function PhotographyGrid() {
                                 <AnimatePresence mode="wait">
                                     <motion.img
                                         key={selectedItem.id}
-                                        src={selectedItem.image_url}
+                                        src={getCloudinaryPreviewUrl(selectedItem.image_url, { width: 1800, crop: 'fit' })}
+                                        srcSet={getImagePreviewSrcSet(selectedItem.image_url, [900, 1400, 1800])}
+                                        sizes="(min-width: 1024px) calc(100vw - 320px), 100vw"
                                         alt={translateText(selectedItem.alt_text || selectedItem.title || selectedItem.categoryName)}
                                         className="max-h-[62vh] w-auto max-w-full object-contain lg:max-h-[92vh]"
+                                        decoding="async"
                                         initial={shouldReduceMotion ? false : { opacity: 0, x: 24 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         exit={shouldReduceMotion ? undefined : { opacity: 0, x: -24 }}

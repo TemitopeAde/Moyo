@@ -324,6 +324,7 @@ export default function ClientGalleryPage() {
                                                     src={image}
                                                     alt={`${gallery.client_name} ${t('clientGallery.galleryImageAlt')} ${index + 1}`}
                                                     className="pointer-events-none w-full h-full object-cover"
+                                                    previewWidth={720}
                                                 />
                                                 <div className="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                                                 <button
@@ -415,6 +416,7 @@ export default function ClientGalleryPage() {
                                                         src={image}
                                                         alt={`${gallery.client_name} ${t('clientGallery.finishedWorkTitle')} ${index + 1}`}
                                                         className="pointer-events-none h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                        previewWidth={720}
                                                     />
                                                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/0" />
                                                     <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/55 px-3 py-1 text-[9px] uppercase tracking-[0.18em] text-white/70 backdrop-blur-sm">

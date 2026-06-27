@@ -6,6 +6,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import GalleryMedia from '@/components/GalleryMedia';
 import { defaultSiteSettings, type SiteSettings } from '@/lib/siteSettings';
+import { getCloudinaryPreviewUrl, getImagePreviewSrcSet } from '@/lib/mediaUrl';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   FiChevronDown,
@@ -146,7 +147,11 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number) 
   });
 }
 
-async function prepareUploadFile(file: File) {
+async function prepareUploadFile(file: File, options: { preserveOriginal?: boolean } = {}) {
+  if (options.preserveOriginal) {
+    return { file, changed: false };
+  }
+
   if (!isCompressibleImage(file)) {
     return { file, changed: false };
   }
@@ -507,6 +512,7 @@ export default function AdminPage() {
 
   const uploadFiles = async (files: File[], target = 'upload'): Promise<UploadBatchResult> => {
     if (!files.length) return { urls: [], failedFiles: [] };
+    const preserveOriginal = target.startsWith('gallery-');
     setTargetUploading(target, true);
     try {
       console.log('[admin] upload start', { count: files.length, target });
@@ -516,7 +522,7 @@ export default function AdminPage() {
       setUploadProgress((prev) => ({ ...prev, [target]: { current: completedCount, total: files.length } }));
 
       const uploadSingleFile = async (file: File, index: number) => {
-        const prepared = await prepareUploadFile(file);
+        const prepared = await prepareUploadFile(file, { preserveOriginal });
         const formData = new FormData();
         formData.append('file', prepared.file);
         const controller = new AbortController();
@@ -1924,7 +1930,14 @@ export default function AdminPage() {
                   />
                   {catalogImagePreview && (
                     <div className="overflow-hidden border border-white/10 bg-white/[0.04]">
-                      <img src={catalogImagePreview} alt="Catalogue preview" className="h-48 w-full object-cover" />
+                      <img
+                        src={getCloudinaryPreviewUrl(catalogImagePreview, { width: 720 })}
+                        srcSet={getImagePreviewSrcSet(catalogImagePreview, [360, 720, 1080])}
+                        alt="Catalogue preview"
+                        className="h-48 w-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
                       <div className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/50">
                         {catalogImageFiles.length > 1 ? `First preview of ${catalogImageFiles.length} selected images` : 'Catalogue preview'}
                       </div>
@@ -1970,9 +1983,15 @@ export default function AdminPage() {
                       {(category.cover_image_url || category.images?.[0]?.image_url) && (
                         <div className="mt-4 flex items-center gap-3 border border-white/10 bg-white/[0.03] p-2">
                           <img
-                            src={category.cover_image_url || category.images?.[0]?.image_url}
+                            src={getCloudinaryPreviewUrl(category.cover_image_url || category.images?.[0]?.image_url, {
+                              width: 160,
+                              height: 160,
+                            })}
+                            srcSet={getImagePreviewSrcSet(category.cover_image_url || category.images?.[0]?.image_url, [80, 160, 240])}
                             alt={`${category.name} display image`}
                             className="h-14 w-14 shrink-0 object-cover"
+                            loading="lazy"
+                            decoding="async"
                           />
                           <div className="min-w-0">
                             <p className="text-[10px] uppercase tracking-[0.24em] text-accent">Display image</p>
@@ -2028,9 +2047,12 @@ export default function AdminPage() {
                       {category.images.map((image) => (
                         <div key={image.id} className="relative group overflow-hidden border border-white/10 bg-black">
                           <img
-                            src={image.image_url}
+                            src={getCloudinaryPreviewUrl(image.image_url, { width: 360, height: 280 })}
+                            srcSet={getImagePreviewSrcSet(image.image_url, [180, 360, 540])}
                             alt={image.alt_text || image.title || category.name}
                             className="h-28 w-full object-cover"
+                            loading="lazy"
+                            decoding="async"
                           />
                           <button
                             type="button"
@@ -2235,6 +2257,8 @@ export default function AdminPage() {
                               alt={`${gal.client_name} selected image ${index + 1}`}
                               className="h-20 w-full object-cover"
                               sizes="(min-width: 1280px) 96px, (min-width: 640px) 33vw, 50vw"
+                              previewWidth={240}
+                              previewHeight={200}
                             />
                             <span className="absolute left-1.5 top-1.5 h-4 w-4 rounded-full border border-white bg-white shadow-[0_0_12px_rgba(255,255,255,0.18)]">
                               <span className="sr-only">Pick {index + 1}</span>
@@ -2256,6 +2280,8 @@ export default function AdminPage() {
                                 alt={`${gal.client_name} gallery upload ${index + 1}`}
                                 className="h-20 w-full border border-white/10 object-cover"
                                 sizes="(min-width: 1280px) 96px, (min-width: 640px) 33vw, 50vw"
+                                previewWidth={240}
+                                previewHeight={200}
                               />
                               <span
                                 className={`absolute left-1.5 top-1.5 h-4 w-4 rounded-full border transition-colors ${
@@ -2374,6 +2400,8 @@ export default function AdminPage() {
                                 alt={`${gal.client_name} finished work ${index + 1}`}
                                 className="h-20 w-full object-cover border border-white/10"
                                 sizes="(min-width: 1280px) 96px, (min-width: 640px) 33vw, 50vw"
+                                previewWidth={240}
+                                previewHeight={200}
                               />
                             </div>
                             <button
