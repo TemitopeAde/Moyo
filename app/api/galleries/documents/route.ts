@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { existsSync, readFileSync } from 'fs';
+import path from 'path';
+import { inflateSync } from 'zlib';
 import nodemailer from 'nodemailer';
 import { requireAdmin } from '@/lib/auth';
 import { query } from '@/lib/db';
@@ -32,9 +35,18 @@ type GeminiResponse = {
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const BRAND_RED_RGB = '0.572 0.004 0.063';
+const LOGO_PATH = path.join(process.cwd(), 'public', 'brand', 'moyo-logo-red.png');
+const PDF_LOGO_BACKGROUND = { r: 255, g: 255, b: 255 };
+let cachedPdfLogo: { width: number; height: number; hex: string } | null | undefined;
 
 function normalize(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeId(value: unknown) {
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  return normalize(value);
 }
 
 function normalizeType(value: unknown) {
@@ -100,24 +112,226 @@ function pdfEscape(value: string) {
   return value.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
 }
 
-function buildPdf(doc: GalleryDocument) {
-  const lines = wrapText(documentText(doc)).slice(0, 48);
-  const content = [
-    'BT',
-    '/F1 11 Tf',
-    '50 780 Td',
-    '16 TL',
-    ...lines.map((line, index) => `${index === 0 ? '' : 'T*'}(${pdfEscape(line)}) Tj`),
-    'ET',
-  ].join('\n');
+function pdfSafe(value: string) {
+  return value.replace(/[^\x09\x0A\x0D\x20-\x7E]/g, '');
+}
 
+function getDocumentLines(doc: GalleryDocument) {
+  const fallback =
+    doc.document_type === 'contract'
+      ? 'Photography service agreement and creative usage terms.'
+      : 'Photography services';
+
+  return (doc.line_items || fallback)
+    .replace(/\\n/g, '\n')
+    .replace(/\s+[-•]\s+/g, '\n')
+    .split(/\n+/)
+    .map((line) => line.replace(/^[-*]\s*/, '').trim())
+    .filter(Boolean)
+    .slice(0, 6);
+}
+
+function getLogoAttachment() {
+  if (!existsSync(LOGO_PATH)) return null;
+  return {
+    filename: 'moyo-logo-red.png',
+    path: LOGO_PATH,
+    cid: 'moyo-logo',
+  };
+}
+
+function paethPredictor(left: number, up: number, upperLeft: number) {
+  const estimate = left + up - upperLeft;
+  const leftDistance = Math.abs(estimate - left);
+  const upDistance = Math.abs(estimate - up);
+  const upperLeftDistance = Math.abs(estimate - upperLeft);
+  if (leftDistance <= upDistance && leftDistance <= upperLeftDistance) return left;
+  if (upDistance <= upperLeftDistance) return up;
+  return upperLeft;
+}
+
+function getPdfLogo() {
+  if (cachedPdfLogo !== undefined) return cachedPdfLogo;
+  cachedPdfLogo = null;
+  if (!existsSync(LOGO_PATH)) return cachedPdfLogo;
+
+  try {
+    const source = readFileSync(LOGO_PATH);
+    let offset = 8;
+    let width = 0;
+    let height = 0;
+    const chunks: Buffer[] = [];
+    while (offset < source.length) {
+      const length = source.readUInt32BE(offset);
+      const type = source.toString('ascii', offset + 4, offset + 8);
+      const data = source.subarray(offset + 8, offset + 8 + length);
+      if (type === 'IHDR') {
+        width = data.readUInt32BE(0);
+        height = data.readUInt32BE(4);
+      }
+      if (type === 'IDAT') chunks.push(data);
+      if (type === 'IEND') break;
+      offset += length + 12;
+    }
+    if (!width || !height || chunks.length === 0) return cachedPdfLogo;
+
+    const inflated = inflateSync(Buffer.concat(chunks));
+    const stride = width * 4;
+    const rows: Buffer[] = [];
+    let index = 0;
+    let previous = Buffer.alloc(stride);
+    for (let y = 0; y < height; y += 1) {
+      const filter = inflated[index];
+      index += 1;
+      const row = Buffer.alloc(stride);
+      for (let x = 0; x < stride; x += 1) {
+        const left = x >= 4 ? row[x - 4] : 0;
+        const up = previous[x];
+        const upperLeft = x >= 4 ? previous[x - 4] : 0;
+        let value = inflated[index];
+        index += 1;
+        if (filter === 1) value = (value + left) & 255;
+        if (filter === 2) value = (value + up) & 255;
+        if (filter === 3) value = (value + Math.floor((left + up) / 2)) & 255;
+        if (filter === 4) value = (value + paethPredictor(left, up, upperLeft)) & 255;
+        row[x] = value;
+      }
+      rows.push(row);
+      previous = row;
+    }
+
+    const outputWidth = 140;
+    const outputHeight = Math.max(1, Math.round((height / width) * outputWidth));
+    const rgb = Buffer.alloc(outputWidth * outputHeight * 3);
+    for (let y = 0; y < outputHeight; y += 1) {
+      const sourceY = Math.min(height - 1, Math.floor((y / outputHeight) * height));
+      const row = rows[sourceY];
+      for (let x = 0; x < outputWidth; x += 1) {
+        const sourceX = Math.min(width - 1, Math.floor((x / outputWidth) * width));
+        const sourceIndex = sourceX * 4;
+        const alpha = row[sourceIndex + 3] / 255;
+        const targetIndex = (y * outputWidth + x) * 3;
+        rgb[targetIndex] = Math.round(row[sourceIndex] * alpha + PDF_LOGO_BACKGROUND.r * (1 - alpha));
+        rgb[targetIndex + 1] = Math.round(row[sourceIndex + 1] * alpha + PDF_LOGO_BACKGROUND.g * (1 - alpha));
+        rgb[targetIndex + 2] = Math.round(row[sourceIndex + 2] * alpha + PDF_LOGO_BACKGROUND.b * (1 - alpha));
+      }
+    }
+    cachedPdfLogo = { width: outputWidth, height: outputHeight, hex: rgb.toString('hex').toUpperCase() };
+  } catch {
+    cachedPdfLogo = null;
+  }
+  return cachedPdfLogo;
+}
+
+function buildPdf(doc: GalleryDocument) {
+  const label = doc.document_type === 'contract' ? 'CONTRACT' : 'INVOICE';
+  const amount = formatMoney(doc.amount, doc.currency);
+  const createdAt = doc.created_at ? new Date(doc.created_at) : new Date();
+  const createdDate = createdAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  const lines = getDocumentLines(doc);
+  const terms = wrapText(doc.terms || 'Thank you for trusting Ijabiken Moyo.', 62).slice(0, 7);
+  const logo = getPdfLogo();
+  const commands: string[] = [];
+  const text = (value: string, x: number, y: number, size = 10, font = 'F1', color = '0.08 0.08 0.08') => {
+    commands.push(
+      'BT',
+      `${color} rg`,
+      `/${font} ${size} Tf`,
+      `${x} ${y} Td`,
+      `(${pdfEscape(pdfSafe(value))}) Tj`,
+      'ET'
+    );
+  };
+  const rect = (x: number, y: number, width: number, height: number, color: string) => {
+    commands.push(`${color} rg`, `${x} ${y} ${width} ${height} re`, 'f');
+  };
+  const line = (x1: number, y1: number, x2: number, y2: number, color = '0.82 0.82 0.82', width = 0.8) => {
+    commands.push(`${color} RG`, `${width} w`, `${x1} ${y1} m`, `${x2} ${y2} l`, 'S');
+  };
+
+  rect(0, 0, 612, 792, '0.965 0.957 0.93');
+  rect(54, 48, 504, 696, '1 1 1');
+  line(54, 744, 558, 744, '0.86 0.84 0.78', 0.8);
+  line(54, 48, 558, 48, '0.86 0.84 0.78', 0.8);
+
+  if (logo) {
+    commands.push('q', `82 0 0 ${Math.round((logo.height / logo.width) * 82)} 86 694 cm`, '/Logo Do', 'Q');
+  } else {
+    rect(86, 690, 30, 24, BRAND_RED_RGB);
+    rect(94, 695, 4, 10, '1 1 1');
+    rect(102, 698, 4, 7, '1 1 1');
+    rect(110, 701, 4, 4, '1 1 1');
+    text('moyo', 86, 668, 14, 'F2', BRAND_RED_RGB);
+  }
+  text(label, 386, 698, 20, 'F2', '0.05 0.05 0.05');
+
+  text(doc.client_name || 'Client Name', 86, 642, 11, 'F2');
+  text(`Date issued: ${createdDate}`, 86, 621, 8, 'F1', '0.25 0.25 0.25');
+  text(`${label === 'INVOICE' ? 'Invoice' : 'Contract'} No: ${doc.id}`, 86, 607, 8, 'F1', '0.25 0.25 0.25');
+  text(`Client email: ${doc.client_email}`, 86, 593, 8, 'F1', '0.25 0.25 0.25');
+
+  text('Ijabiken Moyo', 386, 642, 8, 'F2', '0.12 0.12 0.12');
+  text('Photography & Fine Art', 386, 629, 8, 'F1', '0.32 0.32 0.32');
+  text('Lagos / London / Amsterdam', 386, 616, 8, 'F1', '0.32 0.32 0.32');
+  text('ijabikenm@gmail.com', 386, 603, 8, 'F1', '0.32 0.32 0.32');
+
+  line(86, 555, 526, 555, '0.82 0.82 0.82');
+  text('DESCRIPTION', 86, 568, 7, 'F2', '0.35 0.35 0.35');
+  text(label === 'INVOICE' ? 'DETAILS' : 'SCOPE', 338, 568, 7, 'F2', '0.35 0.35 0.35');
+  text('SUBTOTAL', 462, 568, 7, 'F2', '0.35 0.35 0.35');
+
+  let y = 532;
+  lines.forEach((item, index) => {
+    const itemLines = wrapText(item, 36).slice(0, 2);
+    text(itemLines[0] || item, 86, y, 9, index === 0 ? 'F2' : 'F1');
+    if (itemLines[1]) text(itemLines[1], 86, y - 13, 8, 'F1', '0.35 0.35 0.35');
+    text(index === 0 ? (label === 'INVOICE' ? 'Service' : 'Agreement') : 'Item', 338, y, 8, 'F1', '0.35 0.35 0.35');
+    text(index === 0 && amount ? amount : '-', 462, y, 9, index === 0 ? 'F2' : 'F1', index === 0 && amount ? BRAND_RED_RGB : '0.35 0.35 0.35');
+    y -= itemLines[1] ? 34 : 26;
+  });
+
+  rect(54, 64, 504, 185, '0.925 0.922 0.88');
+  rect(54, 64, 4, 185, BRAND_RED_RGB);
+  line(86, 132, 526, 132, '0.74 0.74 0.70');
+  line(86, 82, 526, 82, '0.74 0.74 0.70');
+  text('PAYMENT INFO', 86, 146, 7, 'F2', '0.38 0.38 0.35');
+  text('DUE BY', 274, 146, 7, 'F2', '0.38 0.38 0.35');
+  text('TOTAL DUE', 438, 146, 7, 'F2', '0.38 0.38 0.35');
+  text('Bank transfer / studio confirmation', 86, 113, 8, 'F1', '0.20 0.20 0.19');
+  text('Invoice reference: Moyo-' + doc.id, 86, 101, 8, 'F1', '0.20 0.20 0.19');
+  text(doc.due_date || 'On receipt', 274, 108, 14, 'F1', '0.05 0.05 0.05');
+  text(amount || 'To be confirmed', 438, 108, 16, 'F2', BRAND_RED_RGB);
+
+  rect(86, 39, 7, 7, BRAND_RED_RGB);
+  text('Thank you!', 100, 39, 10, 'F1', '0.12 0.12 0.12');
+  text('ijabikenm@gmail.com', 320, 39, 7, 'F1', '0.25 0.25 0.25');
+  text('+2348148192201', 420, 39, 7, 'F1', '0.25 0.25 0.25');
+
+  if (terms.length > 0) {
+    text(label === 'INVOICE' ? 'Notes' : 'Terms', 86, Math.max(y - 2, 220), 8, 'F2', BRAND_RED_RGB);
+    terms.forEach((termLine, index) => {
+      text(termLine, 86, Math.max(y - 18 - index * 12, 196), 8, 'F1', '0.28 0.28 0.28');
+    });
+  }
+
+  const content = commands.join('\n');
+
+  const imageObjectNumber = logo ? 6 : null;
+  const contentObjectNumber = logo ? 7 : 6;
+  const imageResource = logo ? `/XObject << /Logo ${imageObjectNumber} 0 R >>` : '';
   const objects = [
     '<< /Type /Catalog /Pages 2 0 R >>',
     '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
-    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> ${imageResource} >> /Contents ${contentObjectNumber} 0 R >>`,
     '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
-    `<< /Length ${Buffer.byteLength(content)} >>\nstream\n${content}\nendstream`,
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>',
   ];
+  if (logo) {
+    objects.push(
+      `<< /Type /XObject /Subtype /Image /Width ${logo.width} /Height ${logo.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /ASCIIHexDecode /Length ${logo.hex.length + 1} >>\nstream\n${logo.hex}>\nendstream`
+    );
+  }
+  objects.push(`<< /Length ${Buffer.byteLength(content)} >>\nstream\n${content}\nendstream`);
 
   let pdf = '%PDF-1.4\n';
   const offsets = [0];
@@ -138,19 +352,92 @@ function buildPdf(doc: GalleryDocument) {
 function emailHtml(doc: GalleryDocument) {
   const amount = formatMoney(doc.amount, doc.currency);
   const label = doc.document_type === 'contract' ? 'Contract' : 'Invoice';
+  const detailLabel = doc.document_type === 'contract' ? 'Agreement' : 'Service';
+  const itemRows = getDocumentLines(doc)
+    .map(
+      (item, index) => `
+        <tr>
+          <td width="55%" style="padding:14px 12px 14px 0;border-top:1px solid #dedbd3;color:#151515;font-size:13px;line-height:1.45;font-weight:${index === 0 ? '700' : '400'};word-break:break-word;">${escapeHtml(item)}</td>
+          <td width="20%" style="padding:14px 8px;border-top:1px solid #dedbd3;color:#6f6f6f;font-size:12px;line-height:1.45;text-align:center;">${index === 0 ? detailLabel : 'Item'}</td>
+          <td width="25%" style="padding:14px 0 14px 12px;border-top:1px solid #dedbd3;color:${index === 0 && amount ? '#920110' : '#6f6f6f'};font-size:13px;line-height:1.45;font-weight:${index === 0 ? '700' : '400'};text-align:right;white-space:nowrap;">${index === 0 && amount ? escapeHtml(amount) : '-'}</td>
+        </tr>
+      `
+    )
+    .join('');
   return `
-    <div style="margin:0;background:#050505;color:#fafafa;font-family:Arial,sans-serif;padding:32px;">
-      <main style="max-width:640px;margin:0 auto;border:1px solid rgba(146,1,16,.35);padding:32px;">
-        <p style="margin:0 0 22px;color:#920110;font-size:11px;letter-spacing:.3em;text-transform:uppercase;">Ijabiken Moyo</p>
-        <h1 style="font-family:Georgia,serif;font-style:italic;font-weight:400;margin:0 0 12px;font-size:30px;color:#fff;">${escapeHtml(label)}</h1>
-        <h2 style="margin:0 0 24px;font-size:18px;color:#f4f4f4;">${escapeHtml(doc.title)}</h2>
-        ${amount ? `<p style="margin:0 0 10px;color:#fff;"><strong>Amount:</strong> ${escapeHtml(amount)}</p>` : ''}
-        ${doc.due_date ? `<p style="margin:0 0 22px;color:#bbb;"><strong>Due date:</strong> ${escapeHtml(doc.due_date)}</p>` : ''}
-        <div style="white-space:pre-wrap;line-height:1.7;color:#ddd;">${escapeHtml(doc.line_items || '')}</div>
-        ${doc.terms ? `<hr style="border:none;border-top:1px solid rgba(255,255,255,.12);margin:28px 0;" /><div style="white-space:pre-wrap;line-height:1.7;color:#bbb;">${escapeHtml(doc.terms)}</div>` : ''}
-        <p style="margin:32px 0 0;color:#777;font-size:12px;line-height:1.6;">A PDF copy is attached.</p>
-      </main>
-    </div>
+    <body style="margin:0;padding:0;background:#f5f3ee;color:#151515;font-family:Arial,Helvetica,sans-serif;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;background:#f5f3ee;">
+        <tr>
+          <td align="center" style="padding:24px 12px;">
+            <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:100%;max-width:600px;border-collapse:collapse;background:#ffffff;border:1px solid #e1ded6;">
+              <tr>
+                <td style="padding:34px 38px 28px;background:#ffffff;">
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">
+                    <tr>
+                      <td valign="middle" style="padding:0 0 38px;">
+                        <img src="cid:moyo-logo" width="82" alt="Moyo" style="display:block;width:82px;height:auto;border:0;outline:none;text-decoration:none;" />
+                      </td>
+                      <td valign="middle" align="right" style="padding:0 0 38px;">
+                        <h1 style="margin:0;color:#111111;font-size:22px;line-height:1.2;letter-spacing:2px;text-transform:uppercase;">${escapeHtml(label)}</h1>
+                        <p style="margin:8px 0 0;color:#777777;font-size:12px;line-height:1.5;">Moyo-${doc.id}</p>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">
+                    <tr>
+                      <td valign="top" width="52%" style="padding:0 20px 34px 0;">
+                        <h2 style="margin:0 0 10px;color:#111111;font-size:17px;line-height:1.3;">${escapeHtml(doc.client_name || 'Client Name')}</h2>
+                        <p style="margin:0;color:#555555;font-size:13px;line-height:1.65;">${escapeHtml(doc.title)}<br/>${escapeHtml(doc.client_email)}</p>
+                      </td>
+                      <td valign="top" width="48%" align="right" style="padding:0 0 34px 20px;color:#555555;font-size:13px;line-height:1.65;">
+                        <strong style="color:#111111;">Ijabiken Moyo</strong><br/>
+                        Photography & Fine Art<br/>
+                        ijabikenm@gmail.com
+                      </td>
+                    </tr>
+                  </table>
+
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                    <thead>
+                      <tr>
+                        <th width="55%" align="left" style="padding:0 12px 12px 0;color:#777777;font-size:10px;line-height:1.3;letter-spacing:2px;text-transform:uppercase;">Description</th>
+                        <th width="20%" align="center" style="padding:0 8px 12px;color:#777777;font-size:10px;line-height:1.3;letter-spacing:2px;text-transform:uppercase;">Details</th>
+                        <th width="25%" align="right" style="padding:0 0 12px 12px;color:#777777;font-size:10px;line-height:1.3;letter-spacing:2px;text-transform:uppercase;">Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody>${itemRows}</tbody>
+                  </table>
+                </td>
+              </tr>
+
+              <tr>
+                <td style="padding:28px 38px 34px;background:#eceae3;">
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;border-top:1px solid #cbc7bd;border-bottom:1px solid #cbc7bd;">
+                    <tr>
+                      <td valign="top" width="39%" style="padding:18px 12px 18px 0;">
+                        <p style="margin:0 0 10px;color:#777777;font-size:10px;line-height:1.3;letter-spacing:2px;text-transform:uppercase;">Payment info</p>
+                        <p style="margin:0;color:#222222;font-size:12px;line-height:1.6;">Bank transfer / studio confirmation<br/>Reference: Moyo-${doc.id}</p>
+                      </td>
+                      <td valign="top" width="25%" style="padding:18px 12px;">
+                        <p style="margin:0 0 10px;color:#777777;font-size:10px;line-height:1.3;letter-spacing:2px;text-transform:uppercase;">Due by</p>
+                        <p style="margin:0;color:#111111;font-size:14px;line-height:1.4;">${escapeHtml(doc.due_date || 'On receipt')}</p>
+                      </td>
+                      <td valign="top" width="36%" align="right" style="padding:18px 0 18px 12px;">
+                        <p style="margin:0 0 10px;color:#777777;font-size:10px;line-height:1.3;letter-spacing:2px;text-transform:uppercase;">Total due</p>
+                        <p style="margin:0;color:#920110;font-size:20px;line-height:1.25;font-weight:700;">${escapeHtml(amount || 'To be confirmed')}</p>
+                      </td>
+                    </tr>
+                  </table>
+                  ${doc.terms ? `<p style="margin:22px 0 0;color:#555555;font-size:12px;line-height:1.7;white-space:pre-line;">${escapeHtml(doc.terms)}</p>` : ''}
+                  <p style="margin:26px 0 0;color:#222222;font-size:13px;line-height:1.6;">Thank you! A PDF copy is attached.</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
   `;
 }
 
@@ -178,8 +465,19 @@ function getTransportConfig() {
 }
 
 function parseGeminiDraft(text: string) {
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) return null;
+  const cleaned = text
+    .replace(/^```(?:json)?/i, '')
+    .replace(/```$/i, '')
+    .trim();
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    if (!cleaned) return null;
+    return {
+      title: 'Photography Invoice Draft',
+      lineItems: cleaned,
+      terms: 'Payment is due according to the agreed schedule. Final delivery follows studio confirmation.',
+    };
+  }
   try {
     const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
     return {
@@ -188,7 +486,15 @@ function parseGeminiDraft(text: string) {
       terms: normalize(parsed.terms),
     };
   } catch {
-    return null;
+    const title = cleaned.match(/"title"\s*:\s*"([^"]+)"/)?.[1] || '';
+    const lineItems = cleaned.match(/"lineItems"\s*:\s*"([\s\S]*?)"\s*,\s*"terms"/)?.[1] || '';
+    const terms = cleaned.match(/"terms"\s*:\s*"([\s\S]*?)"\s*\}/)?.[1] || '';
+    if (!title && !lineItems && !terms) return null;
+    return {
+      title: title.replace(/\\n/g, '\n'),
+      lineItems: lineItems.replace(/\\n/g, '\n'),
+      terms: terms.replace(/\\n/g, '\n'),
+    };
   }
 }
 
@@ -258,7 +564,8 @@ export async function POST(req: NextRequest) {
       dueDate ? `Due date: ${dueDate}` : '',
       'Use a professional, simple photography-studio tone.',
       'Return only valid JSON with keys: title, lineItems, terms.',
-      'lineItems should be plain text with short lines. terms should be plain text.',
+      'lineItems must not be empty. Write 2 to 4 short plain-text service lines based on the brief.',
+      'terms must not be empty. Write concise payment, delivery, and usage terms in plain text.',
       '',
       'Brief:',
       brief,
@@ -271,7 +578,20 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.45, maxOutputTokens: 520 },
+        generationConfig: {
+          temperature: 0.35,
+          maxOutputTokens: 520,
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: 'OBJECT',
+            properties: {
+              title: { type: 'STRING' },
+              lineItems: { type: 'STRING' },
+              terms: { type: 'STRING' },
+            },
+            required: ['title', 'lineItems', 'terms'],
+          },
+        },
       }),
     });
     const data = (await response.json()) as GeminiResponse;
@@ -280,7 +600,13 @@ export async function POST(req: NextRequest) {
     const text = data.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim() || '';
     const draft = parseGeminiDraft(text);
     if (!draft) return NextResponse.json({ error: 'Gemini returned an unusable draft.' }, { status: 502 });
-    return NextResponse.json({ draft });
+    return NextResponse.json({
+      draft: {
+        title: draft.title || title,
+        lineItems: draft.lineItems || lineItems || 'Photography services.',
+        terms: draft.terms || terms || 'Payment is due according to the agreed schedule.',
+      },
+    });
   }
 
   if (!clientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)) {
@@ -304,7 +630,7 @@ export async function PUT(req: NextRequest) {
   if (unauthorized) return unauthorized;
 
   const body = await req.json();
-  const id = normalize(body.id);
+  const id = normalizeId(body.id);
   const action = normalize(body.action);
   if (!id) return NextResponse.json({ error: 'Missing document id.' }, { status: 400 });
 
@@ -322,6 +648,7 @@ export async function PUT(req: NextRequest) {
     );
 
     const label = doc.document_type === 'contract' ? 'Contract' : 'Invoice';
+    const logoAttachment = getLogoAttachment();
     await transporter.sendMail({
       from: config.from,
       to: doc.client_email,
@@ -329,6 +656,7 @@ export async function PUT(req: NextRequest) {
       text: documentText(doc),
       html: emailHtml(doc),
       attachments: [
+        ...(logoAttachment ? [logoAttachment] : []),
         {
           filename: `${doc.document_type}-${doc.id}.pdf`,
           content: buildPdf(doc),

@@ -2654,7 +2654,7 @@ export default function AdminPage() {
                       </button>
                     </div>
                   </div>
-                  <div className="space-y-4 border-t border-white/5 pt-4">
+                  <div className="min-w-0 space-y-4 border-t border-white/5 pt-4">
                     {(() => {
                       const docForm = getGalleryDocumentForm(gal);
                       const docs = galleryDocuments[gal.id] || [];
@@ -2672,7 +2672,7 @@ export default function AdminPage() {
                             </span>
                           </div>
 
-                          <div className="grid gap-3 border border-white/10 bg-white/[0.02] p-3">
+                          <div className="grid min-w-0 gap-3 border border-white/10 bg-white/[0.02] p-3">
                             <div className="grid gap-3 sm:grid-cols-2">
                               <select
                                 className={inputClass}
@@ -2757,16 +2757,16 @@ export default function AdminPage() {
                           </div>
 
                           {docs.length > 0 && (
-                            <div className="space-y-2 border border-accent/20 bg-accent/[0.035] p-3">
+                            <div className="min-w-0 space-y-2 border border-accent/20 bg-accent/[0.035] p-3">
                               <p className="text-[10px] uppercase tracking-[0.28em] text-accent">Saved documents</p>
                               {docs.map((document) => (
-                                <div key={document.id} className="border border-white/10 bg-black/20 p-3">
-                                  <div className="grid gap-3">
-                                    <div>
-                                      <p className="text-sm font-medium text-white">
+                                <div key={document.id} className="min-w-0 border border-white/10 bg-black/20 p-3">
+                                  <div className="grid min-w-0 gap-3">
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-medium text-white [overflow-wrap:anywhere]">
                                         {document.title}
                                       </p>
-                                      <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-white/40">
+                                      <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-white/40 [overflow-wrap:anywhere] sm:tracking-[0.18em]">
                                         {document.document_type} • {document.client_email}
                                         {document.sent_at ? ` • sent ${new Date(document.sent_at).toLocaleDateString()}` : ''}
                                       </p>
