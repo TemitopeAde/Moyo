@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import SessionTracker from '@/components/SessionTracker';
 import CustomCursor from '@/components/CustomCursor';
 import ClickSpark from '@/components/ClickSpark';
+import EniyanChat from '@/components/EniyanChat';
 
 export const metadata: Metadata = {
   title: 'Ijabiken Moyo | Photography & Fine Art',
@@ -44,6 +45,7 @@ export default function RootLayout({
               >
                 {children}
                 <SocialLinks />
+                <EniyanChat />
               </ClickSpark>
             </ProfileProvider>
           </LanguageProvider>

@@ -2,6 +2,15 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+Create or update `.env.local` with your Gemini key before using Eniyan:
+
+```bash
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+Eniyan's editable knowledge base lives in `lib/eniyanKnowledge.ts`. Update that file when you want the chatbot to learn new services, policies, prices, links, FAQs, or brand instructions. The Eniyan sign asset lives at `public/eniyan-sign.svg`.
+
 First, run the development server:
 
 ```bash

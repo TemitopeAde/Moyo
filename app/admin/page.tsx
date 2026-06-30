@@ -57,6 +57,32 @@ type Gallery = {
   is_locked: boolean;
 };
 
+type GalleryDocument = {
+  id: number;
+  gallery_id: number;
+  document_type: 'invoice' | 'contract';
+  title: string;
+  client_email: string;
+  amount: string | number;
+  currency: string;
+  due_date: string;
+  line_items: string;
+  terms: string;
+  sent_at: string | null;
+  created_at: string;
+};
+
+type GalleryDocumentForm = {
+  documentType: 'invoice' | 'contract';
+  clientEmail: string;
+  title: string;
+  amount: string;
+  currency: string;
+  dueDate: string;
+  lineItems: string;
+  terms: string;
+};
+
 type PhotographyCatalogImage = {
   id: number;
   category_id: number;
@@ -101,6 +127,17 @@ const uploadRequestTimeoutMs = 120_000;
 const maxCloudinaryFreeUploadBytes = 10 * 1024 * 1024;
 const compressedImageQuality = 0.82;
 const compressedImageMaxDimension = 2400;
+
+const defaultDocumentForm: GalleryDocumentForm = {
+  documentType: 'invoice',
+  clientEmail: '',
+  title: '',
+  amount: '',
+  currency: 'NGN',
+  dueDate: '',
+  lineItems: '',
+  terms: '',
+};
 
 function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -343,6 +380,9 @@ export default function AdminPage() {
   const [galleryUploads, setGalleryUploads] = useState<Record<string, File[]>>({});
   const [finishedGalleryUploads, setFinishedGalleryUploads] = useState<Record<string, File[]>>({});
   const [galleryPaymentUrls, setGalleryPaymentUrls] = useState<Record<string, string>>({});
+  const [galleryDocuments, setGalleryDocuments] = useState<Record<number, GalleryDocument[]>>({});
+  const [galleryDocumentForms, setGalleryDocumentForms] = useState<Record<number, GalleryDocumentForm>>({});
+  const [documentActionIds, setDocumentActionIds] = useState<Record<string, boolean>>({});
   const [isAuthed, setIsAuthed] = useState(false);
   const [authChecking, setAuthChecking] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -389,10 +429,11 @@ export default function AdminPage() {
   const fetchAll = async () => {
     if (!isAuthed) return;
     try {
-      const [artRes, digitalRes, galRes, contentRes, contactRes, socialRes, orderRes] = await Promise.all([
+      const [artRes, digitalRes, galRes, documentRes, contentRes, contactRes, socialRes, orderRes] = await Promise.all([
         fetch('/api/artworks'),
         fetch('/api/digital-products'),
         fetch('/api/galleries', { headers }),
+        fetch('/api/galleries/documents', { headers }),
         fetch('/api/content'),
         fetch('/api/contact'),
         fetch('/api/socials'),
@@ -403,6 +444,7 @@ export default function AdminPage() {
       const artData = await artRes.json();
       const digitalData = await digitalRes.json();
       const galData = await galRes.json();
+      const documentData = await documentRes.json();
       const conData = await contentRes.json();
       const contactData = await contactRes.json();
       const socialData = await socialRes.json();
@@ -437,6 +479,12 @@ export default function AdminPage() {
       setGalleryPaymentUrls(
         (galData.galleries || []).reduce((acc: Record<string, string>, gallery: Gallery) => {
           acc[gallery.id] = gallery.payment_url || '';
+          return acc;
+        }, {})
+      );
+      setGalleryDocuments(
+        (documentData.documents || []).reduce((acc: Record<number, GalleryDocument[]>, document: GalleryDocument) => {
+          acc[document.gallery_id] = [...(acc[document.gallery_id] || []), document];
           return acc;
         }, {})
       );
@@ -1011,6 +1059,164 @@ export default function AdminPage() {
       paymentVerified,
       paymentUrl: galleryPaymentUrls[gallery.id] ?? gallery.payment_url ?? '',
     });
+  };
+
+  const getGalleryDocumentForm = (gallery: Gallery): GalleryDocumentForm => ({
+    ...defaultDocumentForm,
+    ...galleryDocumentForms[gallery.id],
+    title:
+      galleryDocumentForms[gallery.id]?.title ||
+      `Photography ${galleryDocumentForms[gallery.id]?.documentType === 'contract' ? 'Contract' : 'Invoice'}`,
+  });
+
+  const updateGalleryDocumentForm = (galleryId: number, patch: Partial<GalleryDocumentForm>) => {
+    setGalleryDocumentForms((prev) => ({
+      ...prev,
+      [galleryId]: {
+        ...defaultDocumentForm,
+        ...(prev[galleryId] || {}),
+        ...patch,
+      },
+    }));
+  };
+
+  const createGalleryDocument = async (gallery: Gallery) => {
+    const form = getGalleryDocumentForm(gallery);
+    if (!form.clientEmail.trim()) return setMessage({ text: 'Add client email first', type: 'error' });
+
+    const actionId = `create-${gallery.id}`;
+    setDocumentActionIds((prev) => ({ ...prev, [actionId]: true }));
+    try {
+      const res = await fetch('/api/galleries/documents', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          galleryId: gallery.id,
+          ...form,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.document) return setMessage({ text: data.error || 'Unable to create document', type: 'error' });
+      setGalleryDocuments((prev) => ({
+        ...prev,
+        [gallery.id]: [data.document, ...(prev[gallery.id] || [])],
+      }));
+      setGalleryDocumentForms((prev) => ({ ...prev, [gallery.id]: defaultDocumentForm }));
+      setMessage({ text: `${form.documentType === 'contract' ? 'Contract' : 'Invoice'} created`, type: 'success' });
+    } finally {
+      setDocumentActionIds((prev) => {
+        const next = { ...prev };
+        delete next[actionId];
+        return next;
+      });
+    }
+  };
+
+  const generateGalleryDocumentDraft = async (gallery: Gallery) => {
+    const form = getGalleryDocumentForm(gallery);
+    const actionId = `generate-${gallery.id}`;
+    setDocumentActionIds((prev) => ({ ...prev, [actionId]: true }));
+    try {
+      const res = await fetch('/api/galleries/documents', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          action: 'generate',
+          galleryId: gallery.id,
+          ...form,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.draft) return setMessage({ text: data.error || 'Unable to draft with Gemini', type: 'error' });
+      updateGalleryDocumentForm(gallery.id, {
+        title: data.draft.title || form.title,
+        lineItems: data.draft.lineItems || form.lineItems,
+        terms: data.draft.terms || form.terms,
+      });
+      setMessage({ text: 'Gemini draft added. Review it before sending.', type: 'success' });
+    } finally {
+      setDocumentActionIds((prev) => {
+        const next = { ...prev };
+        delete next[actionId];
+        return next;
+      });
+    }
+  };
+
+  const sendGalleryDocument = async (document: GalleryDocument) => {
+    const actionId = `send-${document.id}`;
+    setDocumentActionIds((prev) => ({ ...prev, [actionId]: true }));
+    try {
+      const res = await fetch('/api/galleries/documents', {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({ id: document.id, action: 'send' }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.document) return setMessage({ text: data.error || 'Unable to send document', type: 'error' });
+      setGalleryDocuments((prev) => ({
+        ...prev,
+        [document.gallery_id]: (prev[document.gallery_id] || []).map((item) =>
+          item.id === document.id ? data.document : item
+        ),
+      }));
+      setMessage({ text: 'Document sent to client', type: 'success' });
+    } finally {
+      setDocumentActionIds((prev) => {
+        const next = { ...prev };
+        delete next[actionId];
+        return next;
+      });
+    }
+  };
+
+  const downloadGalleryDocument = async (document: GalleryDocument) => {
+    const actionId = `download-${document.id}`;
+    setDocumentActionIds((prev) => ({ ...prev, [actionId]: true }));
+    try {
+      const res = await fetch(`/api/galleries/documents?id=${document.id}&format=pdf`, { headers });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return setMessage({ text: data.error || 'Unable to download PDF', type: 'error' });
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = `${document.document_type}-${document.id}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setDocumentActionIds((prev) => {
+        const next = { ...prev };
+        delete next[actionId];
+        return next;
+      });
+    }
+  };
+
+  const deleteGalleryDocument = async (document: GalleryDocument) => {
+    const actionId = `delete-${document.id}`;
+    setDocumentActionIds((prev) => ({ ...prev, [actionId]: true }));
+    try {
+      const res = await fetch(`/api/galleries/documents?id=${document.id}`, {
+        method: 'DELETE',
+        headers,
+      });
+      const data = await res.json();
+      if (!res.ok) return setMessage({ text: data.error || 'Unable to delete document', type: 'error' });
+      setGalleryDocuments((prev) => ({
+        ...prev,
+        [document.gallery_id]: (prev[document.gallery_id] || []).filter((item) => item.id !== document.id),
+      }));
+      setMessage({ text: 'Document deleted', type: 'success' });
+    } finally {
+      setDocumentActionIds((prev) => {
+        const next = { ...prev };
+        delete next[actionId];
+        return next;
+      });
+    }
   };
 
   const createCatalogCategory = async (e: React.FormEvent) => {
@@ -2447,6 +2653,158 @@ export default function AdminPage() {
                         {gal.payment_verified ? 'Mark Unpaid' : 'Verify Payment'}
                       </button>
                     </div>
+                  </div>
+                  <div className="space-y-4 border-t border-white/5 pt-4">
+                    {(() => {
+                      const docForm = getGalleryDocumentForm(gal);
+                      const docs = galleryDocuments[gal.id] || [];
+                      return (
+                        <>
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                              <p className="text-[10px] uppercase tracking-[0.28em] text-accent">Documents</p>
+                              <p className="mt-1 text-xs text-white/40">
+                                Create first. Then use the Send Email or Download PDF buttons under saved documents.
+                              </p>
+                            </div>
+                            <span className="text-[10px] uppercase tracking-[0.2em] text-white/35">
+                              {docs.length} saved
+                            </span>
+                          </div>
+
+                          <div className="grid gap-3 border border-white/10 bg-white/[0.02] p-3">
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <select
+                                className={inputClass}
+                                value={docForm.documentType}
+                                onChange={(e) =>
+                                  updateGalleryDocumentForm(gal.id, {
+                                    documentType: e.target.value === 'contract' ? 'contract' : 'invoice',
+                                    title: e.target.value === 'contract' ? 'Photography Contract' : 'Photography Invoice',
+                                  })
+                                }
+                              >
+                                <option value="invoice">Invoice</option>
+                                <option value="contract">Contract</option>
+                              </select>
+                              <input
+                                className={inputClass}
+                                type="email"
+                                placeholder="Client email"
+                                value={docForm.clientEmail}
+                                onChange={(e) => updateGalleryDocumentForm(gal.id, { clientEmail: e.target.value })}
+                              />
+                            </div>
+                            <input
+                              className={inputClass}
+                              placeholder="Document title"
+                              value={docForm.title}
+                              onChange={(e) => updateGalleryDocumentForm(gal.id, { title: e.target.value })}
+                            />
+                            <div className="grid gap-3 sm:grid-cols-[1fr_90px_1fr]">
+                              <input
+                                className={inputClass}
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                placeholder="Amount"
+                                value={docForm.amount}
+                                onChange={(e) => updateGalleryDocumentForm(gal.id, { amount: e.target.value })}
+                              />
+                              <input
+                                className={inputClass}
+                                placeholder="NGN"
+                                value={docForm.currency}
+                                onChange={(e) => updateGalleryDocumentForm(gal.id, { currency: e.target.value.toUpperCase() })}
+                              />
+                              <input
+                                className={inputClass}
+                                type="date"
+                                value={docForm.dueDate}
+                                onChange={(e) => updateGalleryDocumentForm(gal.id, { dueDate: e.target.value })}
+                              />
+                            </div>
+                            <textarea
+                              className={`${inputClass} min-h-24 resize-y`}
+                              placeholder={docForm.documentType === 'contract' ? 'Contract terms / scope' : 'Line items / notes'}
+                              value={docForm.lineItems}
+                              onChange={(e) => updateGalleryDocumentForm(gal.id, { lineItems: e.target.value })}
+                            />
+                            <textarea
+                              className={`${inputClass} min-h-20 resize-y`}
+                              placeholder="Payment terms, usage rights, delivery notes..."
+                              value={docForm.terms}
+                              onChange={(e) => updateGalleryDocumentForm(gal.id, { terms: e.target.value })}
+                            />
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <button
+                                type="button"
+                                disabled={Boolean(documentActionIds[`generate-${gal.id}`])}
+                                onClick={() => generateGalleryDocumentDraft(gal)}
+                                className="border border-accent/55 bg-accent/10 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.2em] text-accent transition-colors hover:bg-accent hover:text-black disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                {documentActionIds[`generate-${gal.id}`] ? 'Drafting...' : 'Draft with Gemini'}
+                              </button>
+                              <button
+                                type="button"
+                                disabled={Boolean(documentActionIds[`create-${gal.id}`])}
+                                onClick={() => createGalleryDocument(gal)}
+                                className="bg-white px-4 py-3 text-[10px] font-bold uppercase tracking-[0.22em] text-black transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+                              >
+                                {documentActionIds[`create-${gal.id}`] ? 'Saving...' : 'Create Document'}
+                              </button>
+                            </div>
+                          </div>
+
+                          {docs.length > 0 && (
+                            <div className="space-y-2 border border-accent/20 bg-accent/[0.035] p-3">
+                              <p className="text-[10px] uppercase tracking-[0.28em] text-accent">Saved documents</p>
+                              {docs.map((document) => (
+                                <div key={document.id} className="border border-white/10 bg-black/20 p-3">
+                                  <div className="grid gap-3">
+                                    <div>
+                                      <p className="text-sm font-medium text-white">
+                                        {document.title}
+                                      </p>
+                                      <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-white/40">
+                                        {document.document_type} • {document.client_email}
+                                        {document.sent_at ? ` • sent ${new Date(document.sent_at).toLocaleDateString()}` : ''}
+                                      </p>
+                                    </div>
+                                    <div className="grid gap-2 sm:grid-cols-3">
+                                      <button
+                                        type="button"
+                                        disabled={Boolean(documentActionIds[`send-${document.id}`])}
+                                        onClick={() => sendGalleryDocument(document)}
+                                        className="border border-accent/50 px-3 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-accent transition-colors hover:bg-accent hover:text-black disabled:cursor-not-allowed disabled:opacity-50"
+                                      >
+                                        {documentActionIds[`send-${document.id}`] ? 'Sending...' : 'Send Email'}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        disabled={Boolean(documentActionIds[`download-${document.id}`])}
+                                        onClick={() => downloadGalleryDocument(document)}
+                                        className="border border-white/20 bg-white/5 px-3 py-3 text-[9px] font-bold uppercase tracking-[0.18em] text-white/75 transition-colors hover:border-white hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                      >
+                                        Download PDF
+                                      </button>
+                                      <button
+                                        type="button"
+                                        disabled={Boolean(documentActionIds[`delete-${document.id}`])}
+                                        onClick={() => deleteGalleryDocument(document)}
+                                        className="border border-red-500/40 px-3 py-3 text-[9px] uppercase tracking-[0.18em] text-red-300 transition-colors hover:bg-red-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                       </>
                     );

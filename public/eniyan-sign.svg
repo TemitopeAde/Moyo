@@ -1,0 +1,8 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Eniyan sign</title>
+  <desc id="desc">A circular Eniyan monogram with a central human mark.</desc>
+  <circle cx="64" cy="64" r="58" fill="#050505" stroke="#920110" stroke-width="2"/>
+  <path d="M64 28V100" stroke="#920110" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+  <circle cx="64" cy="64" r="7" fill="#920110"/>
+  <text x="64" y="77" text-anchor="middle" fill="#920110" font-family="Georgia, 'Times New Roman', serif" font-size="52" font-style="italic">E</text>
+</svg>

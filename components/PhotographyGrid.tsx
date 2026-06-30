@@ -126,8 +126,8 @@ function CategoryOverviewCard({
                             {imageCount} {translateText(imageCount === 1 ? 'image' : 'images')}
                         </p>
                     </div>
-                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-500 ease-out md:group-hover:bg-black/35 md:group-hover:opacity-100">
-                        <span className="translate-y-2 border border-white/40 bg-black/50 px-5 py-3 text-[10px] uppercase tracking-[0.3em] text-white opacity-0 transition-all duration-500 ease-out md:group-hover:translate-y-0 md:group-hover:opacity-100">
+                    <div className="catalogue-explore-overlay pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-500 ease-out md:group-hover:opacity-100">
+                        <span className="catalogue-explore-badge translate-y-2 px-5 py-3 text-[10px] uppercase tracking-[0.3em] opacity-0 transition-all duration-500 ease-out md:group-hover:translate-y-0 md:group-hover:opacity-100">
                             {translateText('Explore')}
                         </span>
                     </div>

@@ -495,6 +495,22 @@ h6 {
   mix-blend-mode: multiply !important;
 }
 
+.catalogue-explore-overlay {
+  background-color: rgba(0, 0, 0, 0);
+}
+
+@media (min-width: 768px) {
+  .group:hover .catalogue-explore-overlay {
+    background-color: rgba(0, 0, 0, 0.35);
+  }
+}
+
+.catalogue-explore-badge {
+  color: #ffffff !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+}
+
 /* Page Transitions */
 .page-transition-enter {
   opacity: 0;

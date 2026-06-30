@@ -47,6 +47,22 @@ async function ensureTables() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
+    CREATE TABLE IF NOT EXISTS gallery_documents (
+      id SERIAL PRIMARY KEY,
+      gallery_id INTEGER NOT NULL REFERENCES galleries(id) ON DELETE CASCADE,
+      document_type TEXT NOT NULL DEFAULT 'invoice',
+      title TEXT NOT NULL,
+      client_email TEXT NOT NULL,
+      amount NUMERIC DEFAULT 0,
+      currency TEXT DEFAULT 'NGN',
+      due_date TEXT DEFAULT '',
+      line_items TEXT DEFAULT '',
+      terms TEXT DEFAULT '',
+      sent_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
     CREATE TABLE IF NOT EXISTS content (
       id SERIAL PRIMARY KEY,
       homepage_hero_text TEXT DEFAULT '',
@@ -138,6 +154,24 @@ async function ensureTables() {
       ADD COLUMN IF NOT EXISTS review_text TEXT DEFAULT '',
       ADD COLUMN IF NOT EXISTS review_submitted_at TIMESTAMPTZ,
       ADD COLUMN IF NOT EXISTS review_featured BOOLEAN DEFAULT FALSE;
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS gallery_documents (
+      id SERIAL PRIMARY KEY,
+      gallery_id INTEGER NOT NULL REFERENCES galleries(id) ON DELETE CASCADE,
+      document_type TEXT NOT NULL DEFAULT 'invoice',
+      title TEXT NOT NULL,
+      client_email TEXT NOT NULL,
+      amount NUMERIC DEFAULT 0,
+      currency TEXT DEFAULT 'NGN',
+      due_date TEXT DEFAULT '',
+      line_items TEXT DEFAULT '',
+      terms TEXT DEFAULT '',
+      sent_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
   `);
 
   await pool.query(`
