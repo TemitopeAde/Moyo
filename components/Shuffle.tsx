@@ -13,6 +13,7 @@ type ShuffleProps = {
     triggerOnce?: boolean;
     triggerOnHover?: boolean;
     respectReducedMotion?: boolean;
+    wrap?: boolean;
     textAlign?: CSSProperties['textAlign'];
     onShuffleComplete?: () => void;
 };
@@ -30,6 +31,7 @@ export default function Shuffle({
     triggerOnce = true,
     triggerOnHover = true,
     respectReducedMotion = true,
+    wrap = true,
     textAlign = 'center',
     onShuffleComplete,
 }: ShuffleProps) {
@@ -128,7 +130,7 @@ export default function Shuffle({
     };
 
     const content = (
-        <span aria-hidden="true" className="inline-flex max-w-full flex-wrap justify-center">
+        <span aria-hidden="true" className={`inline-flex max-w-full ${wrap ? 'flex-wrap justify-center' : 'flex-nowrap justify-start'}`}>
             {characters.map((character, index) => (
                 <span
                     key={`${character}-${index}`}

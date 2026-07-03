@@ -27,9 +27,7 @@ type ChatMessage = {
   content: string;
 };
 
-const STORAGE_KEY = 'eniyan-chat-last-pop';
 const DISMISS_KEY = 'eniyan-chat-dismissed-at';
-const POP_INTERVAL = 1000 * 60 * 8;
 
 const FEATURE_CARDS = [
   {
@@ -306,7 +304,6 @@ export default function EniyanChat() {
   const copy = ENIYAN_COPY[language] || ENIYAN_COPY.EN;
   const isLight = (resolvedTheme || theme) === 'light';
   const [isOpen, setIsOpen] = useState(false);
-  const [isPulsing, setIsPulsing] = useState(false);
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState('');
@@ -331,33 +328,6 @@ export default function EniyanChat() {
       return [{ ...current[0], content: copy.greeting }];
     });
   }, [copy.greeting]);
-
-  useEffect(() => {
-    const maybeOpen = () => {
-      const now = Date.now();
-      const lastPop = Number(window.localStorage.getItem(STORAGE_KEY) || 0);
-      const lastDismissed = Number(window.localStorage.getItem(DISMISS_KEY) || 0);
-
-      if (now - lastPop < POP_INTERVAL || now - lastDismissed < POP_INTERVAL) {
-        setIsPulsing(true);
-        window.setTimeout(() => setIsPulsing(false), 2400);
-        return;
-      }
-
-      window.localStorage.setItem(STORAGE_KEY, String(now));
-      setIsOpen(true);
-    };
-
-    const initialTimer = window.setTimeout(maybeOpen, 9000);
-    const interval = window.setInterval(() => {
-      if (!isOpen) maybeOpen();
-    }, POP_INTERVAL);
-
-    return () => {
-      window.clearTimeout(initialTimer);
-      window.clearInterval(interval);
-    };
-  }, [isOpen]);
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
@@ -655,8 +625,6 @@ export default function EniyanChat() {
           isLight
             ? 'border-black/10 bg-white/80 text-black/70 hover:border-black/18 hover:bg-white hover:text-black'
             : 'border-white/10 bg-[#171717]/86 text-white/68 hover:border-white/18 hover:bg-[#1f1f1f]/90 hover:text-white/86'
-        } ${
-          isPulsing ? 'animate-pulse' : ''
         }`}
         aria-label={isOpen ? 'Hide Eniyan chat' : 'Open Eniyan chat'}
       >
