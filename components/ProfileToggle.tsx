@@ -24,7 +24,45 @@ export default function ProfileToggle() {
 
     return (
         <div className="flex w-full flex-col items-stretch gap-5 animate-fade-in sm:gap-6" style={{ animationDelay: '1s' }}>
-            <div className="entry-selector-frost relative isolate grid w-full grid-cols-1 gap-2 rounded-[8px] p-2 group md:grid-cols-2">
+            <div className="entry-selector-frost relative isolate grid w-full grid-cols-2 gap-1 rounded-full p-1.5 group md:hidden">
+                <button
+                    onClick={() => handleSelect('photography')}
+                    aria-pressed={profile === 'photography'}
+                    className={`relative z-10 flex min-h-12 items-center justify-center rounded-full px-3 text-center text-[10px] font-medium uppercase tracking-[0.14em] transition-colors duration-500 sm:min-h-14 sm:px-6 sm:text-xs sm:tracking-[0.22em] ${profile === 'photography'
+                            ? 'text-background'
+                            : 'text-foreground/65 hover:text-foreground'
+                        }`}
+                >
+                    {t('common.photography')}
+                    {profile === 'photography' && (
+                        <motion.div
+                            layoutId="mobileToggleKnob"
+                            className="absolute inset-0 bg-foreground rounded-full -z-10 shadow-lg"
+                            transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                        />
+                    )}
+                </button>
+
+                <button
+                    onClick={() => handleSelect('art')}
+                    aria-pressed={profile === 'art'}
+                    className={`relative z-10 flex min-h-12 items-center justify-center rounded-full px-3 text-center text-[10px] font-medium uppercase tracking-[0.14em] transition-colors duration-500 sm:min-h-14 sm:px-6 sm:text-xs sm:tracking-[0.22em] ${profile === 'art'
+                            ? 'text-background'
+                            : 'text-foreground/65 hover:text-foreground'
+                        }`}
+                >
+                    {t('common.fineArt')}
+                    {profile === 'art' && (
+                        <motion.div
+                            layoutId="mobileToggleKnob"
+                            className="absolute inset-0 bg-foreground rounded-full -z-10 shadow-lg"
+                            transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                        />
+                    )}
+                </button>
+            </div>
+
+            <div className="entry-selector-frost relative isolate hidden w-full grid-cols-2 gap-2 rounded-[8px] p-2 group md:grid">
 
                 <button
                     onClick={() => handleSelect('photography')}
