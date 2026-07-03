@@ -107,19 +107,37 @@ function buildFallbackReply(messages: unknown) {
   const normalized = normalizeMessages(messages);
   const latest = normalized.at(-1)?.parts?.[0]?.text?.toLowerCase() || '';
 
-  if (latest.includes('book') || latest.includes('shoot') || latest.includes('session') || latest.includes('photo')) {
-    return `I can help with that. For photography bookings, go to ${ENIYAN_GUIDED_LINKS.bookings}. You can choose the kind of session and send an inquiry from there.`;
+  if (
+    latest.includes('book') ||
+    latest.includes('shoot') ||
+    latest.includes('session') ||
+    latest.includes('portrait') ||
+    latest.includes('editorial') ||
+    latest.includes('commercial')
+  ) {
+    return `Go to ${ENIYAN_GUIDED_LINKS.bookings} to start a photography inquiry. Include the session type, preferred date, location, usage, and any references so the studio can respond clearly.`;
   }
 
-  if (latest.includes('portfolio') || latest.includes('work') || latest.includes('recent')) {
+  if (latest.includes('portfolio') || latest.includes('work') || latest.includes('recent') || latest.includes('examples')) {
     return `To browse photography work, visit ${ENIYAN_GUIDED_LINKS.photographyPortfolio}. For fine art pieces, visit ${ENIYAN_GUIDED_LINKS.artWorks}. I can also point you to commissions at ${ENIYAN_GUIDED_LINKS.artCommissions}.`;
   }
 
-  if (latest.includes('shop') || latest.includes('buy') || latest.includes('print') || latest.includes('art')) {
+  if (
+    latest.includes('shop') ||
+    latest.includes('buy') ||
+    latest.includes('collect') ||
+    latest.includes('available') ||
+    latest.includes('print') ||
+    latest.includes('original')
+  ) {
     return `For available artwork and products, start at ${ENIYAN_GUIDED_LINKS.artShop}. If you want something custom, ${ENIYAN_GUIDED_LINKS.artCommissions} is the better next step.`;
   }
 
-  if (latest.includes('gallery') || latest.includes('client')) {
+  if (latest.includes('commission') || latest.includes('custom') || latest.includes('gift')) {
+    return `For a custom artwork, go to ${ENIYAN_GUIDED_LINKS.artCommissions}. Share the size, mood, timeline, budget range, and any references you have.`;
+  }
+
+  if (latest.includes('gallery') || latest.includes('client') || latest.includes('download') || latest.includes('selection')) {
     return `Client galleries live at ${ENIYAN_GUIDED_LINKS.clientGallery}. You will need the access details connected to your gallery.`;
   }
 
@@ -127,7 +145,15 @@ function buildFallbackReply(messages: unknown) {
     return `For updates, join the photography newsletter at ${ENIYAN_GUIDED_LINKS.photographyNewsletter} or the art newsletter at ${ENIYAN_GUIDED_LINKS.artNewsletter}.`;
   }
 
-  return `I can help you move around the site. Try ${ENIYAN_GUIDED_LINKS.photographyPortfolio} for image work, ${ENIYAN_GUIDED_LINKS.bookings} to book a shoot, ${ENIYAN_GUIDED_LINKS.artShop} to buy art, or ${ENIYAN_GUIDED_LINKS.artCommissions} for custom work.`;
+  if (latest.includes('exhibition') || latest.includes('show') || latest.includes('shows')) {
+    return `For exhibition history and public-facing art updates, visit ${ENIYAN_GUIDED_LINKS.artExhibitions}. For new updates by email, use ${ENIYAN_GUIDED_LINKS.artNewsletter}.`;
+  }
+
+  if (latest.includes('contact') || latest.includes('email') || latest.includes('phone') || latest.includes('call')) {
+    return `For project inquiries, the best next step is the matching form: ${ENIYAN_GUIDED_LINKS.bookings} for photography or ${ENIYAN_GUIDED_LINKS.artCommissions} for custom art. Email is ijabikenm@gmail.com and phone is +2348148192201.`;
+  }
+
+  return `I can help you choose a path. Try ${ENIYAN_GUIDED_LINKS.photographyPortfolio} to see photography, ${ENIYAN_GUIDED_LINKS.bookings} to book a shoot, ${ENIYAN_GUIDED_LINKS.artShop} to collect available art, or ${ENIYAN_GUIDED_LINKS.artCommissions} for custom work.`;
 }
 
 export async function POST(req: Request) {
@@ -150,6 +176,7 @@ export async function POST(req: Request) {
       'Help visitors navigate the site, choose services, book photography sessions, find portfolios, shop art, commission artwork, join newsletters, and understand next steps.',
       'When useful, mention exact internal paths from the site map. Do not invent pages.',
       'You cannot complete payments or access private galleries for the user, but you can guide them to the right page.',
+      'You can help visitors compare options, prepare booking or commission inquiries, summarize what page they are on, and choose the right next step.',
       'Language rule: reply in the same language the visitor uses in their latest message. If the latest message is too short or unclear, reply in the selected site language from the visitor context.',
       'If the visitor switches language mid-chat, switch with them.',
       'Keep replies under 90 words unless the visitor asks for detail.',

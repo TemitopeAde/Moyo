@@ -33,6 +33,26 @@ type GeminiResponse = {
   }>;
 };
 
+type CalculatedInvoiceItem = {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+};
+
+type CalculatedInvoice = {
+  structured: boolean;
+  items: CalculatedInvoiceItem[];
+  subtotal: number;
+  discountType: 'fixed' | 'percent';
+  discountValue: number;
+  discount: number;
+  taxableSubtotal: number;
+  taxRate: number;
+  tax: number;
+  total: number;
+};
+
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 const BRAND_RED_RGB = '0.572 0.004 0.063';
@@ -44,6 +64,10 @@ function normalize(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function truncate(value: string, maxLength: number) {
+  return value.length > maxLength ? value.slice(0, maxLength) : value;
+}
+
 function normalizeId(value: unknown) {
   if (typeof value === 'number' && Number.isFinite(value)) return String(value);
   return normalize(value);
@@ -51,6 +75,23 @@ function normalizeId(value: unknown) {
 
 function normalizeType(value: unknown) {
   return normalize(value).toLowerCase() === 'contract' ? 'contract' : 'invoice';
+}
+
+function normalizeCurrency(value: unknown) {
+  const currency = normalize(value).toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5);
+  return currency || 'NGN';
+}
+
+function parseAmount(value: unknown) {
+  if (value === '' || value === null || value === undefined) return 0;
+  const amount = Number(value);
+  return Number.isFinite(amount) ? amount : NaN;
+}
+
+function isValidDateInput(value: string) {
+  if (!value) return true;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  return !Number.isNaN(new Date(`${value}T00:00:00.000Z`).getTime());
 }
 
 function escapeHtml(value: string) {
@@ -68,9 +109,114 @@ function formatMoney(amount: string | number, currency: string) {
   return `${currency || 'NGN'} ${numeric.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 
+function formatMoneyWithZero(amount: string | number, currency: string) {
+  const numeric = Number(amount || 0);
+  if (!Number.isFinite(numeric)) return `${currency || 'NGN'} 0`;
+  return `${currency || 'NGN'} ${numeric.toLocaleString(undefined, {
+    minimumFractionDigits: Number.isInteger(numeric) ? 0 : 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+function normalizeInvoiceItems(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const record = item as Record<string, unknown>;
+      const description = truncate(normalize(record.description), 220);
+      const parsedQuantity = parseAmount(record.quantity);
+      const parsedUnitPrice = parseAmount(record.unitPrice);
+      const quantity = Number.isFinite(parsedQuantity) ? Math.max(0, parsedQuantity) : 0;
+      const unitPrice = Number.isFinite(parsedUnitPrice) ? Math.max(0, parsedUnitPrice) : 0;
+      if (!description && quantity <= 0 && unitPrice <= 0) return null;
+      return { description, quantity, unitPrice };
+    })
+    .filter(Boolean)
+    .slice(0, 20) as Array<{ description: string; quantity: number; unitPrice: number }>;
+}
+
+function calculateInvoiceDetails(options: {
+  items: Array<{ description: string; quantity: number; unitPrice: number }>;
+  discountType?: unknown;
+  discountValue?: unknown;
+  taxRate?: unknown;
+}) {
+  const items = options.items.map((item) => ({
+    ...item,
+    total: item.quantity * item.unitPrice,
+  }));
+  const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+  const discountType: 'fixed' | 'percent' = normalize(options.discountType) === 'percent' ? 'percent' : 'fixed';
+  const parsedDiscount = parseAmount(options.discountValue);
+  const rawDiscount = Number.isFinite(parsedDiscount) ? Math.max(0, parsedDiscount) : 0;
+  const discount =
+    discountType === 'percent'
+      ? Math.min(subtotal, subtotal * Math.min(rawDiscount, 100) / 100)
+      : Math.min(subtotal, rawDiscount);
+  const taxableSubtotal = Math.max(0, subtotal - discount);
+  const parsedTaxRate = parseAmount(options.taxRate);
+  const taxRate = Number.isFinite(parsedTaxRate) ? Math.max(0, parsedTaxRate) : 0;
+  const tax = taxableSubtotal * taxRate / 100;
+  const total = taxableSubtotal + tax;
+
+  return {
+    structured: true,
+    items,
+    subtotal,
+    discountType,
+    discountValue: rawDiscount,
+    discount,
+    taxableSubtotal,
+    taxRate,
+    tax,
+    total,
+  };
+}
+
+function encodeInvoiceDetails(details: CalculatedInvoice) {
+  return JSON.stringify({
+    version: 1,
+    kind: 'calculated-invoice',
+    items: details.items.map(({ description, quantity, unitPrice }) => ({ description, quantity, unitPrice })),
+    discountType: details.discountType,
+    discountValue: details.discountValue,
+    taxRate: details.taxRate,
+  });
+}
+
+function getCalculatedInvoice(doc: GalleryDocument): CalculatedInvoice | null {
+  try {
+    const parsed = JSON.parse(doc.line_items || '');
+    if (!parsed || parsed.kind !== 'calculated-invoice') return null;
+    const items = normalizeInvoiceItems(parsed.items);
+    if (!items.length) return null;
+    return calculateInvoiceDetails({
+      items,
+      discountType: parsed.discountType,
+      discountValue: parsed.discountValue,
+      taxRate: parsed.taxRate,
+    });
+  } catch {
+    return null;
+  }
+}
+
 function documentText(doc: GalleryDocument) {
   const label = doc.document_type === 'contract' ? 'Contract' : 'Invoice';
-  const amount = formatMoney(doc.amount, doc.currency);
+  const calculation = getCalculatedInvoice(doc);
+  const amount = formatMoney(calculation?.total ?? doc.amount, doc.currency);
+  const itemText = calculation
+    ? [
+        ...calculation.items.map((item) =>
+          `${item.description} | Qty ${item.quantity} | Unit ${formatMoneyWithZero(item.unitPrice, doc.currency)} | Total ${formatMoneyWithZero(item.total, doc.currency)}`
+        ),
+        `Subtotal: ${formatMoneyWithZero(calculation.subtotal, doc.currency)}`,
+        `Discount: -${formatMoneyWithZero(calculation.discount, doc.currency)}`,
+        `Tax${calculation.taxRate ? ` (${calculation.taxRate}%)` : ''}: ${formatMoneyWithZero(calculation.tax, doc.currency)}`,
+        `Total: ${formatMoneyWithZero(calculation.total, doc.currency)}`,
+      ].join('\n')
+    : doc.line_items || (doc.document_type === 'contract' ? 'Agreement details to be confirmed by both parties.' : 'Photography services.');
   return [
     'Ijabiken Moyo',
     label,
@@ -81,7 +227,7 @@ function documentText(doc: GalleryDocument) {
     amount ? `Amount: ${amount}` : '',
     doc.due_date ? `Due date: ${doc.due_date}` : '',
     '',
-    doc.line_items || (doc.document_type === 'contract' ? 'Agreement details to be confirmed by both parties.' : 'Photography services.'),
+    itemText,
     '',
     doc.terms || 'Thank you.',
   ]
@@ -96,8 +242,18 @@ function wrapText(text: string, max = 82) {
     const lines: string[] = [];
     let current = '';
     for (const word of words) {
+      if (word.length > max) {
+        if (current) {
+          lines.push(current);
+          current = '';
+        }
+        for (let index = 0; index < word.length; index += max) {
+          lines.push(word.slice(index, index + max));
+        }
+        continue;
+      }
       if (`${current} ${word}`.trim().length > max) {
-        lines.push(current);
+        if (current) lines.push(current);
         current = word;
       } else {
         current = `${current} ${word}`.trim();
@@ -117,6 +273,9 @@ function pdfSafe(value: string) {
 }
 
 function getDocumentLines(doc: GalleryDocument) {
+  const calculation = getCalculatedInvoice(doc);
+  if (calculation) return calculation.items.map((item) => item.description).filter(Boolean).slice(0, 6);
+
   const fallback =
     doc.document_type === 'contract'
       ? 'Photography service agreement and creative usage terms.'
@@ -225,7 +384,8 @@ function getPdfLogo() {
 
 function buildPdf(doc: GalleryDocument) {
   const label = doc.document_type === 'contract' ? 'CONTRACT' : 'INVOICE';
-  const amount = formatMoney(doc.amount, doc.currency);
+  const calculation = getCalculatedInvoice(doc);
+  const amount = formatMoney(calculation?.total ?? doc.amount, doc.currency);
   const createdAt = doc.created_at ? new Date(doc.created_at) : new Date();
   const createdDate = createdAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   const lines = getDocumentLines(doc);
@@ -281,14 +441,36 @@ function buildPdf(doc: GalleryDocument) {
   text('SUBTOTAL', 462, 568, 7, 'F2', '0.35 0.35 0.35');
 
   let y = 532;
-  lines.forEach((item, index) => {
-    const itemLines = wrapText(item, 36).slice(0, 2);
-    text(itemLines[0] || item, 86, y, 9, index === 0 ? 'F2' : 'F1');
+  const pdfItems = calculation
+    ? calculation.items.slice(0, 6)
+    : lines.map((item, index) => ({
+        description: item,
+        quantity: index === 0 ? 1 : 0,
+        unitPrice: index === 0 ? Number(doc.amount || 0) : 0,
+        total: index === 0 ? Number(doc.amount || 0) : 0,
+      }));
+
+  pdfItems.forEach((item, index) => {
+    const itemLines = wrapText(item.description, 36).slice(0, 2);
+    text(itemLines[0] || item.description, 86, y, 9, index === 0 ? 'F2' : 'F1');
     if (itemLines[1]) text(itemLines[1], 86, y - 13, 8, 'F1', '0.35 0.35 0.35');
-    text(index === 0 ? (label === 'INVOICE' ? 'Service' : 'Agreement') : 'Item', 338, y, 8, 'F1', '0.35 0.35 0.35');
-    text(index === 0 && amount ? amount : '-', 462, y, 9, index === 0 ? 'F2' : 'F1', index === 0 && amount ? BRAND_RED_RGB : '0.35 0.35 0.35');
+    text(calculation ? `Qty ${item.quantity}` : index === 0 ? (label === 'INVOICE' ? 'Service' : 'Agreement') : 'Item', 338, y, 8, 'F1', '0.35 0.35 0.35');
+    text(item.total > 0 ? formatMoneyWithZero(item.total, doc.currency) : '-', 462, y, 9, index === 0 ? 'F2' : 'F1', item.total > 0 ? BRAND_RED_RGB : '0.35 0.35 0.35');
     y -= itemLines[1] ? 34 : 26;
   });
+
+  if (calculation) {
+    y -= 4;
+    line(338, y + 12, 526, y + 12, '0.86 0.86 0.84', 0.6);
+    text('Subtotal', 338, y, 8, 'F1', '0.35 0.35 0.35');
+    text(formatMoneyWithZero(calculation.subtotal, doc.currency), 462, y, 8, 'F1', '0.20 0.20 0.20');
+    y -= 16;
+    text('Discount', 338, y, 8, 'F1', '0.35 0.35 0.35');
+    text(`-${formatMoneyWithZero(calculation.discount, doc.currency)}`, 462, y, 8, 'F1', '0.20 0.20 0.20');
+    y -= 16;
+    text(`Tax${calculation.taxRate ? ` (${calculation.taxRate}%)` : ''}`, 338, y, 8, 'F1', '0.35 0.35 0.35');
+    text(formatMoneyWithZero(calculation.tax, doc.currency), 462, y, 8, 'F1', '0.20 0.20 0.20');
+  }
 
   rect(54, 64, 504, 185, '0.925 0.922 0.88');
   rect(54, 64, 4, 185, BRAND_RED_RGB);
@@ -350,20 +532,44 @@ function buildPdf(doc: GalleryDocument) {
 }
 
 function emailHtml(doc: GalleryDocument) {
-  const amount = formatMoney(doc.amount, doc.currency);
+  const calculation = getCalculatedInvoice(doc);
+  const amount = formatMoney(calculation?.total ?? doc.amount, doc.currency);
   const label = doc.document_type === 'contract' ? 'Contract' : 'Invoice';
   const detailLabel = doc.document_type === 'contract' ? 'Agreement' : 'Service';
-  const itemRows = getDocumentLines(doc)
+  const emailItems = calculation
+    ? calculation.items
+    : getDocumentLines(doc).map((item, index) => ({
+        description: item,
+        quantity: index === 0 ? 1 : 0,
+        total: index === 0 ? Number(doc.amount || 0) : 0,
+      }));
+  const itemRows = emailItems
     .map(
       (item, index) => `
         <tr>
-          <td width="55%" style="padding:14px 12px 14px 0;border-top:1px solid #dedbd3;color:#151515;font-size:13px;line-height:1.45;font-weight:${index === 0 ? '700' : '400'};word-break:break-word;">${escapeHtml(item)}</td>
-          <td width="20%" style="padding:14px 8px;border-top:1px solid #dedbd3;color:#6f6f6f;font-size:12px;line-height:1.45;text-align:center;">${index === 0 ? detailLabel : 'Item'}</td>
-          <td width="25%" style="padding:14px 0 14px 12px;border-top:1px solid #dedbd3;color:${index === 0 && amount ? '#920110' : '#6f6f6f'};font-size:13px;line-height:1.45;font-weight:${index === 0 ? '700' : '400'};text-align:right;white-space:nowrap;">${index === 0 && amount ? escapeHtml(amount) : '-'}</td>
+          <td width="55%" style="padding:14px 12px 14px 0;border-top:1px solid #dedbd3;color:#151515;font-size:13px;line-height:1.45;font-weight:${index === 0 ? '700' : '400'};word-break:break-word;">${escapeHtml(item.description)}</td>
+          <td width="20%" style="padding:14px 8px;border-top:1px solid #dedbd3;color:#6f6f6f;font-size:12px;line-height:1.45;text-align:center;">${calculation ? `Qty ${item.quantity}` : index === 0 ? detailLabel : 'Item'}</td>
+          <td width="25%" style="padding:14px 0 14px 12px;border-top:1px solid #dedbd3;color:${item.total > 0 ? '#920110' : '#6f6f6f'};font-size:13px;line-height:1.45;font-weight:${item.total > 0 ? '700' : '400'};text-align:right;white-space:nowrap;">${item.total > 0 ? escapeHtml(formatMoneyWithZero(item.total, doc.currency)) : '-'}</td>
         </tr>
       `
     )
     .join('');
+  const summaryRows = calculation
+    ? `
+      <tr>
+        <td colspan="2" align="right" style="padding:14px 12px 0 0;color:#555555;font-size:12px;line-height:1.5;">Subtotal</td>
+        <td align="right" style="padding:14px 0 0 12px;color:#222222;font-size:12px;line-height:1.5;white-space:nowrap;">${escapeHtml(formatMoneyWithZero(calculation.subtotal, doc.currency))}</td>
+      </tr>
+      <tr>
+        <td colspan="2" align="right" style="padding:8px 12px 0 0;color:#555555;font-size:12px;line-height:1.5;">Discount</td>
+        <td align="right" style="padding:8px 0 0 12px;color:#222222;font-size:12px;line-height:1.5;white-space:nowrap;">-${escapeHtml(formatMoneyWithZero(calculation.discount, doc.currency))}</td>
+      </tr>
+      <tr>
+        <td colspan="2" align="right" style="padding:8px 12px 0 0;color:#555555;font-size:12px;line-height:1.5;">Tax${calculation.taxRate ? ` (${calculation.taxRate}%)` : ''}</td>
+        <td align="right" style="padding:8px 0 0 12px;color:#222222;font-size:12px;line-height:1.5;white-space:nowrap;">${escapeHtml(formatMoneyWithZero(calculation.tax, doc.currency))}</td>
+      </tr>
+    `
+    : '';
   return `
     <body style="margin:0;padding:0;background:#f5f3ee;color:#151515;font-family:Arial,Helvetica,sans-serif;">
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;background:#f5f3ee;">
@@ -406,7 +612,7 @@ function emailHtml(doc: GalleryDocument) {
                         <th width="25%" align="right" style="padding:0 0 12px 12px;color:#777777;font-size:10px;line-height:1.3;letter-spacing:2px;text-transform:uppercase;">Subtotal</th>
                       </tr>
                     </thead>
-                    <tbody>${itemRows}</tbody>
+                    <tbody>${itemRows}${summaryRows}</tbody>
                   </table>
                 </td>
               </tr>
@@ -534,156 +740,200 @@ export async function POST(req: NextRequest) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
 
-  const body = await req.json();
-  const action = normalize(body.action);
-  const galleryId = Number(body.galleryId);
-  const documentType = normalizeType(body.documentType);
-  const title = normalize(body.title) || (documentType === 'contract' ? 'Photography Contract' : 'Photography Invoice');
-  const clientEmail = normalize(body.clientEmail).toLowerCase();
-  const amount = Number(body.amount || 0);
-  const currency = normalize(body.currency) || 'NGN';
-  const dueDate = normalize(body.dueDate);
-  const lineItems = normalize(body.lineItems);
-  const terms = normalize(body.terms);
+  try {
+    const body = await req.json();
+    const action = normalize(body.action);
+    const galleryId = Number(body.galleryId);
+    const documentType = normalizeType(body.documentType);
+    const title =
+      truncate(normalize(body.title), 140) ||
+      (documentType === 'contract' ? 'Photography Contract' : 'Photography Invoice');
+    const clientEmail = normalize(body.clientEmail).toLowerCase();
+    const amount = parseAmount(body.amount);
+    const currency = normalizeCurrency(body.currency);
+    const dueDate = normalize(body.dueDate);
+    const lineItems = truncate(normalize(body.lineItems), 3000);
+    const terms = truncate(normalize(body.terms), 3000);
+    const invoiceItems = normalizeInvoiceItems(body.items || body.invoiceItems);
+    const invoiceDetails = documentType === 'invoice'
+      ? calculateInvoiceDetails({
+          items: invoiceItems,
+          discountType: body.discountType,
+          discountValue: body.discountValue,
+          taxRate: body.taxRate,
+        })
+      : null;
+    const storedAmount = invoiceDetails ? invoiceDetails.total : amount;
+    const storedLineItems = invoiceDetails ? encodeInvoiceDetails(invoiceDetails) : lineItems;
 
-  if (!galleryId) return NextResponse.json({ error: 'Choose a gallery.' }, { status: 400 });
+    if (!Number.isInteger(galleryId) || galleryId <= 0) {
+      return NextResponse.json({ error: 'Choose a gallery.' }, { status: 400 });
+    }
+    if (!Number.isFinite(storedAmount) || storedAmount < 0) {
+      return NextResponse.json({ error: 'Enter a valid amount.' }, { status: 400 });
+    }
+    if (documentType === 'invoice' && action !== 'generate') {
+      if (!invoiceItems.some((item) => item.description && item.quantity > 0 && item.unitPrice >= 0)) {
+        return NextResponse.json({ error: 'Add at least one invoice item.' }, { status: 400 });
+      }
+    }
+    if (!/^[A-Z]{3,5}$/.test(currency)) {
+      return NextResponse.json({ error: 'Enter a valid currency code.' }, { status: 400 });
+    }
+    if (!isValidDateInput(dueDate)) {
+      return NextResponse.json({ error: 'Enter a valid due date.' }, { status: 400 });
+    }
 
-  if (action === 'generate') {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return NextResponse.json({ error: 'GEMINI_API_KEY is not configured.' }, { status: 500 });
-
-    const { rows } = await query('SELECT client_name FROM galleries WHERE id = $1', [galleryId]);
-    const gallery = rows[0];
+    const { rows: galleryRows } = await query('SELECT client_name FROM galleries WHERE id = $1', [galleryId]);
+    const gallery = galleryRows[0];
     if (!gallery) return NextResponse.json({ error: 'Gallery not found.' }, { status: 404 });
 
-    const brief = [lineItems, terms].filter(Boolean).join('\n\n') || 'A clean photography service document.';
-    const prompt = [
-      `Create a concise ${documentType} draft for Ijabiken Moyo.`,
-      `Client name: ${gallery.client_name}`,
-      amount > 0 ? `Amount: ${currency} ${amount}` : '',
-      dueDate ? `Due date: ${dueDate}` : '',
-      'Use a professional, simple photography-studio tone.',
-      'Return only valid JSON with keys: title, lineItems, terms.',
-      'lineItems must not be empty. Write 2 to 4 short plain-text service lines based on the brief.',
-      'terms must not be empty. Write concise payment, delivery, and usage terms in plain text.',
-      '',
-      'Brief:',
-      brief,
-    ]
-      .filter(Boolean)
-      .join('\n');
+    if (action === 'generate') {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) return NextResponse.json({ error: 'GEMINI_API_KEY is not configured.' }, { status: 500 });
 
-    const response = await fetch(`${GEMINI_ENDPOINT}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.35,
-          maxOutputTokens: 520,
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: 'OBJECT',
-            properties: {
-              title: { type: 'STRING' },
-              lineItems: { type: 'STRING' },
-              terms: { type: 'STRING' },
+      const brief = [lineItems, terms].filter(Boolean).join('\n\n') || 'A clean photography service document.';
+      const prompt = [
+        `Create a concise ${documentType} draft for Ijabiken Moyo.`,
+        `Client name: ${gallery.client_name}`,
+        storedAmount > 0 ? `Amount: ${currency} ${storedAmount}` : '',
+        dueDate ? `Due date: ${dueDate}` : '',
+        'Use a professional, simple photography-studio tone.',
+        'Return only valid JSON with keys: title, lineItems, terms.',
+        'lineItems must not be empty. Write 2 to 4 short plain-text service lines based on the brief.',
+        'terms must not be empty. Write concise payment, delivery, and usage terms in plain text.',
+        '',
+        'Brief:',
+        brief,
+      ]
+        .filter(Boolean)
+        .join('\n');
+
+      const response = await fetch(`${GEMINI_ENDPOINT}?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.35,
+            maxOutputTokens: 520,
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: 'OBJECT',
+              properties: {
+                title: { type: 'STRING' },
+                lineItems: { type: 'STRING' },
+                terms: { type: 'STRING' },
+              },
+              required: ['title', 'lineItems', 'terms'],
             },
-            required: ['title', 'lineItems', 'terms'],
           },
+        }),
+      });
+      const data = (await response.json()) as GeminiResponse;
+      if (!response.ok) return NextResponse.json({ error: 'Gemini could not generate this document.' }, { status: 502 });
+
+      const text = data.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim() || '';
+      const draft = parseGeminiDraft(text);
+      if (!draft) return NextResponse.json({ error: 'Gemini returned an unusable draft.' }, { status: 502 });
+      return NextResponse.json({
+        draft: {
+          title: truncate(draft.title || title, 140),
+          lineItems: truncate(draft.lineItems || lineItems || 'Photography services.', 3000),
+          terms: truncate(draft.terms || terms || 'Payment is due according to the agreed schedule.', 3000),
         },
-      }),
-    });
-    const data = (await response.json()) as GeminiResponse;
-    if (!response.ok) return NextResponse.json({ error: 'Gemini could not generate this document.' }, { status: 502 });
+      });
+    }
 
-    const text = data.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim() || '';
-    const draft = parseGeminiDraft(text);
-    if (!draft) return NextResponse.json({ error: 'Gemini returned an unusable draft.' }, { status: 502 });
-    return NextResponse.json({
-      draft: {
-        title: draft.title || title,
-        lineItems: draft.lineItems || lineItems || 'Photography services.',
-        terms: draft.terms || terms || 'Payment is due according to the agreed schedule.',
-      },
-    });
+    if (!clientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)) {
+      return NextResponse.json({ error: 'Enter a valid client email.' }, { status: 400 });
+    }
+
+    const { rows } = await query(
+      `INSERT INTO gallery_documents (
+        gallery_id, document_type, title, client_email, amount, currency, due_date, line_items, terms
+      )
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       RETURNING *`,
+      [galleryId, documentType, title, clientEmail, storedAmount, currency, dueDate, storedLineItems, terms]
+    );
+
+    return NextResponse.json({ document: rows[0] });
+  } catch (error) {
+    console.error('[gallery documents] POST error', error);
+    return NextResponse.json({ error: 'Unable to save this document.' }, { status: 500 });
   }
-
-  if (!clientEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)) {
-    return NextResponse.json({ error: 'Enter a valid client email.' }, { status: 400 });
-  }
-
-  const { rows } = await query(
-    `INSERT INTO gallery_documents (
-      gallery_id, document_type, title, client_email, amount, currency, due_date, line_items, terms
-    )
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-     RETURNING *`,
-    [galleryId, documentType, title, clientEmail, Number.isFinite(amount) ? amount : 0, currency, dueDate, lineItems, terms]
-  );
-
-  return NextResponse.json({ document: rows[0] });
 }
 
 export async function PUT(req: NextRequest) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
 
-  const body = await req.json();
-  const id = normalizeId(body.id);
-  const action = normalize(body.action);
-  if (!id) return NextResponse.json({ error: 'Missing document id.' }, { status: 400 });
+  try {
+    const body = await req.json();
+    const id = normalizeId(body.id);
+    const action = normalize(body.action);
+    if (!id) return NextResponse.json({ error: 'Missing document id.' }, { status: 400 });
 
-  if (action === 'send') {
-    const doc = await getDocument(id);
-    if (!doc) return NextResponse.json({ error: 'Document not found.' }, { status: 404 });
+    if (action === 'send') {
+      const doc = await getDocument(id);
+      if (!doc) return NextResponse.json({ error: 'Document not found.' }, { status: 404 });
 
-    const config = getTransportConfig();
-    if (!config) return NextResponse.json({ error: 'Email is not configured.' }, { status: 500 });
+      const config = getTransportConfig();
+      if (!config) return NextResponse.json({ error: 'Email is not configured.' }, { status: 500 });
 
-    const transporter = nodemailer.createTransport(
-      config.host
-        ? { host: config.host, port: config.port, secure: config.secure, auth: { user: config.user, pass: config.pass } }
-        : { service: 'gmail', auth: { user: config.user, pass: config.pass } }
-    );
+      const transporter = nodemailer.createTransport(
+        config.host
+          ? { host: config.host, port: config.port, secure: config.secure, auth: { user: config.user, pass: config.pass } }
+          : { service: 'gmail', auth: { user: config.user, pass: config.pass } }
+      );
 
-    const label = doc.document_type === 'contract' ? 'Contract' : 'Invoice';
-    const logoAttachment = getLogoAttachment();
-    await transporter.sendMail({
-      from: config.from,
-      to: doc.client_email,
-      subject: `${label}: ${doc.title}`,
-      text: documentText(doc),
-      html: emailHtml(doc),
-      attachments: [
-        ...(logoAttachment ? [logoAttachment] : []),
-        {
-          filename: `${doc.document_type}-${doc.id}.pdf`,
-          content: buildPdf(doc),
-          contentType: 'application/pdf',
-        },
-      ],
-    });
+      const label = doc.document_type === 'contract' ? 'Contract' : 'Invoice';
+      const logoAttachment = getLogoAttachment();
+      await transporter.sendMail({
+        from: config.from,
+        to: doc.client_email,
+        subject: `${label}: ${doc.title}`,
+        text: documentText(doc),
+        html: emailHtml(doc),
+        attachments: [
+          ...(logoAttachment ? [logoAttachment] : []),
+          {
+            filename: `${doc.document_type}-${doc.id}.pdf`,
+            content: buildPdf(doc),
+            contentType: 'application/pdf',
+          },
+        ],
+      });
 
-    const { rows } = await query(
-      `UPDATE gallery_documents
-       SET sent_at = NOW(), updated_at = NOW()
-       WHERE id = $1
-       RETURNING *`,
-      [id]
-    );
-    return NextResponse.json({ document: rows[0], message: 'Document sent.' });
+      const { rows } = await query(
+        `UPDATE gallery_documents
+         SET sent_at = NOW(), updated_at = NOW()
+         WHERE id = $1
+         RETURNING *`,
+        [id]
+      );
+      return NextResponse.json({ document: rows[0], message: 'Document sent.' });
+    }
+
+    return NextResponse.json({ error: 'Unsupported action.' }, { status: 400 });
+  } catch (error) {
+    console.error('[gallery documents] PUT error', error);
+    return NextResponse.json({ error: 'Unable to update this document.' }, { status: 500 });
   }
-
-  return NextResponse.json({ error: 'Unsupported action.' }, { status: 400 });
 }
 
 export async function DELETE(req: NextRequest) {
   const unauthorized = requireAdmin(req);
   if (unauthorized) return unauthorized;
 
-  const id = req.nextUrl.searchParams.get('id');
-  if (!id) return NextResponse.json({ error: 'Missing document id.' }, { status: 400 });
-  await query('DELETE FROM gallery_documents WHERE id = $1', [id]);
-  return NextResponse.json({ success: true });
+  try {
+    const id = req.nextUrl.searchParams.get('id');
+    if (!id) return NextResponse.json({ error: 'Missing document id.' }, { status: 400 });
+    await query('DELETE FROM gallery_documents WHERE id = $1', [id]);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('[gallery documents] DELETE error', error);
+    return NextResponse.json({ error: 'Unable to delete this document.' }, { status: 500 });
+  }
 }

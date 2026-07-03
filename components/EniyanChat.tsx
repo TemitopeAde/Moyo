@@ -1,7 +1,20 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, Camera, FileText, Folder, Loader2, Minimize2, Send, X } from 'lucide-react';
+import {
+  ArrowRight,
+  CalendarCheck,
+  Camera,
+  Loader2,
+  LockKeyhole,
+  Mail,
+  Minimize2,
+  Palette,
+  RotateCcw,
+  Send,
+  ShoppingBag,
+  X,
+} from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from 'next-themes';
 import { LanguageCode, useLanguage } from '@/context/LanguageContext';
@@ -20,21 +33,53 @@ const POP_INTERVAL = 1000 * 60 * 8;
 
 const FEATURE_CARDS = [
   {
-    id: 'guide',
+    id: 'portfolio',
     href: '/photography/portfolio',
     icon: Camera,
   },
   {
-    id: 'book',
+    id: 'bookings',
     href: '/photography/bookings',
-    icon: FileText,
+    icon: CalendarCheck,
   },
   {
-    id: 'collect',
+    id: 'artShop',
     href: '/art/shop',
-    icon: Folder,
+    icon: ShoppingBag,
+  },
+  {
+    id: 'commissions',
+    href: '/art/commissions',
+    icon: Palette,
+  },
+  {
+    id: 'clientGallery',
+    href: '/photography/client-gallery',
+    icon: LockKeyhole,
+  },
+  {
+    id: 'newsletters',
+    href: '/photography/newsletter',
+    icon: Mail,
   },
 ] as const;
+
+const ROUTE_LABELS: Record<string, string> = {
+  '/': 'Home',
+  '/photography': 'Photography',
+  '/photography/portfolio': 'Photography portfolio',
+  '/photography/bookings': 'Book photography',
+  '/photography/client-gallery': 'Client gallery',
+  '/photography/about': 'Photography about',
+  '/photography/newsletter': 'Photography newsletter',
+  '/art': 'Fine art',
+  '/art/works': 'Artworks',
+  '/art/shop': 'Art shop',
+  '/art/commissions': 'Art commissions',
+  '/art/exhibitions': 'Exhibitions',
+  '/art/about': 'Art about',
+  '/art/newsletter': 'Art newsletter',
+};
 
 const ENIYAN_COPY: Record<LanguageCode, {
   eyebrow: string;
@@ -44,7 +89,7 @@ const ENIYAN_COPY: Record<LanguageCode, {
   thinking: string;
   greeting: string;
   starterPrompts: string[];
-  features: Record<(typeof FEATURE_CARDS)[number]['id'], { label: string; title: string; action: string }>;
+  features: Partial<Record<(typeof FEATURE_CARDS)[number]['id'], { label: string; title: string; action: string }>>;
 }> = {
   EN: {
     eyebrow: 'Site companion',
@@ -53,11 +98,14 @@ const ENIYAN_COPY: Record<LanguageCode, {
     placeholder: 'Ask Eniyan...',
     thinking: 'Thinking',
     greeting: "Mo ki o. I'm Eniyan, your guide around Ijabiken Moyo's world. Tell me what you want to do and I'll help you find the right page or next step.",
-    starterPrompts: ['Book a photography session', 'Show me the art shop', 'Where can I see recent work?'],
+    starterPrompts: ['Help me choose a service', 'Book a photography session', 'Commission an artwork', 'Find my client gallery'],
     features: {
-      guide: { label: 'Guide', title: 'Find work', action: 'Explore' },
-      book: { label: 'Book', title: 'Start a session', action: 'Book' },
-      collect: { label: 'Collect', title: 'Shop art', action: 'Visit' },
+      portfolio: { label: 'See', title: 'Photography work', action: 'Explore' },
+      bookings: { label: 'Book', title: 'Start a session', action: 'Inquire' },
+      artShop: { label: 'Collect', title: 'Available art', action: 'Shop' },
+      commissions: { label: 'Create', title: 'Custom artwork', action: 'Commission' },
+      clientGallery: { label: 'Access', title: 'Client gallery', action: 'Open' },
+      newsletters: { label: 'Follow', title: 'Studio updates', action: 'Join' },
     },
   },
   FR: {
@@ -69,9 +117,9 @@ const ENIYAN_COPY: Record<LanguageCode, {
     greeting: "Bonjour. Je suis Eniyan, votre guide sur le site d'Ijabiken Moyo. Dites-moi ce que vous voulez faire.",
     starterPrompts: ['Reserver une seance photo', 'Voir la boutique art', 'Voir les travaux recents'],
     features: {
-      guide: { label: 'Guide', title: 'Voir le travail', action: 'Explorer' },
-      book: { label: 'Reserver', title: 'Demarrer', action: 'Reserver' },
-      collect: { label: 'Collection', title: 'Acheter art', action: 'Visiter' },
+      portfolio: { label: 'Guide', title: 'Voir le travail', action: 'Explorer' },
+      bookings: { label: 'Reserver', title: 'Demarrer', action: 'Reserver' },
+      artShop: { label: 'Collection', title: 'Acheter art', action: 'Visiter' },
     },
   },
   ES: {
@@ -83,9 +131,9 @@ const ENIYAN_COPY: Record<LanguageCode, {
     greeting: 'Hola. Soy Eniyan, tu guia en el sitio de Ijabiken Moyo. Dime que quieres hacer.',
     starterPrompts: ['Reservar una sesion', 'Mostrar la tienda de arte', 'Ver trabajos recientes'],
     features: {
-      guide: { label: 'Guia', title: 'Ver obras', action: 'Explorar' },
-      book: { label: 'Reserva', title: 'Iniciar sesion', action: 'Reservar' },
-      collect: { label: 'Coleccion', title: 'Comprar arte', action: 'Visitar' },
+      portfolio: { label: 'Guia', title: 'Ver obras', action: 'Explorar' },
+      bookings: { label: 'Reserva', title: 'Iniciar sesion', action: 'Reservar' },
+      artShop: { label: 'Coleccion', title: 'Comprar arte', action: 'Visitar' },
     },
   },
   DE: {
@@ -97,9 +145,9 @@ const ENIYAN_COPY: Record<LanguageCode, {
     greeting: 'Hallo. Ich bin Eniyan, dein Guide auf der Website von Ijabiken Moyo. Sag mir, was du tun moechtest.',
     starterPrompts: ['Fotosession buchen', 'Art-Shop zeigen', 'Aktuelle Arbeiten sehen'],
     features: {
-      guide: { label: 'Guide', title: 'Arbeiten sehen', action: 'Entdecken' },
-      book: { label: 'Buchen', title: 'Session starten', action: 'Buchen' },
-      collect: { label: 'Sammeln', title: 'Kunst kaufen', action: 'Besuchen' },
+      portfolio: { label: 'Guide', title: 'Arbeiten sehen', action: 'Entdecken' },
+      bookings: { label: 'Buchen', title: 'Session starten', action: 'Buchen' },
+      artShop: { label: 'Sammeln', title: 'Kunst kaufen', action: 'Besuchen' },
     },
   },
   PT: {
@@ -111,9 +159,9 @@ const ENIYAN_COPY: Record<LanguageCode, {
     greeting: 'Ola. Sou Eniyan, seu guia no site de Ijabiken Moyo. Diga-me o que quer fazer.',
     starterPrompts: ['Marcar uma sessao', 'Mostrar loja de arte', 'Ver trabalhos recentes'],
     features: {
-      guide: { label: 'Guia', title: 'Ver trabalhos', action: 'Explorar' },
-      book: { label: 'Marcar', title: 'Iniciar sessao', action: 'Marcar' },
-      collect: { label: 'Colecionar', title: 'Comprar arte', action: 'Visitar' },
+      portfolio: { label: 'Guia', title: 'Ver trabalhos', action: 'Explorar' },
+      bookings: { label: 'Marcar', title: 'Iniciar sessao', action: 'Marcar' },
+      artShop: { label: 'Colecionar', title: 'Comprar arte', action: 'Visitar' },
     },
   },
   AR: {
@@ -125,9 +173,9 @@ const ENIYAN_COPY: Record<LanguageCode, {
     greeting: 'مرحبا. أنا Eniyan، دليلك في موقع Ijabiken Moyo. أخبرني بما تريد فعله.',
     starterPrompts: ['حجز جلسة تصوير', 'اعرض متجر الفن', 'أين أرى الأعمال الحديثة؟'],
     features: {
-      guide: { label: 'دليل', title: 'شاهد الأعمال', action: 'استكشف' },
-      book: { label: 'حجز', title: 'ابدأ جلسة', action: 'احجز' },
-      collect: { label: 'اقتناء', title: 'تسوق الفن', action: 'زيارة' },
+      portfolio: { label: 'دليل', title: 'شاهد الأعمال', action: 'استكشف' },
+      bookings: { label: 'حجز', title: 'ابدأ جلسة', action: 'احجز' },
+      artShop: { label: 'اقتناء', title: 'تسوق الفن', action: 'زيارة' },
     },
   },
   ZH: {
@@ -139,9 +187,9 @@ const ENIYAN_COPY: Record<LanguageCode, {
     greeting: '你好。我是 Eniyan，是你浏览 Ijabiken Moyo 网站的向导。告诉我你想做什么。',
     starterPrompts: ['预约摄影', '打开艺术商店', '查看近期作品'],
     features: {
-      guide: { label: '向导', title: '查看作品', action: '探索' },
-      book: { label: '预约', title: '开始拍摄', action: '预约' },
-      collect: { label: '收藏', title: '购买艺术', action: '访问' },
+      portfolio: { label: '向导', title: '查看作品', action: '探索' },
+      bookings: { label: '预约', title: '开始拍摄', action: '预约' },
+      artShop: { label: '收藏', title: '购买艺术', action: '访问' },
     },
   },
   YO: {
@@ -153,9 +201,9 @@ const ENIYAN_COPY: Record<LanguageCode, {
     greeting: 'Mo ki o. Emi ni Eniyan, olutoju re lori oju opo Ijabiken Moyo. So ohun ti o fe se fun mi.',
     starterPrompts: ['Mo fe book igba foto', 'Fi shop art han mi', 'Nibo ni mo ti ri ise tuntun?'],
     features: {
-      guide: { label: 'Itosona', title: 'Wo ise', action: 'Sewo' },
-      book: { label: 'Book', title: 'Bere igba foto', action: 'Book' },
-      collect: { label: 'Akojo', title: 'Ra art', action: 'Wo' },
+      portfolio: { label: 'Itosona', title: 'Wo ise', action: 'Sewo' },
+      bookings: { label: 'Book', title: 'Bere igba foto', action: 'Book' },
+      artShop: { label: 'Akojo', title: 'Ra art', action: 'Wo' },
     },
   },
   IG: {
@@ -167,9 +215,9 @@ const ENIYAN_COPY: Record<LanguageCode, {
     greeting: 'Ndewo. A bu m Eniyan, onye ndu gi na webusaiti Ijabiken Moyo. Gwa m ihe ichoro ime.',
     starterPrompts: ['Book oge foto', 'Gosi m shop art', 'Ebee ka m ga-ahụ ọrụ ọhụrụ?'],
     features: {
-      guide: { label: 'Nduzi', title: 'Lee ọrụ', action: 'Chọpụta' },
-      book: { label: 'Book', title: 'Malite foto', action: 'Book' },
-      collect: { label: 'Nchịkọta', title: 'Zụta art', action: 'Gaa' },
+      portfolio: { label: 'Nduzi', title: 'Lee ọrụ', action: 'Chọpụta' },
+      bookings: { label: 'Book', title: 'Malite foto', action: 'Book' },
+      artShop: { label: 'Nchịkọta', title: 'Zụta art', action: 'Gaa' },
     },
   },
   HA: {
@@ -181,9 +229,9 @@ const ENIYAN_COPY: Record<LanguageCode, {
     greeting: 'Sannu. Ni ne Eniyan, jagoranka a shafin Ijabiken Moyo. Fadi abin da kake son yi.',
     starterPrompts: ['Yi booking na hoto', 'Nuna min shagon art', 'Ina zan ga sabbin ayyuka?'],
     features: {
-      guide: { label: 'Jagora', title: 'Duba aiki', action: 'Bincika' },
-      book: { label: 'Booking', title: 'Fara zama', action: 'Book' },
-      collect: { label: 'Tara', title: 'Sayi art', action: 'Ziyarci' },
+      portfolio: { label: 'Jagora', title: 'Duba aiki', action: 'Bincika' },
+      bookings: { label: 'Booking', title: 'Fara zama', action: 'Book' },
+      artShop: { label: 'Tara', title: 'Sayi art', action: 'Ziyarci' },
     },
   },
 };
@@ -200,6 +248,11 @@ function getPageContext() {
   const visibleText = document.body.innerText.replace(/\s+/g, ' ').trim().slice(0, 1600);
 
   return { title, path, visibleText };
+}
+
+function getMessageLinks(content: string) {
+  const paths = content.match(/\/(?:photography|art)(?:\/[a-z-]+)?|\/(?=\s|$|[.,])/g) || [];
+  return Array.from(new Set(paths)).filter((path) => ROUTE_LABELS[path]);
 }
 
 function EniyanSign({
@@ -220,23 +273,25 @@ function EniyanSign({
           ? 'border-black/10 bg-black/[0.035] text-black/70'
           : neutral
           ? 'border-white/15 bg-white/[0.035] text-white/72'
-          : 'border-accent/35 bg-background text-accent'
+          : light
+            ? 'border-black/10 bg-white text-black/70'
+            : 'border-accent/24 bg-white/[0.045] text-accent'
       }`}
       aria-hidden="true"
     >
       <span
         className={`absolute left-1/2 top-2 h-[calc(100%-1rem)] w-px -translate-x-1/2 ${
-          neutral && light ? 'bg-black/18' : neutral ? 'bg-white/18' : 'bg-accent/30'
+          neutral && light || !neutral && light ? 'bg-black/18' : neutral ? 'bg-white/18' : 'bg-accent/24'
         }`}
       />
       <span
         className={`absolute top-1/2 -translate-y-1/2 rounded-full ${compact ? 'size-1.5' : 'size-2'} ${
-          neutral && light ? 'bg-black/45' : neutral ? 'bg-white/55' : 'bg-accent'
+          neutral && light || !neutral && light ? 'bg-black/45' : neutral ? 'bg-white/55' : 'bg-accent'
         }`}
       />
       <span
         className={`relative font-heading italic leading-none ${compact ? 'text-base' : 'text-2xl'} ${
-          neutral && light ? 'text-black/70' : neutral ? 'text-white/75' : 'text-accent'
+          neutral && light || !neutral && light ? 'text-black/70' : neutral ? 'text-white/75' : 'text-accent'
         }`}
       >
         E
@@ -350,6 +405,12 @@ export default function EniyanChat() {
     setIsOpen(false);
   }
 
+  function resetChat() {
+    setMessages([{ id: 'welcome', role: 'assistant', content: copy.greeting }]);
+    setInput('');
+    setError('');
+  }
+
   return (
     <div className="fixed bottom-5 right-5 z-[120] flex max-w-[calc(100vw-2rem)] flex-col items-end gap-3 md:bottom-8 md:right-8">
       <AnimatePresence>
@@ -359,26 +420,20 @@ export default function EniyanChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.98 }}
             transition={{ duration: 0.28, ease: [0.19, 1, 0.22, 1] }}
-            className={`relative w-[min(410px,calc(100vw-2rem))] overflow-hidden rounded-[20px] border shadow-2xl backdrop-blur-xl ${
+            className={`relative w-[min(440px,calc(100vw-2rem))] overflow-hidden rounded-[18px] border shadow-2xl backdrop-blur-xl ${
               isLight
-                ? 'border-black/10 bg-[#f6f4ef]/96 text-[#141414] shadow-black/15'
-                : 'border-white/10 bg-[#161616]/96 text-white shadow-black/45'
+                ? 'border-black/10 bg-[#fbfaf7]/96 text-[#141414] shadow-black/12'
+                : 'border-white/10 bg-[#111111]/96 text-white shadow-black/45'
             }`}
             aria-label="Eniyan AI chat assistant"
-            style={{
-              backgroundImage:
-                `radial-gradient(circle at 1px 1px, rgba(146, 1, 16, ${isLight ? '0.14' : '0.18'}) 1px, transparent 0), linear-gradient(180deg, ${isLight ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.045)'}, rgba(255,255,255,0))`,
-              backgroundSize: '20px 20px, 100% 100%',
-            }}
           >
-            <div className={`absolute inset-0 ${isLight ? 'bg-[#f6f4ef]/88' : 'bg-[#161616]/88'}`} />
             <div className="relative">
               <header className={`overflow-hidden border-b px-5 py-4 ${isLight ? 'border-black/10' : 'border-white/10'}`}>
                 <div className="flex items-start justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-3">
                   <EniyanSign compact />
                   <div className="min-w-0">
-                    <p className="mb-1 text-[9px] font-medium uppercase tracking-[0.28em] text-accent">
+                    <p className={`mb-1 text-[9px] font-medium uppercase tracking-[0.28em] ${isLight ? 'text-black/40' : 'text-white/40'}`}>
                       {copy.eyebrow}
                     </p>
                     <h2 className={`truncate font-heading text-2xl italic leading-none ${isLight ? 'text-[#141414]' : 'text-white'}`}>
@@ -390,6 +445,16 @@ export default function EniyanChat() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={resetChat}
+                    className={`grid size-9 place-items-center rounded-full transition ${
+                      isLight ? 'text-black/45 hover:bg-black/5 hover:text-black' : 'text-white/50 hover:bg-white/8 hover:text-white'
+                    }`}
+                    aria-label="Reset Eniyan chat"
+                  >
+                    <RotateCcw className="size-4" aria-hidden="true" />
+                  </button>
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
@@ -418,34 +483,40 @@ export default function EniyanChat() {
                 <div className="flex gap-3 overflow-x-auto pb-1">
                 {FEATURE_CARDS.map((card) => {
                   const Icon = card.icon;
-                  const cardCopy = copy.features[card.id];
+                  const cardCopy = copy.features[card.id] || ENIYAN_COPY.EN.features[card.id];
+                  if (!cardCopy) return null;
                   return (
                   <a
                     key={card.href}
                     href={card.href}
-                    className={`group flex w-[150px] shrink-0 flex-col rounded-[16px] border p-3 transition ${
+                    className={`group flex w-[146px] shrink-0 flex-col rounded-[14px] border p-3 transition ${
                       isLight
                         ? 'border-black/10 bg-white/45 hover:bg-white/75'
                         : 'border-white/10 bg-white/[0.035] hover:bg-white/[0.06]'
                     }`}
                   >
                     <span
-                      className={`mb-3 grid size-9 place-items-center rounded-[12px] border shadow-lg shadow-black/10 transition ${
+                      className={`mb-3 grid size-9 place-items-center rounded-[10px] border transition ${
                         isLight
-                          ? 'border-black/10 bg-black/[0.035] text-black/62'
-                          : 'border-white/12 bg-white/[0.055] text-white/72'
+                          ? 'border-black/10 bg-[#111111] text-white'
+                          : 'border-white/10 bg-white/[0.045] text-white/64'
                       }`}
                     >
-                      <Icon className="size-4" strokeWidth={1.8} aria-hidden="true" />
+                      <Icon
+                        className="size-4"
+                        color={isLight ? '#ffffff' : 'rgba(255, 255, 255, 0.72)'}
+                        strokeWidth={2}
+                        aria-hidden="true"
+                      />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="mb-1 block text-[8px] font-semibold uppercase tracking-[0.2em] text-accent/75">
+                      <span className={`mb-1 block text-[8px] font-semibold uppercase tracking-[0.2em] ${isLight ? 'text-black/38' : 'text-white/38'}`}>
                         {cardCopy.label}
                       </span>
                       <span className={`block text-sm font-semibold leading-tight ${isLight ? 'text-black/85' : 'text-white/86'}`}>
                         {cardCopy.title}
                       </span>
-                      <span className="mt-3 inline-flex items-center gap-1.5 text-[10px] font-semibold text-accent/85">
+                      <span className={`mt-3 inline-flex items-center gap-1.5 text-[10px] font-semibold ${isLight ? 'text-black/52' : 'text-white/52'}`}>
                         {cardCopy.action}
                         <ArrowRight className="size-3.5 transition group-hover:translate-x-1" aria-hidden="true" />
                       </span>
@@ -456,25 +527,49 @@ export default function EniyanChat() {
                 </div>
               </div>
 
-            <div ref={scrollRef} className="max-h-[28svh] space-y-4 overflow-y-auto px-5 py-4">
-              {recentMessages.map((message) => (
+            <div ref={scrollRef} className="max-h-[34svh] space-y-4 overflow-y-auto px-5 py-4">
+              {recentMessages.map((message) => {
+                const links = message.role === 'assistant' ? getMessageLinks(message.content) : [];
+
+                return (
                 <div
                   key={message.id}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}
                 >
                   <p
                     className={`max-w-[84%] whitespace-pre-wrap rounded-[2px] px-3 py-2.5 text-sm leading-relaxed ${
                       message.role === 'user'
-                        ? 'bg-accent text-background'
+                        ? isLight
+                          ? 'bg-[#181818] text-white'
+                          : 'bg-white text-[#111111]'
                         : isLight
-                          ? 'border-l border-accent/45 bg-black/[0.035] text-black/72'
-                          : 'border-l border-accent/45 bg-white/[0.045] text-white/78'
+                          ? 'border-l border-black/18 bg-black/[0.035] text-black/72'
+                          : 'border-l border-white/18 bg-white/[0.045] text-white/78'
                     }`}
                   >
                     {message.content}
                   </p>
+                  {links.length > 0 && (
+                    <div className="mt-2 flex max-w-[84%] flex-wrap gap-2">
+                      {links.map((path) => (
+                        <a
+                          key={path}
+                          href={path}
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] transition ${
+                            isLight
+                              ? 'border-black/10 bg-white/70 text-black/62 hover:border-black/22 hover:text-black'
+                              : 'border-white/10 bg-white/[0.045] text-white/62 hover:border-white/22 hover:text-white'
+                          }`}
+                        >
+                          {ROUTE_LABELS[path]}
+                          <ArrowRight className="size-3" aria-hidden="true" />
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              ))}
+                );
+              })}
               {isSending && (
                 <div className="flex justify-start">
                   <div
@@ -497,7 +592,7 @@ export default function EniyanChat() {
                     key={prompt}
                     type="button"
                     onClick={() => sendMessage(prompt)}
-                    className={`rounded-full border px-3 py-2 text-left text-[10px] uppercase tracking-[0.12em] transition hover:border-accent/50 hover:text-accent ${
+                    className={`rounded-full border px-3 py-2 text-left text-[10px] uppercase tracking-[0.12em] transition ${
                       isLight ? 'border-black/10 bg-white/45 text-black/52' : 'border-white/10 bg-white/[0.035] text-white/55'
                     }`}
                   >
@@ -528,19 +623,23 @@ export default function EniyanChat() {
                     }
                   }}
                   placeholder={copy.placeholder}
-                  className={`max-h-24 min-h-11 flex-1 resize-none rounded-full border px-4 py-3 text-sm outline-none transition focus:border-accent ${
+                  className={`max-h-24 min-h-11 flex-1 resize-none rounded-full border px-4 py-3 text-sm outline-none transition ${
                     isLight
-                      ? 'border-black/10 bg-white/55 text-black placeholder:text-black/30'
-                      : 'border-white/10 bg-white/[0.035] text-white placeholder:text-white/30'
+                      ? 'border-black/10 bg-white/70 text-black placeholder:text-black/30 focus:border-black/24'
+                      : 'border-white/10 bg-white/[0.035] text-white placeholder:text-white/30 focus:border-white/24'
                   }`}
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || isSending}
-                  className="grid size-11 shrink-0 place-items-center rounded-full bg-accent text-background transition hover:bg-white hover:text-background disabled:cursor-not-allowed disabled:opacity-40"
+                  className={`grid size-11 shrink-0 place-items-center rounded-full transition disabled:cursor-not-allowed ${
+                    isLight
+                      ? 'bg-black/[0.08] text-accent hover:bg-black/[0.12]'
+                      : 'bg-white/[0.08] text-accent hover:bg-white/[0.12]'
+                  }`}
                   aria-label="Send message"
                 >
-                  <Send className="size-4" aria-hidden="true" />
+                  <Send className="size-4 text-accent" aria-hidden="true" />
                 </button>
               </form>
             </div>
