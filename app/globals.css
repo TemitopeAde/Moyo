@@ -331,17 +331,17 @@ h6 {
   --entry-card: #f7f5ef;
   --entry-text: rgba(8, 8, 8, 0.86);
   --entry-title: rgba(0, 0, 0, 0.86);
-  --entry-soft: rgba(8, 8, 8, 0.5);
-  --entry-muted: rgba(8, 8, 8, 0.42);
-  --entry-faint: rgba(8, 8, 8, 0.22);
-  --entry-rule: rgba(8, 8, 8, 0.17);
-  --entry-rule-soft: rgba(8, 8, 8, 0.095);
+  --entry-soft: rgba(8, 8, 8, 0.64);
+  --entry-muted: rgba(8, 8, 8, 0.56);
+  --entry-faint: rgba(8, 8, 8, 0.34);
+  --entry-rule: rgba(8, 8, 8, 0.2);
+  --entry-rule-soft: rgba(8, 8, 8, 0.13);
   --entry-border: rgba(8, 8, 8, 0.16);
   --entry-shadow: rgba(8, 8, 8, 0.13);
   --entry-control-border: rgba(8, 8, 8, 0.14);
   --entry-control-hover: rgba(8, 8, 8, 0.24);
   --entry-control-bg: rgba(8, 8, 8, 0.06);
-  --entry-control-text: rgba(8, 8, 8, 0.58);
+  --entry-control-text: rgba(8, 8, 8, 0.7);
 }
 
 .entry-bg-wash {
@@ -358,10 +358,6 @@ h6 {
 
 .entry-image-bottom-wash {
   background: linear-gradient(to top, rgba(0, 0, 0, 0.94), transparent 52%, rgba(0, 0, 0, 0.34));
-}
-
-.entry-line-gap {
-  background: var(--entry-card);
 }
 
 [data-theme='light'] .entry-bg-wash {
@@ -506,41 +502,115 @@ h6 {
 }
 
 [data-theme='light'] .text-white\/70 {
-  color: color-mix(in srgb, var(--foreground) 70%, transparent) !important;
+  color: color-mix(in srgb, var(--foreground) 80%, transparent) !important;
 }
 
 [data-theme='light'] .text-white\/60 {
-  color: color-mix(in srgb, var(--foreground) 60%, transparent) !important;
+  color: color-mix(in srgb, var(--foreground) 72%, transparent) !important;
 }
 
 [data-theme='light'] .text-white\/50 {
-  color: color-mix(in srgb, var(--foreground) 50%, transparent) !important;
+  color: color-mix(in srgb, var(--foreground) 66%, transparent) !important;
 }
 
 [data-theme='light'] .text-white\/45 {
-  color: color-mix(in srgb, var(--foreground) 45%, transparent) !important;
+  color: color-mix(in srgb, var(--foreground) 62%, transparent) !important;
 }
 
 [data-theme='light'] .text-white\/40 {
-  color: color-mix(in srgb, var(--foreground) 40%, transparent) !important;
+  color: color-mix(in srgb, var(--foreground) 58%, transparent) !important;
 }
 
 [data-theme='light'] .text-white\/35,
 [data-theme='light'] .text-white\/30 {
-  color: color-mix(in srgb, var(--foreground) 34%, transparent) !important;
+  color: color-mix(in srgb, var(--foreground) 52%, transparent) !important;
 }
 
 [data-theme='light'] .text-white\/25,
 [data-theme='light'] .text-white\/20 {
-  color: color-mix(in srgb, var(--foreground) 22%, transparent) !important;
+  color: color-mix(in srgb, var(--foreground) 44%, transparent) !important;
 }
 
 [data-theme='light'] .text-black {
   color: var(--foreground) !important;
 }
 
+[data-theme='light'] .text-foreground\/70 {
+  color: color-mix(in srgb, var(--foreground) 80%, transparent) !important;
+}
+
+[data-theme='light'] .text-foreground\/60 {
+  color: color-mix(in srgb, var(--foreground) 72%, transparent) !important;
+}
+
+[data-theme='light'] .text-foreground\/50 {
+  color: color-mix(in srgb, var(--foreground) 66%, transparent) !important;
+}
+
+[data-theme='light'] .text-foreground\/45,
+[data-theme='light'] .text-foreground\/40 {
+  color: color-mix(in srgb, var(--foreground) 58%, transparent) !important;
+}
+
+[data-theme='light'] .text-foreground\/35,
+[data-theme='light'] .text-foreground\/30 {
+  color: color-mix(in srgb, var(--foreground) 52%, transparent) !important;
+}
+
+[data-theme='light'] .text-foreground\/25,
+[data-theme='light'] .text-foreground\/20 {
+  color: color-mix(in srgb, var(--foreground) 44%, transparent) !important;
+}
+
+.image-overlay-caption {
+  color: rgba(255, 255, 255, 0.94) !important;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.65);
+}
+
+.image-overlay-meta {
+  color: rgba(255, 255, 255, 0.58) !important;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.6);
+}
+
+.image-overlay-chip {
+  background: rgba(0, 0, 0, 0.58) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: rgba(255, 255, 255, 0.72) !important;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.55);
+}
+
 [data-theme='light'] .bg-white.text-black {
   color: var(--background) !important;
+}
+
+.bg-accent,
+.bg-accent.text-black,
+.bg-accent.text-white,
+.hover\:bg-accent:hover,
+.hover\:bg-accent.text-black:hover,
+.hover\:bg-accent.text-white:hover,
+.hover\:bg-accent.hover\:text-black:hover {
+  color: #fff !important;
+}
+
+.bg-accent *,
+.hover\:bg-accent:hover * {
+  color: inherit;
+}
+
+[data-theme='light'] .bg-accent,
+[data-theme='light'] .bg-accent.text-black,
+[data-theme='light'] .bg-accent.text-white,
+[data-theme='light'] .border-accent.bg-accent,
+[data-theme='light'] .hover\:bg-accent:hover,
+[data-theme='light'] .hover\:bg-accent.hover\:text-black:hover,
+[data-theme='light'] .hover\:bg-accent.hover\:text-white:hover {
+  color: #fff !important;
+}
+
+[data-theme='light'] .bg-accent *,
+[data-theme='light'] .hover\:bg-accent:hover * {
+  color: inherit !important;
 }
 
 [data-theme='light'] .border-white\/20 {
@@ -570,6 +640,21 @@ h6 {
 
 [data-theme='light'] .mix-blend-screen {
   mix-blend-mode: multiply !important;
+}
+
+/* Contrast guard: the red accent is too dark for black text. */
+[class~='bg-accent'],
+[class~='bg-accent'] *,
+[class*='hover:bg-accent']:hover,
+[class*='hover:bg-accent']:hover * {
+  color: #fff !important;
+}
+
+[data-theme='light'] [class~='bg-accent'],
+[data-theme='light'] [class~='bg-accent'] *,
+[data-theme='light'] [class*='hover:bg-accent']:hover,
+[data-theme='light'] [class*='hover:bg-accent']:hover * {
+  color: #fff !important;
 }
 
 .catalogue-explore-overlay {

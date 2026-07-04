@@ -117,12 +117,12 @@ function CategoryOverviewCard({
                         whileHover={canAnimatePointer ? { scale: 1.08 } : undefined}
                         transition={{ duration: 1.15, ease: [0.22, 1, 0.36, 1] }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/0" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/38 to-black/0" />
                     <div className="absolute inset-x-0 bottom-0 min-w-0 p-4 sm:p-6">
-                        <h3 className="font-heading text-2xl italic text-white [overflow-wrap:anywhere] sm:text-3xl">
+                        <h3 className="image-overlay-caption font-heading text-2xl italic [overflow-wrap:anywhere] sm:text-3xl">
                             {translateText(category.name)}
                         </h3>
-                        <p className="mt-3 text-[10px] uppercase tracking-[0.18em] text-white/45 sm:tracking-[0.24em]">
+                        <p className="image-overlay-meta mt-3 text-[10px] uppercase tracking-[0.18em] sm:tracking-[0.24em]">
                             {imageCount} {translateText(imageCount === 1 ? 'image' : 'images')}
                         </p>
                     </div>
@@ -366,7 +366,7 @@ export default function PhotographyGrid() {
                         onClick={() => setActiveCategory('all')}
                         className={`px-3 py-2.5 text-[9px] uppercase tracking-[0.16em] border transition-colors sm:px-5 sm:py-3 sm:text-[10px] sm:tracking-[0.3em] ${
                             activeCategory === 'all'
-                                ? 'border-accent bg-accent text-black'
+                                ? 'border-accent bg-accent text-white'
                                 : 'border-foreground/10 text-foreground/50 hover:border-accent hover:text-accent'
                         }`}
                     >
@@ -379,7 +379,7 @@ export default function PhotographyGrid() {
                             onClick={() => setActiveCategory(category.slug)}
                             className={`px-3 py-2.5 text-[9px] uppercase tracking-[0.16em] border transition-colors sm:px-5 sm:py-3 sm:text-[10px] sm:tracking-[0.3em] ${
                                 activeCategory === category.slug
-                                    ? 'border-accent bg-accent text-black'
+                                    ? 'border-accent bg-accent text-white'
                                     : 'border-foreground/10 text-foreground/50 hover:border-accent hover:text-accent'
                             }`}
                         >

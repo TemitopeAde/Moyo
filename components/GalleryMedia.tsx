@@ -34,7 +34,7 @@ export default function GalleryMedia({
                     playsInline
                     aria-label={alt}
                 />
-                <span className="absolute bottom-2 left-2 border border-white/15 bg-black/60 px-2 py-1 text-[8px] uppercase tracking-[0.18em] text-white/65">
+                <span className="image-overlay-chip absolute bottom-2 left-2 border px-2 py-1 text-[8px] uppercase tracking-[0.18em]">
                     Video
                 </span>
             </div>

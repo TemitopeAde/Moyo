@@ -68,11 +68,11 @@ export default function GlobalEntryPage() {
           <div className="entry-image-side-wash absolute inset-0" />
           <div className="entry-image-bottom-wash absolute inset-0" />
           <div className="absolute inset-x-0 top-0 h-px bg-[color:var(--entry-rule)]" />
-          <div className="absolute inset-y-0 left-[19%] hidden w-px bg-[color:var(--entry-rule-soft)] sm:block" />
-          <div className="absolute inset-y-0 right-[13%] hidden w-px bg-[color:var(--entry-rule-soft)] sm:block" />
-          <div className="entry-line-gap absolute left-[calc(19%-1px)] top-[20px] hidden h-[62px] w-[3px] sm:block" />
-          <div className="entry-line-gap absolute right-[calc(13%-1px)] top-[22px] hidden h-[58px] w-[3px] sm:block" />
-          <div className="entry-line-gap absolute right-[calc(13%-1px)] bottom-[8%] hidden h-[120px] w-[3px] sm:block" />
+          <div className="absolute left-[19%] top-0 hidden h-5 w-px bg-[color:var(--entry-rule-soft)] sm:block" />
+          <div className="absolute bottom-0 left-[19%] top-[94px] hidden w-px bg-[color:var(--entry-rule-soft)] sm:block" />
+          <div className="absolute right-[13%] top-0 hidden h-5 w-px bg-[color:var(--entry-rule-soft)] sm:block" />
+          <div className="absolute bottom-[calc(9%+96px)] right-[13%] top-[88px] hidden w-px bg-[color:var(--entry-rule-soft)] sm:block" />
+          <div className="absolute bottom-0 right-[13%] hidden h-[calc(9%-12px)] w-px bg-[color:var(--entry-rule-soft)] sm:block" />
 
           <div className="absolute left-5 right-5 top-5 flex items-center justify-between text-[color:var(--entry-text)] sm:left-7 sm:right-7 sm:top-6">
             <div className="flex items-center gap-3">

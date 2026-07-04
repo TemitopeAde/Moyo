@@ -419,7 +419,7 @@ export default function ClientGalleryPage() {
                                                         previewWidth={720}
                                                     />
                                                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/0" />
-                                                    <span className="absolute left-3 top-3 rounded-full border border-white/15 bg-black/55 px-3 py-1 text-[9px] uppercase tracking-[0.18em] text-white/70 backdrop-blur-sm">
+                                                    <span className="image-overlay-chip absolute left-3 top-3 rounded-full border px-3 py-1 text-[9px] uppercase tracking-[0.18em] backdrop-blur-sm">
                                                         {t('clientGallery.finishedWorkTitle')} {index + 1}
                                                     </span>
                                                     <a
