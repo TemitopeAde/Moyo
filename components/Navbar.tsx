@@ -74,7 +74,6 @@ export default function Navbar() {
         { name: t('common.fineArt'), href: '/art' },
         { name: t('common.works'), href: '/art/works' },
         { name: t('common.exhibitions'), href: '/art/exhibitions' },
-        { name: t('common.shop'), href: '/art/shop' },
         { name: t('common.about'), href: '/art/about' },
     ];
 

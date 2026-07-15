@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useMotionValue, useReducedMotion, useSpring, useTransform } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
@@ -50,6 +50,11 @@ type CategoryOverviewCardProps = {
     translateText: (text: string) => string;
     onSelect: (slug: string) => void;
 };
+
+const initialPortfolioItemCount = 12;
+const portfolioItemBatchSize = 9;
+const initialCategoryCount = 6;
+const categoryBatchSize = 6;
 
 function getCategoryDisplayImage(category: CatalogCategory) {
     return category.cover_image_url || category.images?.[0]?.image_url || '';
@@ -257,6 +262,9 @@ export default function PhotographyGrid() {
     const [activeCategory, setActiveCategory] = useState('all');
     const [isLoading, setIsLoading] = useState(true);
     const [selectedItem, setSelectedItem] = useState<CatalogGridItem | null>(null);
+    const [renderedItemCount, setRenderedItemCount] = useState(initialPortfolioItemCount);
+    const [renderedCategoryCount, setRenderedCategoryCount] = useState(initialCategoryCount);
+    const infiniteScrollRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         fetch('/api/photography-catalog')
@@ -296,16 +304,64 @@ export default function PhotographyGrid() {
         });
     }, [categories]);
 
-    const visibleItems =
-        activeCategory === 'all' ? items : items.filter((item) => item.categorySlug === activeCategory);
+    const visibleItems = useMemo(
+        () => (activeCategory === 'all' ? items : items.filter((item) => item.categorySlug === activeCategory)),
+        [activeCategory, items]
+    );
     const overviewCategories = useMemo(
         () => categories.filter((category) => getCategoryDisplayImage(category)),
         [categories]
     );
     const isOverview = activeCategory === 'all';
     const hasVisibleContent = isOverview ? overviewCategories.length > 0 : visibleItems.length > 0;
+    const renderedCategories = overviewCategories.slice(0, renderedCategoryCount);
+    const renderedItems = visibleItems.slice(0, renderedItemCount);
+    const hasMoreContent = isOverview
+        ? renderedCategoryCount < overviewCategories.length
+        : renderedItemCount < visibleItems.length;
     const selectedIndex = selectedItem ? visibleItems.findIndex((item) => item.id === selectedItem.id) : -1;
     const canNavigateSelection = visibleItems.length > 1 && selectedIndex >= 0;
+
+    const resetInfiniteScroll = () => {
+        setRenderedItemCount(initialPortfolioItemCount);
+        setRenderedCategoryCount(initialCategoryCount);
+    };
+
+    const showAllCategories = () => {
+        resetInfiniteScroll();
+        setActiveCategory('all');
+    };
+
+    const showCategory = (slug: string) => {
+        resetInfiniteScroll();
+        setActiveCategory(slug);
+    };
+
+    useEffect(() => {
+        if (!hasMoreContent) return;
+        const sentinel = infiniteScrollRef.current;
+        if (!sentinel) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry?.isIntersecting) return;
+
+                if (isOverview) {
+                    setRenderedCategoryCount((current) =>
+                        Math.min(current + categoryBatchSize, overviewCategories.length)
+                    );
+                } else {
+                    setRenderedItemCount((current) =>
+                        Math.min(current + portfolioItemBatchSize, visibleItems.length)
+                    );
+                }
+            },
+            { rootMargin: '720px 0px 720px 0px' }
+        );
+
+        observer.observe(sentinel);
+        return () => observer.disconnect();
+    }, [hasMoreContent, isOverview, overviewCategories.length, visibleItems.length]);
 
     const showPreviousItem = useCallback(() => {
         if (!canNavigateSelection) return;
@@ -363,7 +419,7 @@ export default function PhotographyGrid() {
                 <div className="mb-10 flex flex-wrap gap-2 sm:gap-3 md:mb-12">
                     <button
                         type="button"
-                        onClick={() => setActiveCategory('all')}
+                        onClick={showAllCategories}
                         className={`px-3 py-2.5 text-[9px] uppercase tracking-[0.16em] border transition-colors sm:px-5 sm:py-3 sm:text-[10px] sm:tracking-[0.3em] ${
                             activeCategory === 'all'
                                 ? 'border-accent bg-accent text-white'
@@ -376,7 +432,7 @@ export default function PhotographyGrid() {
                         <button
                             key={category.id}
                             type="button"
-                            onClick={() => setActiveCategory(category.slug)}
+                            onClick={() => showCategory(category.slug)}
                             className={`px-3 py-2.5 text-[9px] uppercase tracking-[0.16em] border transition-colors sm:px-5 sm:py-3 sm:text-[10px] sm:tracking-[0.3em] ${
                                 activeCategory === category.slug
                                     ? 'border-accent bg-accent text-white'
@@ -416,7 +472,7 @@ export default function PhotographyGrid() {
                             },
                         }}
                     >
-                        {overviewCategories.map((category, index) => (
+                        {renderedCategories.map((category, index) => (
                             <CategoryOverviewCard
                                 key={category.id}
                                 category={category}
@@ -424,7 +480,7 @@ export default function PhotographyGrid() {
                                 shouldReduceMotion={shouldReduceMotion}
                                 enablePointerMotion={enablePointerMotion}
                                 translateText={translateText}
-                                onSelect={setActiveCategory}
+                                onSelect={showCategory}
                             />
                         ))}
                     </motion.div>
@@ -447,7 +503,7 @@ export default function PhotographyGrid() {
                         }}
                     >
                         <AnimatePresence mode="popLayout">
-                            {visibleItems.map((item, index) => (
+                            {renderedItems.map((item, index) => (
                                 <PortfolioCard
                                     key={`${activeCategory}-${item.id}`}
                                     item={item}
@@ -461,6 +517,20 @@ export default function PhotographyGrid() {
                             ))}
                         </AnimatePresence>
                     </motion.div>
+                )}
+
+                {!isLoading && hasVisibleContent && (
+                    <div ref={infiniteScrollRef} className="flex min-h-24 items-center justify-center py-12">
+                        {hasMoreContent ? (
+                            <span className="text-[10px] uppercase tracking-[0.28em] text-foreground/25 sm:tracking-[0.4em]">
+                                {translateText('Loading more')}
+                            </span>
+                        ) : (
+                            <span className="text-[10px] uppercase tracking-[0.28em] text-foreground/20 sm:tracking-[0.4em]">
+                                {translateText('End of catalogue')}
+                            </span>
+                        )}
+                    </div>
                 )}
             </div>
 

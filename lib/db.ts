@@ -24,10 +24,20 @@ async function ensureTables() {
       price NUMERIC NOT NULL,
       image TEXT NOT NULL,
       category TEXT NOT NULL,
+      year TEXT DEFAULT '',
+      medium TEXT DEFAULT '',
+      dimensions TEXT DEFAULT '',
+      description TEXT DEFAULT '',
       is_featured BOOLEAN DEFAULT FALSE,
-      is_available BOOLEAN DEFAULT TRUE,
+      is_available BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
+
+    ALTER TABLE artworks ADD COLUMN IF NOT EXISTS year TEXT DEFAULT '';
+    ALTER TABLE artworks ADD COLUMN IF NOT EXISTS medium TEXT DEFAULT '';
+    ALTER TABLE artworks ADD COLUMN IF NOT EXISTS dimensions TEXT DEFAULT '';
+    ALTER TABLE artworks ADD COLUMN IF NOT EXISTS description TEXT DEFAULT '';
+    ALTER TABLE artworks ALTER COLUMN is_available SET DEFAULT FALSE;
 
     CREATE TABLE IF NOT EXISTS galleries (
       id SERIAL PRIMARY KEY,

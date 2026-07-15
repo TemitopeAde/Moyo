@@ -12,6 +12,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   FiChevronDown,
   FiCheckCircle,
+  FiEdit3,
   FiImage,
   FiLock,
   FiTrash2,
@@ -26,8 +27,25 @@ type Artwork = {
   price: number;
   image: string;
   category: string;
+  year: string;
+  medium: string;
+  dimensions: string;
+  description: string;
   is_featured: boolean;
   is_available: boolean;
+};
+
+type ArtworkEditForm = {
+  title: string;
+  price: string;
+  image: string;
+  category: string;
+  year: string;
+  medium: string;
+  dimensions: string;
+  description: string;
+  isFeatured: boolean;
+  isAvailable: boolean;
 };
 
 type DigitalProduct = {
@@ -132,7 +150,7 @@ const adminSections: Array<{
   description: string;
   href: string;
 }> = [
-  { id: 'artwork', title: 'Artwork', description: 'Create and manage fine art shop entries.', href: '/admin/artwork' },
+  { id: 'artwork', title: 'Artwork', description: 'Create and manage fine art catalogue entries.', href: '/admin/artwork' },
   { id: 'digital-products', title: 'Digital Products', description: 'Manage downloadable products and assets.', href: '/admin/digital-products' },
   { id: 'catalog', title: 'Photography Catalog', description: 'Upload and organize portfolio categories.', href: '/admin/catalog' },
   { id: 'galleries', title: 'Client Galleries', description: 'Handle galleries, documents, invoices, and access.', href: '/admin/galleries' },
@@ -565,10 +583,40 @@ export default function AdminPage() {
     title: '',
     price: '',
     category: '',
+    year: '',
+    medium: '',
+    dimensions: '',
+    description: '',
     image: '',
     isFeatured: false,
-    isAvailable: true,
+    isAvailable: false,
   });
+  const createArtworkEditForm = (artwork: Artwork): ArtworkEditForm => ({
+    title: artwork.title || '',
+    price: String(artwork.price || ''),
+    image: artwork.image || '',
+    category: artwork.category || '',
+    year: artwork.year || '',
+    medium: artwork.medium || '',
+    dimensions: artwork.dimensions || '',
+    description: artwork.description || '',
+    isFeatured: artwork.is_featured,
+    isAvailable: artwork.is_available,
+  });
+  const createEmptyArtworkEditForm = (): ArtworkEditForm => ({
+    title: '',
+    price: '',
+    image: '',
+    category: '',
+    year: '',
+    medium: '',
+    dimensions: '',
+    description: '',
+    isFeatured: false,
+    isAvailable: false,
+  });
+  const [editingArtworks, setEditingArtworks] = useState<Record<number, ArtworkEditForm>>({});
+  const [editingArtworkId, setEditingArtworkId] = useState<number | null>(null);
   const [digitalProductForm, setDigitalProductForm] = useState({
     title: '',
     price: '',
@@ -607,7 +655,7 @@ export default function AdminPage() {
   const [contactForm, setContactForm] = useState(contact);
   const [socialForm, setSocialForm] = useState({ platform: '', url: '', icon: '' });
   const [editingSocials, setEditingSocials] = useState<Record<number, Social>>({});
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [artworkFiles, setArtworkFiles] = useState<File[]>([]);
   const [digitalProductFile, setDigitalProductFile] = useState<File | null>(null);
   const [digitalProductAssetFile, setDigitalProductAssetFile] = useState<File | null>(null);
   const [catalogImageFiles, setCatalogImageFiles] = useState<File[]>([]);
@@ -623,6 +671,7 @@ export default function AdminPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [digitalProductPreview, setDigitalProductPreview] = useState<string | null>(null);
   const [catalogImagePreview, setCatalogImagePreview] = useState<string | null>(null);
+  const artworkInputRef = useRef<HTMLInputElement | null>(null);
   const catalogImageInputRef = useRef<HTMLInputElement | null>(null);
   const isUploading = (target: string) => Boolean(uploadingTargets[target]);
   const getUploadProgressLabel = (target: string, label: string) => {
@@ -682,6 +731,12 @@ export default function AdminPage() {
       const catalogData = await catalogRes.json();
 
       setArtworks(artData.artworks || []);
+      setEditingArtworks(
+        (artData.artworks || []).reduce((acc: Record<number, ArtworkEditForm>, artwork: Artwork) => {
+          acc[artwork.id] = createArtworkEditForm(artwork);
+          return acc;
+        }, {})
+      );
       setDigitalProducts(digitalData.products || []);
       setEditingDigitalProducts(
         (digitalData.products || []).reduce((acc: Record<number, {
@@ -950,21 +1005,16 @@ export default function AdminPage() {
     return `${files.length} files selected`;
   };
 
-  const handleArtworkFileChange = async (file: File | null) => {
-    setSelectedFile(file);
-    if (!file) return;
-    const localPreview = URL.createObjectURL(file);
-    setImagePreview(localPreview);
-    if (!adminKey) {
-      setMessage({ text: 'Add admin password first', type: 'error' });
+  const handleArtworkFileChange = (files: File[]) => {
+    const nextFiles = mergeSelectedFiles(artworkFiles, files);
+    setArtworkFiles(nextFiles);
+    if (!nextFiles.length) {
+      setImagePreview(artForm.image || null);
       return;
     }
-    const url = await handleUpload(file, 'artwork-image');
-    if (url) {
-      setArtForm((prev) => ({ ...prev, image: url }));
-      setImagePreview(url);
-      setMessage({ text: 'Image uploaded', type: 'success' });
-    }
+
+    const localPreview = URL.createObjectURL(nextFiles[0]);
+    setImagePreview(localPreview);
   };
 
   useEffect(() => {
@@ -1044,33 +1094,153 @@ export default function AdminPage() {
     }
   };
 
+  const uploadContentAsset = async (
+    file: File | null,
+    target: string,
+    onUploaded: (url: string) => void,
+    successMessage: string
+  ) => {
+    if (!file) return;
+    if (!adminKey) {
+      setMessage({ text: 'Add admin password first', type: 'error' });
+      return;
+    }
+
+    const url = await handleUpload(file, target);
+    if (url) {
+      onUploaded(url);
+      setMessage({ text: successMessage, type: 'success' });
+    }
+  };
+
+  const renderContentUploadField = ({
+    labelText,
+    value,
+    target,
+    onChange,
+  }: {
+    labelText: string;
+    value: string;
+    target: string;
+    onChange: (url: string) => void;
+  }) => (
+    <div className="space-y-2">
+      <label className={label}>{labelText}</label>
+      <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+        <input
+          className={inputClass}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Paste image URL or upload a file"
+        />
+        <label
+          className={`inline-flex cursor-pointer items-center justify-center gap-2 border border-white/10 px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-white/60 transition-colors hover:border-accent hover:text-accent ${
+            isUploading(target) ? 'pointer-events-none opacity-50' : ''
+          }`}
+        >
+          <FiUpload aria-hidden="true" />
+          <span>{isUploading(target) ? getUploadProgressLabel(target, 'Uploading') : 'Upload'}</span>
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            disabled={isUploading(target)}
+            onChange={(e) => {
+              void uploadContentAsset(
+                e.target.files?.[0] || null,
+                target,
+                onChange,
+                `${labelText} uploaded`
+              );
+              e.currentTarget.value = '';
+            }}
+          />
+        </label>
+      </div>
+      {value && (
+        <div className="overflow-hidden border border-white/10 bg-white/[0.04]">
+          <img
+            src={getCloudinaryPreviewUrl(value, { width: 720 })}
+            srcSet={getImagePreviewSrcSet(value, [360, 720, 1080])}
+            alt={`${labelText} preview`}
+            className="h-40 w-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+          <div className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/50">Preview</div>
+        </div>
+      )}
+    </div>
+  );
+
   const handleArtworkSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(null);
     if (!adminKey) return setMessage({ text: 'Add admin key first', type: 'error' });
 
-    let imageUrl = artForm.image;
-    if (selectedFile && !imageUrl) {
-      const url = await handleUpload(selectedFile, 'artwork-image');
-      if (!url) return;
-      imageUrl = url;
+    let imageUrls = artForm.image.trim() ? [artForm.image.trim()] : [];
+    let failedFiles: File[] = [];
+
+    if (artworkFiles.length) {
+      const uploaded = await uploadFiles(artworkFiles, 'artwork-image');
+      imageUrls = [...imageUrls, ...uploaded.urls];
+      failedFiles = uploaded.failedFiles;
     }
+
+    imageUrls = imageUrls.filter(Boolean);
+    if (!imageUrls.length) {
+      return setMessage({ text: 'Upload artwork files or paste an image URL', type: 'error' });
+    }
+
+    const artworksPayload = imageUrls.map((imageUrl, index) => ({
+      ...artForm,
+      title:
+        imageUrls.length > 1 && artForm.title
+          ? `${artForm.title} ${index + 1}`
+          : artForm.title || `Artwork ${artworks.length + index + 1}`,
+      price: Number(artForm.price || 0),
+      image: imageUrl,
+    }));
 
     const res = await fetch('/api/artworks', {
       method: 'POST',
       headers,
-      body: JSON.stringify({
-        ...artForm,
-        price: Number(artForm.price),
-        image: imageUrl,
-      }),
+      body: JSON.stringify(
+        artworksPayload.length === 1 ? artworksPayload[0] : { artworks: artworksPayload }
+      ),
     });
     const data = await res.json();
     if (!res.ok) return setMessage({ text: data.error || 'Failed', type: 'error' });
-    setArtworks((prev) => [data.artwork, ...prev]);
-    setArtForm({ title: '', price: '', category: '', image: '', isFeatured: false, isAvailable: true });
-    setSelectedFile(null);
-    setMessage({ text: 'Artwork saved', type: 'success' });
+    const createdArtworks = data.artworks || (data.artwork ? [data.artwork] : []);
+    setArtworks((prev) => [...createdArtworks, ...prev]);
+    setEditingArtworks((prev) => ({
+      ...createdArtworks.reduce((acc: Record<number, ArtworkEditForm>, artwork: Artwork) => {
+        acc[artwork.id] = createArtworkEditForm(artwork);
+        return acc;
+      }, {}),
+      ...prev,
+    }));
+    setArtForm({
+      title: '',
+      price: '',
+      category: '',
+      year: '',
+      medium: '',
+      dimensions: '',
+      description: '',
+      image: '',
+      isFeatured: false,
+      isAvailable: false,
+    });
+    setArtworkFiles(failedFiles);
+    if (artworkInputRef.current && !failedFiles.length) artworkInputRef.current.value = '';
+    setImagePreview(failedFiles[0] ? URL.createObjectURL(failedFiles[0]) : null);
+    setMessage({
+      text: `${createdArtworks.length} ${createdArtworks.length === 1 ? 'artwork' : 'artworks'} saved${
+        failedFiles.length ? `, ${failedFiles.length} ${failedFiles.length === 1 ? 'upload failed' : 'uploads failed'}` : ''
+      }`,
+      type: failedFiles.length ? 'error' : 'success',
+    });
   };
 
   const toggleArtwork = async (id: number, field: 'isFeatured' | 'isAvailable', value: boolean) => {
@@ -1082,12 +1252,70 @@ export default function AdminPage() {
     const data = await res.json();
     if (res.ok) {
       setArtworks((prev) => prev.map((a) => (a.id === id ? data.artwork : a)));
+      setEditingArtworks((prev) => ({ ...prev, [id]: createArtworkEditForm(data.artwork) }));
+    }
+  };
+
+  const startEditingArtwork = (artwork: Artwork) => {
+    setEditingArtworks((prev) => ({ ...prev, [artwork.id]: createArtworkEditForm(artwork) }));
+    setEditingArtworkId(artwork.id);
+  };
+
+  const cancelEditingArtwork = (artwork: Artwork) => {
+    setEditingArtworks((prev) => ({ ...prev, [artwork.id]: createArtworkEditForm(artwork) }));
+    setEditingArtworkId(null);
+  };
+
+  const updateArtworkDraft = (id: number, updates: Partial<ArtworkEditForm>) => {
+    setEditingArtworks((prev) => ({
+      ...prev,
+      [id]: { ...(prev[id] || createEmptyArtworkEditForm()), ...updates },
+    }));
+  };
+
+  const saveArtworkDetails = async (id: number) => {
+    const draft = editingArtworks[id];
+    if (!draft) return;
+
+    const res = await fetch('/api/artworks', {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        id,
+        title: draft.title,
+        price: Number(draft.price || 0),
+        image: draft.image,
+        category: draft.category,
+        year: draft.year,
+        medium: draft.medium,
+        dimensions: draft.dimensions,
+        description: draft.description,
+        isFeatured: draft.isFeatured,
+        isAvailable: draft.isAvailable,
+      }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setArtworks((prev) => prev.map((artwork) => (artwork.id === id ? data.artwork : artwork)));
+      setEditingArtworks((prev) => ({ ...prev, [id]: createArtworkEditForm(data.artwork) }));
+      setEditingArtworkId(null);
+      setMessage({ text: 'Artwork details updated', type: 'success' });
+    } else {
+      setMessage({ text: data.error || 'Failed to update artwork', type: 'error' });
     }
   };
 
   const deleteArtwork = async (id: number) => {
     const res = await fetch(`/api/artworks?id=${id}`, { method: 'DELETE', headers });
-    if (res.ok) setArtworks((prev) => prev.filter((a) => a.id !== id));
+    if (res.ok) {
+      setArtworks((prev) => prev.filter((a) => a.id !== id));
+      setEditingArtworks((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+      if (editingArtworkId === id) setEditingArtworkId(null);
+    }
   };
 
   const createDigitalProduct = async (e: React.FormEvent) => {
@@ -1954,18 +2182,17 @@ export default function AdminPage() {
                     className={inputClass}
                     value={artForm.title}
                     onChange={(e) => setArtForm({ ...artForm, title: e.target.value })}
-                    required
+                    placeholder="Base title, or leave blank to auto-name a batch"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className={label}>Price</label>
+                    <label className={label}>Internal Price (optional)</label>
                     <input
                       type="number"
                       className={inputClass}
                       value={artForm.price}
                       onChange={(e) => setArtForm({ ...artForm, price: e.target.value })}
-                      required
                     />
                   </div>
                   <div className="space-y-2">
@@ -1978,29 +2205,73 @@ export default function AdminPage() {
                     />
                   </div>
                 </div>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="space-y-2">
+                    <label className={label}>Year</label>
+                    <input
+                      className={inputClass}
+                      value={artForm.year}
+                      onChange={(e) => setArtForm({ ...artForm, year: e.target.value })}
+                      placeholder="2026"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={label}>Medium</label>
+                    <input
+                      className={inputClass}
+                      value={artForm.medium}
+                      onChange={(e) => setArtForm({ ...artForm, medium: e.target.value })}
+                      placeholder="Photography / manipulation"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className={label}>Dimensions</label>
+                    <input
+                      className={inputClass}
+                      value={artForm.dimensions}
+                      onChange={(e) => setArtForm({ ...artForm, dimensions: e.target.value })}
+                      placeholder="24 x 36 in"
+                    />
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  <label className={label}>Image</label>
+                  <label className={label}>Archive Note</label>
+                  <textarea
+                    className={`${inputClass} min-h-[90px]`}
+                    value={artForm.description}
+                    onChange={(e) => setArtForm({ ...artForm, description: e.target.value })}
+                    placeholder="Context, series note, exhibition note, or process detail"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className={label}>Artwork Files</label>
                   <div className="relative group">
                     <input
+                      ref={artworkInputRef}
                       type="file"
-                      onChange={(e) => handleArtworkFileChange(e.target.files?.[0] || null)}
+                      multiple
+                      onChange={(e) => {
+                        handleArtworkFileChange(Array.from(e.target.files || []));
+                        e.currentTarget.value = '';
+                      }}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                       accept="image/*"
                     />
                     <div className="w-full bg-white/5 border-2 border-dashed border-white/10 p-6 flex flex-col items-center justify-center gap-3 group-hover:border-accent/50 transition-colors">
                       <FiUpload className="text-xl text-white/20 group-hover:text-accent transition-colors" />
                       <span className="text-[10px] uppercase tracking-[0.2em] text-white/40">
-                        {selectedFile ? selectedFile.name : 'Choose File or Drag & Drop'}
+                        {getSelectedFileLabel(artworkFiles, 'Choose one or many artwork files')}
                       </span>
+                      <span className="text-xs text-white/30">Batch uploads create one catalogue entry per file.</span>
                     </div>
                   </div>
                   <input
-                    placeholder="or paste image URL"
+                    placeholder="or paste one image URL"
                     className={inputClass}
                     value={artForm.image}
                     onChange={(e) => {
                       setArtForm({ ...artForm, image: e.target.value });
-                      setImagePreview(e.target.value || null);
+                      if (!artworkFiles.length) setImagePreview(e.target.value || null);
                     }}
                   />
                   {imagePreview && (
@@ -2010,6 +2281,20 @@ export default function AdminPage() {
                         Preview
                       </div>
                     </div>
+                  )}
+                  {artworkFiles.length > 0 && (
+                    <button
+                      type="button"
+                      disabled={isUploading('artwork-image')}
+                      onClick={() => {
+                        setArtworkFiles([]);
+                        if (artworkInputRef.current) artworkInputRef.current.value = '';
+                        setImagePreview(artForm.image || null);
+                      }}
+                      className="w-full border border-white/10 py-3 text-[10px] uppercase tracking-[0.2em] text-white/40 transition-colors hover:border-red-500 hover:text-red-300 disabled:opacity-50 sm:tracking-[0.3em]"
+                    >
+                      Clear Selected Artwork Files
+                    </button>
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-xs text-white/70">
@@ -2027,7 +2312,7 @@ export default function AdminPage() {
                       checked={artForm.isAvailable}
                       onChange={(e) => setArtForm({ ...artForm, isAvailable: e.target.checked })}
                     />
-                    Available
+                    Print option
                   </label>
                 </div>
                 <button
@@ -2035,45 +2320,186 @@ export default function AdminPage() {
                   disabled={isUploading('artwork-image')}
                   className="w-full bg-accent hover:bg-white text-black py-4 px-5 text-[10px] uppercase tracking-[0.22em] font-medium transition-all flex items-center justify-center gap-4 disabled:opacity-50 sm:px-8 sm:tracking-[0.4em]"
                 >
-                  {isUploading('artwork-image') ? 'Uploading...' : 'Save Artwork'}
+                  {isUploading('artwork-image') ? 'Uploading...' : 'Save Catalogue Work'}
                 </button>
               </form>
             </div>
             <div className="space-y-4 max-h-[640px] overflow-y-auto pr-2">
               <h3 className="text-[10px] uppercase tracking-[0.28em] text-accent sm:tracking-[0.5em]">Existing</h3>
-              {artworks.map((art) => (
-                <div key={art.id} className="bg-surface/20 border border-white/5 p-4 flex gap-4 items-center group">
-                  <div className="w-20 h-20 bg-neutral-950 overflow-hidden">
-                    <img src={art.image} alt={art.title} className="w-full h-full object-cover" />
+              {artworks.map((art) => {
+                const draft = editingArtworks[art.id] || createArtworkEditForm(art);
+                const isEditing = editingArtworkId === art.id;
+
+                return (
+                  <div key={art.id} className="bg-surface/20 border border-white/5 p-4">
+                    <div className="flex gap-4 items-center group">
+                      <div className="w-20 h-20 shrink-0 bg-neutral-950 overflow-hidden">
+                        <img src={art.image} alt={art.title} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-white font-heading italic">{art.title}</p>
+                        <p className="text-[10px] text-white/40 uppercase tracking-widest">
+                          {[art.category, art.year].filter(Boolean).join(' / ')}
+                        </p>
+                        {(art.medium || art.dimensions) && (
+                          <p className="mt-1 text-xs text-white/45">
+                            {[art.medium, art.dimensions].filter(Boolean).join(' / ')}
+                          </p>
+                        )}
+                        {art.description && (
+                          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-white/35">
+                            {art.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 text-[10px]">
+                        <button
+                          type="button"
+                          onClick={() => startEditingArtwork(art)}
+                          className={`px-3 py-2 border ${isEditing ? 'border-accent text-accent' : 'border-white/10 text-white/60 hover:border-accent hover:text-accent'}`}
+                        >
+                          <span className="inline-flex items-center gap-2">
+                            <FiEdit3 />
+                            Edit
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleArtwork(art.id, 'isFeatured', !art.is_featured)}
+                          className={`px-3 py-2 border ${art.is_featured ? 'border-accent text-accent' : 'border-white/10 text-white/60'}`}
+                        >
+                          Featured
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => toggleArtwork(art.id, 'isAvailable', !art.is_available)}
+                          className={`px-3 py-2 border ${art.is_available ? 'border-white/10 text-white/60' : 'border-red-500/40 text-red-300'}`}
+                        >
+                          {art.is_available ? 'Print option' : 'No print'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => deleteArtwork(art.id)}
+                          className="p-2 text-red-400 hover:text-red-200 border border-white/10"
+                          aria-label={`Delete ${art.title}`}
+                        >
+                          <FiTrash2 />
+                        </button>
+                      </div>
+                    </div>
+
+                    {isEditing && (
+                      <div className="mt-5 space-y-4 border-t border-white/10 pt-5">
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div className="space-y-2">
+                            <label className={label}>Title</label>
+                            <input
+                              className={inputClass}
+                              value={draft.title}
+                              onChange={(e) => updateArtworkDraft(art.id, { title: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className={label}>Category</label>
+                            <input
+                              className={inputClass}
+                              value={draft.category}
+                              onChange={(e) => updateArtworkDraft(art.id, { category: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-3">
+                          <div className="space-y-2">
+                            <label className={label}>Year</label>
+                            <input
+                              className={inputClass}
+                              value={draft.year}
+                              onChange={(e) => updateArtworkDraft(art.id, { year: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className={label}>Medium</label>
+                            <input
+                              className={inputClass}
+                              value={draft.medium}
+                              onChange={(e) => updateArtworkDraft(art.id, { medium: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className={label}>Dimensions</label>
+                            <input
+                              className={inputClass}
+                              value={draft.dimensions}
+                              onChange={(e) => updateArtworkDraft(art.id, { dimensions: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className={label}>Archive Note</label>
+                          <textarea
+                            className={`${inputClass} min-h-[88px]`}
+                            value={draft.description}
+                            onChange={(e) => updateArtworkDraft(art.id, { description: e.target.value })}
+                          />
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-[1fr_160px]">
+                          <div className="space-y-2">
+                            <label className={label}>Image URL</label>
+                            <input
+                              className={inputClass}
+                              value={draft.image}
+                              onChange={(e) => updateArtworkDraft(art.id, { image: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className={label}>Internal Price</label>
+                            <input
+                              type="number"
+                              className={inputClass}
+                              value={draft.price}
+                              onChange={(e) => updateArtworkDraft(art.id, { price: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid gap-3 text-xs text-white/70 sm:grid-cols-2">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={draft.isFeatured}
+                              onChange={(e) => updateArtworkDraft(art.id, { isFeatured: e.target.checked })}
+                            />
+                            Featured
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={draft.isAvailable}
+                              onChange={(e) => updateArtworkDraft(art.id, { isAvailable: e.target.checked })}
+                            />
+                            Print option
+                          </label>
+                        </div>
+                        <div className="flex flex-col gap-3 sm:flex-row">
+                          <button
+                            type="button"
+                            onClick={() => saveArtworkDetails(art.id)}
+                            className="flex-1 bg-accent px-4 py-3 text-[10px] font-semibold uppercase tracking-[0.24em] text-black transition-colors hover:bg-white"
+                          >
+                            Save Changes
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => cancelEditingArtwork(art)}
+                            className="flex-1 border border-white/10 px-4 py-3 text-[10px] uppercase tracking-[0.24em] text-white/50 transition-colors hover:border-white/30 hover:text-white"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex-1">
-                    <p className="text-white font-heading italic">{art.title}</p>
-                    <p className="text-[10px] text-white/40 uppercase tracking-widest">
-                      {art.category} • ${art.price}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 text-[10px]">
-                    <button
-                      onClick={() => toggleArtwork(art.id, 'isFeatured', !art.is_featured)}
-                      className={`px-3 py-2 border ${art.is_featured ? 'border-accent text-accent' : 'border-white/10 text-white/60'}`}
-                    >
-                      Featured
-                    </button>
-                    <button
-                      onClick={() => toggleArtwork(art.id, 'isAvailable', !art.is_available)}
-                      className={`px-3 py-2 border ${art.is_available ? 'border-white/10 text-white/60' : 'border-red-500/40 text-red-300'}`}
-                    >
-                      {art.is_available ? 'Hide' : 'Show'}
-                    </button>
-                    <button
-                    onClick={() => deleteArtwork(art.id)}
-                      className="p-2 text-red-400 hover:text-red-200 border border-white/10"
-                    >
-                      <FiTrash2 />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
           </AdminAccordionPanel>
@@ -3485,6 +3911,63 @@ export default function AdminPage() {
                   value={contentForm.about.image}
                   onChange={(e) => setContentForm({ ...contentForm, about: { ...contentForm.about, image: e.target.value } })}
                 />
+              </div>
+              <div className="space-y-3 border-t border-white/5 pt-6">
+                <h3 className="text-[10px] uppercase tracking-[0.24em] text-accent sm:tracking-[0.4em]">Art Profile Assets</h3>
+                {renderContentUploadField({
+                  labelText: 'Art Hero Image',
+                  value: contentForm.settings.art.heroImage,
+                  target: 'content-art-hero-image',
+                  onChange: (url) =>
+                    setContentForm({
+                      ...contentForm,
+                      settings: {
+                        ...contentForm.settings,
+                        art: { ...contentForm.settings.art, heroImage: url },
+                      },
+                    }),
+                })}
+                {renderContentUploadField({
+                  labelText: 'Art About Image',
+                  value: contentForm.settings.art.aboutImage,
+                  target: 'content-art-about-image',
+                  onChange: (url) =>
+                    setContentForm({
+                      ...contentForm,
+                      settings: {
+                        ...contentForm.settings,
+                        art: { ...contentForm.settings.art, aboutImage: url },
+                      },
+                    }),
+                })}
+                <div className="grid gap-4 md:grid-cols-2">
+                  {renderContentUploadField({
+                    labelText: 'Selected Work Preview 1',
+                    value: contentForm.settings.art.previewImageOne,
+                    target: 'content-art-preview-image-one',
+                    onChange: (url) =>
+                      setContentForm({
+                        ...contentForm,
+                        settings: {
+                          ...contentForm.settings,
+                          art: { ...contentForm.settings.art, previewImageOne: url },
+                        },
+                      }),
+                  })}
+                  {renderContentUploadField({
+                    labelText: 'Selected Work Preview 2',
+                    value: contentForm.settings.art.previewImageTwo,
+                    target: 'content-art-preview-image-two',
+                    onChange: (url) =>
+                      setContentForm({
+                        ...contentForm,
+                        settings: {
+                          ...contentForm.settings,
+                          art: { ...contentForm.settings.art, previewImageTwo: url },
+                        },
+                      }),
+                  })}
+                </div>
               </div>
               <div className="space-y-3 border-t border-white/5 pt-6">
                 <h3 className="text-[10px] uppercase tracking-[0.24em] text-accent sm:tracking-[0.4em]">Photography Page Visibility</h3>

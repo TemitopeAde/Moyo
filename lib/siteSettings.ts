@@ -19,6 +19,12 @@ export type SiteSettings = {
     showReviews: boolean;
     showNewsletter: boolean;
   };
+  art: {
+    heroImage: string;
+    aboutImage: string;
+    previewImageOne: string;
+    previewImageTwo: string;
+  };
   portfolio: {
     eyebrow: string;
     title: string;
@@ -67,6 +73,12 @@ export const defaultSiteSettings: SiteSettings = {
     showBooking: true,
     showReviews: true,
     showNewsletter: true,
+  },
+  art: {
+    heroImage: '/art_hero.webp',
+    aboutImage: '/profile-portrait.jpg',
+    previewImageOne: '/art_preview.webp',
+    previewImageTwo: '/art_preview.webp',
   },
   portfolio: {
     eyebrow: 'Selected Portfolio',

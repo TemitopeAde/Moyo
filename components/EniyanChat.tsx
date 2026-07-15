@@ -12,7 +12,7 @@ import {
   Palette,
   RotateCcw,
   Send,
-  ShoppingBag,
+  Images,
   X,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -41,9 +41,9 @@ const FEATURE_CARDS = [
     icon: CalendarCheck,
   },
   {
-    id: 'artShop',
-    href: '/art/shop',
-    icon: ShoppingBag,
+    id: 'artArchive',
+    href: '/art/works',
+    icon: Images,
   },
   {
     id: 'commissions',
@@ -72,7 +72,6 @@ const ROUTE_LABELS: Record<string, string> = {
   '/photography/newsletter': 'Photography newsletter',
   '/art': 'Fine art',
   '/art/works': 'Artworks',
-  '/art/shop': 'Art shop',
   '/art/commissions': 'Art commissions',
   '/art/exhibitions': 'Exhibitions',
   '/art/about': 'Art about',
@@ -100,7 +99,7 @@ const ENIYAN_COPY: Record<LanguageCode, {
     features: {
       portfolio: { label: 'See', title: 'Photography work', action: 'Explore' },
       bookings: { label: 'Book', title: 'Start a session', action: 'Inquire' },
-      artShop: { label: 'Collect', title: 'Available art', action: 'Shop' },
+      artArchive: { label: 'View', title: 'Art archive', action: 'Open' },
       commissions: { label: 'Create', title: 'Custom artwork', action: 'Commission' },
       clientGallery: { label: 'Access', title: 'Client gallery', action: 'Open' },
       newsletters: { label: 'Follow', title: 'Studio updates', action: 'Join' },
@@ -113,11 +112,11 @@ const ENIYAN_COPY: Record<LanguageCode, {
     placeholder: 'Demandez a Eniyan...',
     thinking: 'Reflexion',
     greeting: "Bonjour. Je suis Eniyan, votre guide sur le site d'Ijabiken Moyo. Dites-moi ce que vous voulez faire.",
-    starterPrompts: ['Reserver une seance photo', 'Voir la boutique art', 'Voir les travaux recents'],
+    starterPrompts: ['Reserver une seance photo', 'Voir les travaux recents', 'Voir les expositions'],
     features: {
       portfolio: { label: 'Guide', title: 'Voir le travail', action: 'Explorer' },
       bookings: { label: 'Reserver', title: 'Demarrer', action: 'Reserver' },
-      artShop: { label: 'Collection', title: 'Acheter art', action: 'Visiter' },
+      artArchive: { label: 'Archive', title: 'Voir art', action: 'Visiter' },
     },
   },
   ES: {
@@ -127,11 +126,11 @@ const ENIYAN_COPY: Record<LanguageCode, {
     placeholder: 'Pregunta a Eniyan...',
     thinking: 'Pensando',
     greeting: 'Hola. Soy Eniyan, tu guia en el sitio de Ijabiken Moyo. Dime que quieres hacer.',
-    starterPrompts: ['Reservar una sesion', 'Mostrar la tienda de arte', 'Ver trabajos recientes'],
+    starterPrompts: ['Reservar una sesion', 'Ver trabajos recientes', 'Ver exposiciones'],
     features: {
       portfolio: { label: 'Guia', title: 'Ver obras', action: 'Explorar' },
       bookings: { label: 'Reserva', title: 'Iniciar sesion', action: 'Reservar' },
-      artShop: { label: 'Coleccion', title: 'Comprar arte', action: 'Visitar' },
+      artArchive: { label: 'Archivo', title: 'Ver arte', action: 'Visitar' },
     },
   },
   DE: {
@@ -141,11 +140,11 @@ const ENIYAN_COPY: Record<LanguageCode, {
     placeholder: 'Frag Eniyan...',
     thinking: 'Denke nach',
     greeting: 'Hallo. Ich bin Eniyan, dein Guide auf der Website von Ijabiken Moyo. Sag mir, was du tun moechtest.',
-    starterPrompts: ['Fotosession buchen', 'Art-Shop zeigen', 'Aktuelle Arbeiten sehen'],
+    starterPrompts: ['Fotosession buchen', 'Aktuelle Arbeiten sehen', 'Ausstellungen sehen'],
     features: {
       portfolio: { label: 'Guide', title: 'Arbeiten sehen', action: 'Entdecken' },
       bookings: { label: 'Buchen', title: 'Session starten', action: 'Buchen' },
-      artShop: { label: 'Sammeln', title: 'Kunst kaufen', action: 'Besuchen' },
+      artArchive: { label: 'Archiv', title: 'Kunst ansehen', action: 'Besuchen' },
     },
   },
   PT: {
@@ -155,11 +154,11 @@ const ENIYAN_COPY: Record<LanguageCode, {
     placeholder: 'Pergunte ao Eniyan...',
     thinking: 'Pensando',
     greeting: 'Ola. Sou Eniyan, seu guia no site de Ijabiken Moyo. Diga-me o que quer fazer.',
-    starterPrompts: ['Marcar uma sessao', 'Mostrar loja de arte', 'Ver trabalhos recentes'],
+    starterPrompts: ['Marcar uma sessao', 'Ver trabalhos recentes', 'Ver exposicoes'],
     features: {
       portfolio: { label: 'Guia', title: 'Ver trabalhos', action: 'Explorar' },
       bookings: { label: 'Marcar', title: 'Iniciar sessao', action: 'Marcar' },
-      artShop: { label: 'Colecionar', title: 'Comprar arte', action: 'Visitar' },
+      artArchive: { label: 'Arquivo', title: 'Ver arte', action: 'Visitar' },
     },
   },
   AR: {
@@ -169,11 +168,11 @@ const ENIYAN_COPY: Record<LanguageCode, {
     placeholder: 'اسأل Eniyan...',
     thinking: 'يفكر',
     greeting: 'مرحبا. أنا Eniyan، دليلك في موقع Ijabiken Moyo. أخبرني بما تريد فعله.',
-    starterPrompts: ['حجز جلسة تصوير', 'اعرض متجر الفن', 'أين أرى الأعمال الحديثة؟'],
+    starterPrompts: ['حجز جلسة تصوير', 'أين أرى الأعمال الحديثة؟', 'اعرض المعارض'],
     features: {
       portfolio: { label: 'دليل', title: 'شاهد الأعمال', action: 'استكشف' },
       bookings: { label: 'حجز', title: 'ابدأ جلسة', action: 'احجز' },
-      artShop: { label: 'اقتناء', title: 'تسوق الفن', action: 'زيارة' },
+      artArchive: { label: 'أرشيف', title: 'شاهد الفن', action: 'زيارة' },
     },
   },
   ZH: {
@@ -183,11 +182,11 @@ const ENIYAN_COPY: Record<LanguageCode, {
     placeholder: '问 Eniyan...',
     thinking: '思考中',
     greeting: '你好。我是 Eniyan，是你浏览 Ijabiken Moyo 网站的向导。告诉我你想做什么。',
-    starterPrompts: ['预约摄影', '打开艺术商店', '查看近期作品'],
+    starterPrompts: ['预约摄影', '查看近期作品', '查看展览'],
     features: {
       portfolio: { label: '向导', title: '查看作品', action: '探索' },
       bookings: { label: '预约', title: '开始拍摄', action: '预约' },
-      artShop: { label: '收藏', title: '购买艺术', action: '访问' },
+      artArchive: { label: '档案', title: '查看艺术', action: '访问' },
     },
   },
   YO: {
@@ -197,11 +196,11 @@ const ENIYAN_COPY: Record<LanguageCode, {
     placeholder: 'Beere lowo Eniyan...',
     thinking: 'N ronu',
     greeting: 'Mo ki o. Emi ni Eniyan, olutoju re lori oju opo Ijabiken Moyo. So ohun ti o fe se fun mi.',
-    starterPrompts: ['Mo fe book igba foto', 'Fi shop art han mi', 'Nibo ni mo ti ri ise tuntun?'],
+    starterPrompts: ['Mo fe book igba foto', 'Nibo ni mo ti ri ise tuntun?', 'Fi exhibition han mi'],
     features: {
       portfolio: { label: 'Itosona', title: 'Wo ise', action: 'Sewo' },
       bookings: { label: 'Book', title: 'Bere igba foto', action: 'Book' },
-      artShop: { label: 'Akojo', title: 'Ra art', action: 'Wo' },
+      artArchive: { label: 'Akojo', title: 'Wo art', action: 'Wo' },
     },
   },
   IG: {
@@ -211,11 +210,11 @@ const ENIYAN_COPY: Record<LanguageCode, {
     placeholder: 'Juo Eniyan...',
     thinking: 'Na-eche',
     greeting: 'Ndewo. A bu m Eniyan, onye ndu gi na webusaiti Ijabiken Moyo. Gwa m ihe ichoro ime.',
-    starterPrompts: ['Book oge foto', 'Gosi m shop art', 'Ebee ka m ga-ahụ ọrụ ọhụrụ?'],
+    starterPrompts: ['Book oge foto', 'Ebee ka m ga-ahụ ọrụ ọhụrụ?', 'Gosi m ngosi nka'],
     features: {
       portfolio: { label: 'Nduzi', title: 'Lee ọrụ', action: 'Chọpụta' },
       bookings: { label: 'Book', title: 'Malite foto', action: 'Book' },
-      artShop: { label: 'Nchịkọta', title: 'Zụta art', action: 'Gaa' },
+      artArchive: { label: 'Nchịkọta', title: 'Lee art', action: 'Gaa' },
     },
   },
   HA: {
@@ -225,11 +224,11 @@ const ENIYAN_COPY: Record<LanguageCode, {
     placeholder: 'Tambayi Eniyan...',
     thinking: 'Tunani',
     greeting: 'Sannu. Ni ne Eniyan, jagoranka a shafin Ijabiken Moyo. Fadi abin da kake son yi.',
-    starterPrompts: ['Yi booking na hoto', 'Nuna min shagon art', 'Ina zan ga sabbin ayyuka?'],
+    starterPrompts: ['Yi booking na hoto', 'Ina zan ga sabbin ayyuka?', 'Nuna min nune-nune'],
     features: {
       portfolio: { label: 'Jagora', title: 'Duba aiki', action: 'Bincika' },
       bookings: { label: 'Booking', title: 'Fara zama', action: 'Book' },
-      artShop: { label: 'Tara', title: 'Sayi art', action: 'Ziyarci' },
+      artArchive: { label: 'Tarihi', title: 'Duba art', action: 'Ziyarci' },
     },
   },
 };

@@ -5,6 +5,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import { useEffect, useState } from 'react';
 import GlareHover from '@/components/GlareHover';
+import { useSiteSettings } from '@/lib/useSiteSettings';
 interface AboutSectionProps {
     profileType: 'photography' | 'art';
 }
@@ -12,6 +13,7 @@ interface AboutSectionProps {
 export default function AboutSection({ profileType }: AboutSectionProps) {
     const { language } = useLanguage();
     const { t, translateText } = useTranslate(language);
+    const settings = useSiteSettings();
     const [cmsAbout, setCmsAbout] = useState<{ text: string; image: string } | null>(null);
 
     useEffect(() => {
@@ -30,6 +32,9 @@ export default function AboutSection({ profileType }: AboutSectionProps) {
         t(`about.${profileType}.text2`),
         t(`about.${profileType}.text3`),
     ];
+    const aboutImage = profileType === 'art'
+        ? settings.art.aboutImage
+        : cmsAbout?.image || '/profile-portrait.jpg';
 
     return (
         <section id="about" className="relative overflow-hidden border-t border-foreground/5 bg-background py-24 text-foreground md:py-32 lg:py-40">
@@ -56,7 +61,7 @@ export default function AboutSection({ profileType }: AboutSectionProps) {
                             <div className="absolute inset-0 z-10 bg-black/10" />
                             <div
                                 className="h-full w-full bg-cover bg-center bg-no-repeat"
-                                style={{ backgroundImage: `url('${cmsAbout?.image || '/profile-portrait.jpg'}')` }}
+                                style={{ backgroundImage: `url('${aboutImage || '/profile-portrait.jpg'}')` }}
                             />
                         </div>
                     </GlareHover>

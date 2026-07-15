@@ -12,11 +12,13 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import Link from 'next/link';
 import GlareHover from '@/components/GlareHover';
+import { useSiteSettings } from '@/lib/useSiteSettings';
 
 export default function FineArtPage() {
     const { setProfile } = useProfile();
     const { language } = useLanguage();
     const { t } = useTranslate(language);
+    const settings = useSiteSettings();
 
     useEffect(() => {
         setProfile('art');
@@ -43,9 +45,9 @@ export default function FineArtPage() {
                     </header>
 
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-12">
-                        {[1, 2].map((i) => (
+                        {[settings.art.previewImageOne, settings.art.previewImageTwo].map((image, i) => (
                             <GlareHover
-                                key={i}
+                                key={`${image}-${i}`}
                                 width="100%"
                                 height="auto"
                                 background="var(--color-surface)"
@@ -59,7 +61,10 @@ export default function FineArtPage() {
                             >
                                 <div className="relative aspect-[4/3] overflow-hidden">
                                     <div className="absolute inset-0 z-10 bg-black/20 transition-colors group-hover:bg-black/0" />
-                                    <div className="h-full w-full bg-[url('/art_preview.webp')] bg-cover bg-center grayscale transition-all duration-[2s] group-hover:scale-105 group-hover:grayscale-0" />
+                                    <div
+                                        className="h-full w-full bg-cover bg-center grayscale transition-all duration-[2s] group-hover:scale-105 group-hover:grayscale-0"
+                                        style={{ backgroundImage: `url('${image || '/art_preview.webp'}')` }}
+                                    />
                                 </div>
                             </GlareHover>
                         ))}
@@ -69,7 +74,7 @@ export default function FineArtPage() {
 
             <Exhibitions />
 
-            {/* CTA Section for Commissions/Shop */}
+            {/* CTA Section for commissions and exhibitions */}
             <section className="border-y border-foreground/5 bg-foreground/5 py-24 md:py-32 lg:py-40">
                 <div className="container mx-auto grid gap-px bg-foreground/10 px-6 md:grid-cols-2 md:px-12">
                     <GlareHover
@@ -100,10 +105,10 @@ export default function FineArtPage() {
                         glareSize={170}
                         transitionDuration={760}
                     >
-                        <Link href="/art/shop" className="group flex h-full flex-col items-center justify-center space-y-6 bg-background p-10 text-center transition-colors duration-700 hover:bg-surface sm:p-14 md:space-y-8 lg:p-20">
-                            <span className="text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">{t('artPage.editions')}</span>
-                            <h3 className="text-3xl font-heading italic text-foreground md:text-4xl">{t('artPage.printShop')}</h3>
-                            <p className="text-foreground/30 text-xs tracking-widest uppercase">{t('artPage.exploreReleases')}</p>
+                        <Link href="/art/exhibitions" className="group flex h-full flex-col items-center justify-center space-y-6 bg-background p-10 text-center transition-colors duration-700 hover:bg-surface sm:p-14 md:space-y-8 lg:p-20">
+                            <span className="text-accent text-[10px] uppercase tracking-[0.32em] md:tracking-[0.5em]">{t('common.exhibitions')}</span>
+                            <h3 className="text-3xl font-heading italic text-foreground md:text-4xl">{t('artExhibitionsPage.title')}</h3>
+                            <p className="text-foreground/30 text-xs tracking-widest uppercase">{t('artExhibitionsPage.exploreArchive')}</p>
                         </Link>
                     </GlareHover>
                 </div>

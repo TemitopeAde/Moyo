@@ -44,6 +44,10 @@ export default function Hero({ profileType }: HeroProps) {
     const defaultHeadline = profileType === 'photography' ? t('hero.photography') : t('hero.art');
     const headline = cmsHero?.heroText ? translateText(cmsHero.heroText) : defaultHeadline;
 
+    const heroImage = profileType === 'art'
+        ? settings.art.heroImage
+        : cmsHero?.heroImage || '/photography_hero.webp';
+
     const subtext = profileType === 'photography'
         ? translateText(settings.photography.heroSubtext || t('hero.photographySub'))
         : t('hero.artSub');
@@ -79,7 +83,7 @@ export default function Hero({ profileType }: HeroProps) {
                     }}
                     className="w-full h-full bg-neutral-900"
                     style={{
-                        backgroundImage: `url('${cmsHero?.heroImage || '/' + profileType + '_hero.webp'}')`,
+                        backgroundImage: `url('${heroImage || '/' + profileType + '_hero.webp'}')`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         willChange: 'transform, opacity'
