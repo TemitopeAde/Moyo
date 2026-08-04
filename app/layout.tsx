@@ -9,6 +9,7 @@ import SessionTracker from '@/components/SessionTracker';
 import CustomCursor from '@/components/CustomCursor';
 import ClickSpark from '@/components/ClickSpark';
 import EniyanChat from '@/components/EniyanChat';
+import { JsonLd, createRootJsonLd } from '@/lib/schema';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -59,6 +60,7 @@ export default function RootLayout({
       <body
         className="font-body antialiased bg-background text-foreground selection:bg-accent selection:text-background"
       >
+        <JsonLd data={createRootJsonLd()} />
         <ThemeProvider
           attribute="data-theme"
           defaultTheme="light"
