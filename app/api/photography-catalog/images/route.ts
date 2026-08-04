@@ -17,6 +17,12 @@ export async function POST(req: NextRequest) {
   const { rows } = await query(
     `INSERT INTO photography_category_images (category_id, image_url, title, alt_text, display_order)
      VALUES ($1, $2, $3, $4, $5)
+     ON CONFLICT (category_id, image_url)
+     DO UPDATE SET
+       title = EXCLUDED.title,
+       alt_text = EXCLUDED.alt_text,
+       display_order = EXCLUDED.display_order,
+       updated_at = NOW()
      RETURNING *`,
     [
       categoryId,

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { defaultDescription, defaultOgImage, siteName, siteUrl } from '@/lib/seo';
 import './globals.css';
 import { ProfileProvider } from '@/context/ProfileContext';
 import { LanguageProvider } from '@/context/LanguageContext';
@@ -10,8 +11,42 @@ import ClickSpark from '@/components/ClickSpark';
 import EniyanChat from '@/components/EniyanChat';
 
 export const metadata: Metadata = {
-  title: 'Ijabiken Moyo | Photography & Fine Art',
-  description: 'Visual storytelling across photography and fine art. Two practices. One vision.',
+  metadataBase: new URL(siteUrl),
+  applicationName: siteName,
+  title: {
+    default: `${siteName} | Photography & Fine Art`,
+    template: `%s | ${siteName}`,
+  },
+  description: defaultDescription,
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: `${siteName} | Photography & Fine Art`,
+    description: defaultDescription,
+    url: '/',
+    siteName,
+    images: [
+      {
+        url: defaultOgImage,
+        width: 2560,
+        height: 1707,
+        alt: siteName,
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${siteName} | Photography & Fine Art`,
+    description: defaultDescription,
+    images: [defaultOgImage],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

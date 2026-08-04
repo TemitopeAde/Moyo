@@ -5,7 +5,14 @@ export default function robots(): MetadataRoute.Robots {
         rules: {
             userAgent: '*',
             allow: '/',
-            disallow: '/private/',
+            disallow: [
+                '/admin',
+                '/admin/',
+                '/api/admin/',
+                '/api/upload/',
+                '/photography/client-gallery',
+                '/private/',
+            ],
         },
         sitemap: 'https://ijabikenmoyo.com/sitemap.xml',
     };

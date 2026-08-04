@@ -51,8 +51,6 @@ type CategoryOverviewCardProps = {
     onSelect: (slug: string) => void;
 };
 
-const initialPortfolioItemCount = 12;
-const portfolioItemBatchSize = 9;
 const initialCategoryCount = 6;
 const categoryBatchSize = 6;
 
@@ -262,7 +260,6 @@ export default function PhotographyGrid() {
     const [activeCategory, setActiveCategory] = useState('all');
     const [isLoading, setIsLoading] = useState(true);
     const [selectedItem, setSelectedItem] = useState<CatalogGridItem | null>(null);
-    const [renderedItemCount, setRenderedItemCount] = useState(initialPortfolioItemCount);
     const [renderedCategoryCount, setRenderedCategoryCount] = useState(initialCategoryCount);
     const infiniteScrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -308,22 +305,18 @@ export default function PhotographyGrid() {
         () => (activeCategory === 'all' ? items : items.filter((item) => item.categorySlug === activeCategory)),
         [activeCategory, items]
     );
+    const isAllCategory = activeCategory === 'all';
     const overviewCategories = useMemo(
         () => categories.filter((category) => getCategoryDisplayImage(category)),
         [categories]
     );
-    const isOverview = activeCategory === 'all';
-    const hasVisibleContent = isOverview ? overviewCategories.length > 0 : visibleItems.length > 0;
+    const hasVisibleContent = isAllCategory ? overviewCategories.length > 0 : visibleItems.length > 0;
     const renderedCategories = overviewCategories.slice(0, renderedCategoryCount);
-    const renderedItems = visibleItems.slice(0, renderedItemCount);
-    const hasMoreContent = isOverview
-        ? renderedCategoryCount < overviewCategories.length
-        : renderedItemCount < visibleItems.length;
+    const hasMoreContent = isAllCategory && renderedCategoryCount < overviewCategories.length;
     const selectedIndex = selectedItem ? visibleItems.findIndex((item) => item.id === selectedItem.id) : -1;
     const canNavigateSelection = visibleItems.length > 1 && selectedIndex >= 0;
 
     const resetInfiniteScroll = () => {
-        setRenderedItemCount(initialPortfolioItemCount);
         setRenderedCategoryCount(initialCategoryCount);
     };
 
@@ -346,22 +339,16 @@ export default function PhotographyGrid() {
             ([entry]) => {
                 if (!entry?.isIntersecting) return;
 
-                if (isOverview) {
-                    setRenderedCategoryCount((current) =>
-                        Math.min(current + categoryBatchSize, overviewCategories.length)
-                    );
-                } else {
-                    setRenderedItemCount((current) =>
-                        Math.min(current + portfolioItemBatchSize, visibleItems.length)
-                    );
-                }
+                setRenderedCategoryCount((current) =>
+                    Math.min(current + categoryBatchSize, overviewCategories.length)
+                );
             },
             { rootMargin: '720px 0px 720px 0px' }
         );
 
         observer.observe(sentinel);
         return () => observer.disconnect();
-    }, [hasMoreContent, isOverview, overviewCategories.length, visibleItems.length]);
+    }, [hasMoreContent, overviewCategories.length]);
 
     const showPreviousItem = useCallback(() => {
         if (!canNavigateSelection) return;
@@ -456,7 +443,7 @@ export default function PhotographyGrid() {
                     </div>
                 )}
 
-                {isOverview && overviewCategories.length > 0 && (
+                {isAllCategory && overviewCategories.length > 0 && (
                     <motion.div
                         key="category-overview"
                         className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 md:gap-8"
@@ -486,7 +473,7 @@ export default function PhotographyGrid() {
                     </motion.div>
                 )}
 
-                {!isOverview && visibleItems.length > 0 && (
+                {!isAllCategory && visibleItems.length > 0 && (
                     <motion.div
                         key={activeCategory}
                         className="columns-1 gap-5 sm:columns-2 lg:columns-3 md:gap-8"
@@ -503,7 +490,7 @@ export default function PhotographyGrid() {
                         }}
                     >
                         <AnimatePresence mode="popLayout">
-                            {renderedItems.map((item, index) => (
+                            {visibleItems.map((item, index) => (
                                 <PortfolioCard
                                     key={`${activeCategory}-${item.id}`}
                                     item={item}

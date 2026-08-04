@@ -6,8 +6,24 @@ if (!connectionString) {
   throw new Error('DATABASE_URL is not set');
 }
 
+function normalizeConnectionString(value: string) {
+  try {
+    const url = new URL(value);
+    const sslMode = url.searchParams.get('sslmode');
+
+    if (sslMode && ['prefer', 'require', 'verify-ca'].includes(sslMode) && !url.searchParams.has('uselibpqcompat')) {
+      url.searchParams.set('uselibpqcompat', 'true');
+      return url.toString();
+    }
+  } catch {
+    return value;
+  }
+
+  return value;
+}
+
 const pool = new Pool({
-  connectionString,
+  connectionString: normalizeConnectionString(connectionString),
   ssl: { rejectUnauthorized: false },
 });
 
@@ -202,6 +218,17 @@ async function ensureTables() {
   await pool.query(`
     ALTER TABLE photography_categories
       ADD COLUMN IF NOT EXISTS cover_image_url TEXT DEFAULT '';
+  `);
+
+  await pool.query(`
+    DELETE FROM photography_category_images a
+    USING photography_category_images b
+    WHERE a.id > b.id
+      AND a.category_id = b.category_id
+      AND a.image_url = b.image_url;
+
+    CREATE UNIQUE INDEX IF NOT EXISTS photography_category_images_category_url_idx
+      ON photography_category_images (category_id, image_url);
   `);
 
   await pool.query(`

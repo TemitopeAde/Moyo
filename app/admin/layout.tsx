@@ -1,12 +1,13 @@
 import { createPageMetadata } from '@/lib/seo';
 
 export const metadata = createPageMetadata({
-    title: 'Fine Art',
-    description: 'Original works, exhibitions, and commissions exploring identity, memory, and presence.',
-    path: '/art',
+    title: 'Admin',
+    description: 'Private administration area for Ijabiken Moyo.',
+    path: '/admin',
+    noIndex: true,
 });
 
-export default function ArtLayout({
+export default function AdminLayout({
     children,
 }: {
     children: React.ReactNode;

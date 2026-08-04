@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Navbar from '@/components/Navbar';
@@ -47,6 +47,32 @@ type ArtworkEditForm = {
   isFeatured: boolean;
   isAvailable: boolean;
 };
+
+const createArtworkEditForm = (artwork: Artwork): ArtworkEditForm => ({
+  title: artwork.title || '',
+  price: String(artwork.price || ''),
+  image: artwork.image || '',
+  category: artwork.category || '',
+  year: artwork.year || '',
+  medium: artwork.medium || '',
+  dimensions: artwork.dimensions || '',
+  description: artwork.description || '',
+  isFeatured: artwork.is_featured,
+  isAvailable: artwork.is_available,
+});
+
+const createEmptyArtworkEditForm = (): ArtworkEditForm => ({
+  title: '',
+  price: '',
+  image: '',
+  category: '',
+  year: '',
+  medium: '',
+  dimensions: '',
+  description: '',
+  isFeatured: false,
+  isAvailable: false,
+});
 
 type DigitalProduct = {
   id: number;
@@ -143,6 +169,14 @@ type Order = { id: number; items: unknown[]; total_price: number; status: string
 type AdminSection = 'artwork' | 'digital-products' | 'catalog' | 'galleries' | 'content-contact' | 'orders';
 type UploadBatchResult = { urls: string[]; failedFiles: File[] };
 type UploadProgress = { current: number; total: number };
+
+const defaultAdminContent: Content = {
+  homepage: { heroText: '', heroImage: '' },
+  about: { text: '', image: '' },
+  settings: defaultSiteSettings,
+};
+
+const defaultAdminContact: Contact = { phone: '', email: '', address: '' };
 
 const adminSections: Array<{
   id: AdminSection;
@@ -400,6 +434,10 @@ function mergeSelectedFiles(existing: File[] | undefined, incoming: File[]) {
   })];
 }
 
+function uniqueStrings(values: string[]) {
+  return [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+}
+
 function isCompressibleImage(file: File) {
   return ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
 }
@@ -548,6 +586,24 @@ function AdminAccordionPanel({
   );
 }
 
+function AdminPreviewImage({
+  src,
+  srcSet,
+  alt,
+  className,
+}: {
+  src: string;
+  srcSet?: string;
+  alt: string;
+  className: string;
+}) {
+  return (
+    // Admin previews accept arbitrary pasted image URLs, so Next image optimization is intentionally bypassed here.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} srcSet={srcSet} alt={alt} className={className} loading="lazy" decoding="async" />
+  );
+}
+
 export default function AdminPage() {
   const pathname = usePathname();
   const activeRouteSection = useMemo(() => {
@@ -570,12 +626,8 @@ export default function AdminPage() {
   const [digitalProducts, setDigitalProducts] = useState<DigitalProduct[]>([]);
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [catalogCategories, setCatalogCategories] = useState<PhotographyCatalogCategory[]>([]);
-  const [content, setContent] = useState<Content>({
-    homepage: { heroText: '', heroImage: '' },
-    about: { text: '', image: '' },
-    settings: defaultSiteSettings,
-  });
-  const [contact, setContact] = useState<Contact>({ phone: '', email: '', address: '' });
+  const [content, setContent] = useState<Content>(defaultAdminContent);
+  const [contact, setContact] = useState<Contact>(defaultAdminContact);
   const [socials, setSocials] = useState<Social[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
 
@@ -588,30 +640,6 @@ export default function AdminPage() {
     dimensions: '',
     description: '',
     image: '',
-    isFeatured: false,
-    isAvailable: false,
-  });
-  const createArtworkEditForm = (artwork: Artwork): ArtworkEditForm => ({
-    title: artwork.title || '',
-    price: String(artwork.price || ''),
-    image: artwork.image || '',
-    category: artwork.category || '',
-    year: artwork.year || '',
-    medium: artwork.medium || '',
-    dimensions: artwork.dimensions || '',
-    description: artwork.description || '',
-    isFeatured: artwork.is_featured,
-    isAvailable: artwork.is_available,
-  });
-  const createEmptyArtworkEditForm = (): ArtworkEditForm => ({
-    title: '',
-    price: '',
-    image: '',
-    category: '',
-    year: '',
-    medium: '',
-    dimensions: '',
-    description: '',
     isFeatured: false,
     isAvailable: false,
   });
@@ -705,7 +733,7 @@ export default function AdminPage() {
     [adminKey]
   );
 
-  const fetchAll = async () => {
+  const fetchAll = useCallback(async () => {
     if (!isAuthed) return;
     try {
       const [artRes, digitalRes, galRes, documentRes, contentRes, contactRes, socialRes, orderRes] = await Promise.all([
@@ -774,12 +802,12 @@ export default function AdminPage() {
         }, {})
       );
       setCatalogCategories(catalogData.categories || []);
-      setContent(conData.content || content);
-      setContact(contactData.contact || contact);
+      setContent(conData.content || defaultAdminContent);
+      setContact(contactData.contact || defaultAdminContact);
       setSocials(socialData.socials || []);
       setOrders(orderData.orders || []);
-      setContentForm(conData.content || content);
-      setContactForm(contactData.contact || contact);
+      setContentForm(conData.content || defaultAdminContent);
+      setContactForm(contactData.contact || defaultAdminContact);
       setEditingSocials(
         (socialData.socials || []).reduce((acc: Record<number, Social>, social: Social) => {
           if (social.id) acc[social.id] = { ...social };
@@ -790,11 +818,11 @@ export default function AdminPage() {
       console.error(error);
       setMessage({ text: 'Failed to load data', type: 'error' });
     }
-  };
+  }, [headers, isAuthed]);
 
   useEffect(() => {
     fetchAll();
-  }, [isAuthed]);
+  }, [fetchAll]);
 
   const verifyAdminKey = async (keyToVerify: string) => {
     const submittedKey = keyToVerify.trim();
@@ -1159,13 +1187,11 @@ export default function AdminPage() {
       </div>
       {value && (
         <div className="overflow-hidden border border-white/10 bg-white/[0.04]">
-          <img
+          <AdminPreviewImage
             src={getCloudinaryPreviewUrl(value, { width: 720 })}
             srcSet={getImagePreviewSrcSet(value, [360, 720, 1080])}
             alt={`${labelText} preview`}
             className="h-40 w-full object-cover"
-            loading="lazy"
-            decoding="async"
           />
           <div className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/50">Preview</div>
         </div>
@@ -1834,13 +1860,27 @@ export default function AdminPage() {
       imageUrls = [...imageUrls, ...uploaded.urls];
       failedFiles = uploaded.failedFiles;
     }
-    imageUrls = imageUrls.filter(Boolean);
+    imageUrls = uniqueStrings(imageUrls);
 
     if (!imageUrls.length) return setMessage({ text: 'Upload images or paste an image URL', type: 'error' });
 
+    const selectedCategory = catalogCategories.find((category) => category.id === Number(catalogImageForm.category_id));
+    const existingUrls = new Set((selectedCategory?.images || []).map((image) => image.image_url));
+    const newImageUrls = imageUrls.filter((imageUrl) => !existingUrls.has(imageUrl));
+
+    if (!newImageUrls.length) {
+      setCatalogImageFiles(failedFiles);
+      return setMessage({
+        text: failedFiles.length
+          ? `No new catalog images were added. ${failedFiles.length} ${failedFiles.length === 1 ? 'upload failed' : 'uploads failed'}.`
+          : 'Those catalog images are already in this category.',
+        type: 'error',
+      });
+    }
+
     const createdImages: PhotographyCatalogImage[] = [];
     let failedSaves = 0;
-    for (const [index, imageUrl] of imageUrls.entries()) {
+    for (const [index, imageUrl] of newImageUrls.entries()) {
       try {
         const res = await fetch('/api/photography-catalog/images', {
           method: 'POST',
@@ -1849,7 +1889,7 @@ export default function AdminPage() {
             ...catalogImageForm,
             category_id: Number(catalogImageForm.category_id),
             title:
-              imageUrls.length > 1 && catalogImageForm.title
+              newImageUrls.length > 1 && catalogImageForm.title
                 ? `${catalogImageForm.title} ${index + 1}`
                 : catalogImageForm.title,
             image_url: imageUrl,
@@ -1878,12 +1918,14 @@ export default function AdminPage() {
           ? {
               ...category,
               cover_image_url: category.cover_image_url || createdImages[0]?.image_url || '',
-              images: [...(category.images || []), ...createdImages],
+              images: [...(category.images || []), ...createdImages].filter(
+                (image, index, images) =>
+                  images.findIndex((item) => item.category_id === image.category_id && item.image_url === image.image_url) === index
+              ),
             }
           : category
       )
     );
-    const selectedCategory = catalogCategories.find((category) => category.id === Number(catalogImageForm.category_id));
     if (selectedCategory && !selectedCategory.cover_image_url && createdImages[0]) {
       await updateCatalogCategoryCover(selectedCategory, createdImages[0].image_url, { silent: true });
     }
@@ -2276,7 +2318,7 @@ export default function AdminPage() {
                   />
                   {imagePreview && (
                     <div className="mt-3 rounded-lg border border-white/10 overflow-hidden bg-white/5">
-                      <img src={imagePreview} alt="Artwork preview" className="w-full h-48 object-cover" />
+                      <AdminPreviewImage src={imagePreview} alt="Artwork preview" className="w-full h-48 object-cover" />
                       <div className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/60">
                         Preview
                       </div>
@@ -2334,7 +2376,7 @@ export default function AdminPage() {
                   <div key={art.id} className="bg-surface/20 border border-white/5 p-4">
                     <div className="flex gap-4 items-center group">
                       <div className="w-20 h-20 shrink-0 bg-neutral-950 overflow-hidden">
-                        <img src={art.image} alt={art.title} className="w-full h-full object-cover" />
+                        <AdminPreviewImage src={art.image} alt={art.title} className="w-full h-full object-cover" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-white font-heading italic">{art.title}</p>
@@ -2613,7 +2655,7 @@ export default function AdminPage() {
                   />
                   {digitalProductPreview && (
                     <div className="overflow-hidden border border-white/10 bg-white/[0.04]">
-                      <img src={digitalProductPreview} alt="Digital product preview" className="h-48 w-full object-cover" />
+                      <AdminPreviewImage src={digitalProductPreview} alt="Digital product preview" className="h-48 w-full object-cover" />
                       <div className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/50">
                         Product preview
                       </div>
@@ -2655,7 +2697,7 @@ export default function AdminPage() {
                   <div key={product.id} className="space-y-4 border border-white/5 bg-surface/20 p-4">
                     <div className="grid gap-4 sm:grid-cols-[112px_1fr]">
                       <div className="h-32 overflow-hidden bg-neutral-950 sm:h-28">
-                        <img src={draft.image || product.image} alt={draft.title || product.title} className="h-full w-full object-cover" />
+                        <AdminPreviewImage src={draft.image || product.image} alt={draft.title || product.title} className="h-full w-full object-cover" />
                       </div>
                       <div className="grid gap-3">
                         <input
@@ -2914,13 +2956,11 @@ export default function AdminPage() {
                   />
                   {catalogImagePreview && (
                     <div className="overflow-hidden border border-white/10 bg-white/[0.04]">
-                      <img
+                      <AdminPreviewImage
                         src={getCloudinaryPreviewUrl(catalogImagePreview, { width: 720 })}
                         srcSet={getImagePreviewSrcSet(catalogImagePreview, [360, 720, 1080])}
                         alt="Catalogue preview"
                         className="h-48 w-full object-cover"
-                        loading="lazy"
-                        decoding="async"
                       />
                       <div className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/50">
                         {catalogImageFiles.length > 1 ? `First preview of ${catalogImageFiles.length} selected images` : 'Catalogue preview'}
@@ -2966,7 +3006,7 @@ export default function AdminPage() {
                       )}
                       {(category.cover_image_url || category.images?.[0]?.image_url) && (
                         <div className="mt-4 flex items-center gap-3 border border-white/10 bg-white/[0.03] p-2">
-                          <img
+                          <AdminPreviewImage
                             src={getCloudinaryPreviewUrl(category.cover_image_url || category.images?.[0]?.image_url, {
                               width: 160,
                               height: 160,
@@ -2974,8 +3014,6 @@ export default function AdminPage() {
                             srcSet={getImagePreviewSrcSet(category.cover_image_url || category.images?.[0]?.image_url, [80, 160, 240])}
                             alt={`${category.name} display image`}
                             className="h-14 w-14 shrink-0 object-cover"
-                            loading="lazy"
-                            decoding="async"
                           />
                           <div className="min-w-0">
                             <p className="text-[10px] uppercase tracking-[0.24em] text-accent">Display image</p>
@@ -3030,13 +3068,11 @@ export default function AdminPage() {
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                       {category.images.map((image) => (
                         <div key={image.id} className="relative group overflow-hidden border border-white/10 bg-black">
-                          <img
+                          <AdminPreviewImage
                             src={getCloudinaryPreviewUrl(image.image_url, { width: 360, height: 280 })}
                             srcSet={getImagePreviewSrcSet(image.image_url, [180, 360, 540])}
                             alt={image.alt_text || image.title || category.name}
                             className="h-28 w-full object-cover"
-                            loading="lazy"
-                            decoding="async"
                           />
                           <button
                             type="button"

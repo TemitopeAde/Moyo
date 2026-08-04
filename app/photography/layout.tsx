@@ -1,9 +1,10 @@
-import { Metadata } from 'next';
+import { createPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-    title: 'Photography | Ijabiken Moyo',
+export const metadata = createPageMetadata({
+    title: 'Photography',
     description: 'Portraits, editorial, and commissioned work crafted with precision and intention.',
-};
+    path: '/photography',
+});
 
 export default function PhotographyLayout({
     children,
