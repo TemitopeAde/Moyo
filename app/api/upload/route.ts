@@ -33,7 +33,7 @@ function safeFileName(name: string) {
     .replace(/^-+|-+$/g, '')
     .slice(0, 60);
 
-  return `${unique}-${base || 'upload'}${ext || '.jpg'}`;
+  return `${base || 'moyo-upload'}-${unique}${ext || '.jpg'}`;
 }
 
 async function saveLocalUpload(file: File, buffer: Buffer) {
@@ -72,7 +72,7 @@ async function uploadFile(file: File) {
     }, cloudinaryUploadTimeoutMs);
 
     const stream = cloudinary.uploader.upload_stream(
-      { folder: 'moyo-admin', resource_type: 'auto' },
+      { folder: 'moyo-admin', resource_type: 'auto', use_filename: true, unique_filename: true },
       (error, result) => {
         if (settled) return;
         settled = true;

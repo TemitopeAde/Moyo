@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import GlareHover from '@/components/GlareHover';
+import SeoImage from '@/components/SeoImage';
 
 export default function ArtExhibitionsPage() {
     const { language } = useLanguage();
@@ -58,7 +59,13 @@ export default function ArtExhibitionsPage() {
                     >
                         <div className="relative aspect-square overflow-hidden bg-neutral-900">
                             <div className="absolute inset-0 z-10 bg-black/40 transition-colors group-hover:bg-black/20" />
-                            <div className="h-full w-full bg-[url('/exhibition_catalog.webp')] bg-cover bg-center transition-transform duration-[3s] group-hover:scale-105" />
+                            <SeoImage
+                                src="/exhibition_catalog.webp"
+                                alt="Moyo Ayaworan fine art exhibition catalogue preview"
+                                fill
+                                sizes="(min-width: 768px) 50vw, 100vw"
+                                className="object-cover transition-transform duration-[3s] group-hover:scale-105"
+                            />
                         </div>
                     </GlareHover>
                 </div>

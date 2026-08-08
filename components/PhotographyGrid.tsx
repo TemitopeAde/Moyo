@@ -7,6 +7,7 @@ import { useTranslate } from '@/lib/translations';
 import GlareHover from '@/components/GlareHover';
 import { useSiteSettings } from '@/lib/useSiteSettings';
 import { getCloudinaryPreviewUrl, getImagePreviewSrcSet } from '@/lib/mediaUrl';
+import { createImageAlt, imageNameFromUrl } from '@/lib/imageSeo';
 
 type CatalogImage = {
     id: number;
@@ -111,9 +112,10 @@ function CategoryOverviewCard({
                         src={getCloudinaryPreviewUrl(imageUrl, { width: 900 })}
                         srcSet={getImagePreviewSrcSet(imageUrl, [450, 900, 1350])}
                         sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                        alt={translateText(category.name)}
+                        alt={translateText(createImageAlt(category.name, 'photography catalogue cover'))}
                         className="h-full w-full object-cover will-change-transform"
-                        loading="lazy"
+                        loading={index < 3 ? 'eager' : 'lazy'}
+                        fetchPriority={index === 0 ? 'high' : 'auto'}
                         decoding="async"
                         initial={shouldReduceMotion ? false : { scale: 1.04 }}
                         animate={shouldReduceMotion ? undefined : { scale: 1.01 }}
@@ -220,9 +222,10 @@ function PortfolioCard({
                         src={getCloudinaryPreviewUrl(item.image_url, { width: 900, crop: 'fit' })}
                         srcSet={getImagePreviewSrcSet(item.image_url, [450, 900, 1350])}
                         sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                        alt={translateText(item.alt_text || item.title || item.categoryName)}
+                        alt={translateText(createImageAlt(item.alt_text || item.title || imageNameFromUrl(item.image_url), item.categoryName, 'photograph by Moyo Ayaworan'))}
                         className="h-auto w-full will-change-transform"
-                        loading="lazy"
+                        loading={index < 3 ? 'eager' : 'lazy'}
+                        fetchPriority={index === 0 ? 'high' : 'auto'}
                         decoding="async"
                         initial={shouldReduceMotion ? false : { scale: 1.045, y: 0 }}
                         animate={shouldReduceMotion ? undefined : { scale: 1.015, y: 0 }}
@@ -579,8 +582,10 @@ export default function PhotographyGrid() {
                                         src={getCloudinaryPreviewUrl(selectedItem.image_url, { width: 1800, crop: 'fit' })}
                                         srcSet={getImagePreviewSrcSet(selectedItem.image_url, [900, 1400, 1800])}
                                         sizes="(min-width: 1024px) calc(100vw - 320px), 100vw"
-                                        alt={translateText(selectedItem.alt_text || selectedItem.title || selectedItem.categoryName)}
+                                        alt={translateText(createImageAlt(selectedItem.alt_text || selectedItem.title || imageNameFromUrl(selectedItem.image_url), selectedItem.categoryName, 'photograph by Moyo Ayaworan'))}
                                         className="max-h-[62vh] w-auto max-w-full object-contain lg:max-h-[92vh]"
+                                        loading="eager"
+                                        fetchPriority="high"
                                         decoding="async"
                                         initial={shouldReduceMotion ? false : { opacity: 0, x: 24 }}
                                         animate={{ opacity: 1, x: 0 }}

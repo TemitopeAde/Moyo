@@ -12,6 +12,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 import ThemeToggle from '@/components/ThemeToggle';
 import Shuffle from '@/components/Shuffle';
 import Image from 'next/image';
+import SeoImage from '@/components/SeoImage';
 
 export default function GlobalEntryPage() {
   const { language } = useLanguage();
@@ -61,9 +62,13 @@ export default function GlobalEntryPage() {
           transition={{ duration: 1.2, delay: 0.1, ease: [0.19, 1, 0.22, 1] }}
           className="entry-selector-frost relative mx-auto h-[72svh] min-h-[560px] w-full max-w-[430px] overflow-hidden rounded-[8px] border-[color:var(--entry-border)] bg-[color:var(--entry-card)] shadow-[0_28px_120px_var(--entry-shadow)] sm:h-[78svh] sm:max-h-[920px] sm:min-h-[620px] sm:w-[min(96vw,1720px)] sm:max-w-none"
         >
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-[0.78] grayscale"
-            style={{ backgroundImage: `url('${settings.entry.desktopImage}')` }}
+          <SeoImage
+            src={settings.entry.desktopImage}
+            alt={`${entryTitle} portfolio entry image`}
+            fill
+            sizes="(min-width: 640px) 96vw, 430px"
+            preload
+            className="object-cover opacity-[0.78] grayscale"
           />
           <div className="entry-image-side-wash absolute inset-0" />
           <div className="entry-image-bottom-wash absolute inset-0" />
@@ -83,7 +88,8 @@ export default function GlobalEntryPage() {
                   fill
                   sizes="36px"
                   className="object-contain"
-                  priority
+                  loading="eager"
+                  fetchPriority="low"
                 />
               </span>
               <span className="hidden text-[8px] uppercase tracking-[0.38em] text-[color:var(--entry-muted)] sm:block">Home</span>

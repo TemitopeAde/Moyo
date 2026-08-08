@@ -110,8 +110,8 @@ export default function Footer() {
                         © 2026 IJABIKEN MOYO. {t('footer.rights')}
                     </p>
                     <div className="flex flex-wrap justify-center gap-6 text-[9px] uppercase tracking-[0.2em] text-foreground/20 md:gap-8 md:tracking-[0.4em]">
-                        <a href="#" className="hover:text-foreground transition-colors">{translateText(settings.footer.privacyLabel || t('footer.privacy'))}</a>
-                        <a href="#" className="hover:text-foreground transition-colors">{translateText(settings.footer.termsLabel || t('footer.terms'))}</a>
+                        <Link href="/privacy" className="hover:text-foreground transition-colors">{translateText(settings.footer.privacyLabel || t('footer.privacy'))}</Link>
+                        <Link href="/terms" className="hover:text-foreground transition-colors">{translateText(settings.footer.termsLabel || t('footer.terms'))}</Link>
                     </div>
                 </div>
             </div>

@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import GlareHover from '@/components/GlareHover';
+import SeoImage from '@/components/SeoImage';
 
 export default function ArtCommissionsPage() {
     const { language } = useLanguage();
@@ -70,8 +71,14 @@ export default function ArtCommissionsPage() {
                             className="group"
                         >
                             <div className="relative aspect-[3/4] overflow-hidden bg-neutral-900">
+                                <SeoImage
+                                    src="/art_commission.webp"
+                                    alt="Moyo Ayaworan commissioned fine art process preview"
+                                    fill
+                                    sizes="(min-width: 768px) 50vw, 100vw"
+                                    className="object-cover grayscale transition-all duration-1000 group-hover:grayscale-0"
+                                />
                                 <div className="absolute inset-0 bg-black/20" />
-                                <div className="h-full w-full bg-[url('/art_commission.webp')] bg-cover bg-center grayscale transition-all duration-1000 group-hover:grayscale-0" />
                             </div>
                         </GlareHover>
                     </div>

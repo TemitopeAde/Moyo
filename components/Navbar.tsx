@@ -100,7 +100,8 @@ export default function Navbar() {
                             alt="Ijabiken Moyo"
                             width={160}
                             height={160}
-                            priority
+                            loading="eager"
+                            fetchPriority="low"
                             className="theme-logo h-8 w-8 object-contain transition-opacity duration-300 group-hover:opacity-80 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-11 lg:w-11"
                         />
                     </Link>

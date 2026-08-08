@@ -10,6 +10,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import GlareHover from '@/components/GlareHover';
 import { FiX } from 'react-icons/fi';
+import { createImageAlt } from '@/lib/imageSeo';
 
 type Artwork = {
     id: number;
@@ -23,6 +24,10 @@ type Artwork = {
     is_featured?: boolean;
     is_available?: boolean;
 };
+
+function isSvgImage(src: string) {
+    return /\.svg(?:\?.*)?$/i.test(src);
+}
 
 export default function WorksPage() {
     const { setProfile } = useProfile();
@@ -111,12 +116,13 @@ export default function WorksPage() {
                                     >
                                         <Image
                                             src={work.image}
-                                            alt={translateText(work.title)}
+                                            alt={translateText(createImageAlt(work.title, work.medium, work.category, 'artwork by Moyo Ayaworan'))}
                                             fill
                                             sizes={works.length <= 2 ? '(min-width: 768px) 920px, 100vw' : '(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw'}
-                                            unoptimized
+                                            unoptimized={isSvgImage(work.image)}
                                             className="object-contain p-3 transition duration-700 group-hover:scale-[1.015] sm:p-5"
                                             loading={index === 0 ? 'eager' : 'lazy'}
+                                            fetchPriority={index === 0 ? 'high' : 'auto'}
                                         />
                                         <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/[0.035]" />
                                         <span className="pointer-events-none absolute bottom-4 right-4 border border-white/10 bg-black/60 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/50 opacity-0 backdrop-blur-md transition-opacity duration-300 group-hover:opacity-100">
@@ -207,12 +213,14 @@ export default function WorksPage() {
                             <div className="flex max-h-[58vh] items-center justify-center bg-black p-3 sm:p-6 lg:max-h-[92vh]">
                                 <Image
                                     src={selectedWork.image}
-                                    alt={translateText(selectedWork.title)}
+                                    alt={translateText(createImageAlt(selectedWork.title, selectedWork.medium, selectedWork.category, 'artwork by Moyo Ayaworan'))}
                                     width={1800}
                                     height={1400}
-                                    unoptimized
+                                    sizes="(min-width: 1024px) 65vw, 100vw"
+                                    unoptimized={isSvgImage(selectedWork.image)}
                                     className="max-h-[54vh] w-auto max-w-full object-contain lg:max-h-[84vh]"
-                                    priority
+                                    loading="eager"
+                                    fetchPriority="high"
                                 />
                             </div>
 

@@ -6,6 +6,7 @@ import { useTranslate } from '@/lib/translations';
 import { useEffect, useState } from 'react';
 import GlareHover from '@/components/GlareHover';
 import { useSiteSettings } from '@/lib/useSiteSettings';
+import SeoImage from '@/components/SeoImage';
 interface AboutSectionProps {
     profileType: 'photography' | 'art';
 }
@@ -59,9 +60,12 @@ export default function AboutSection({ profileType }: AboutSectionProps) {
                     >
                         <div className="relative aspect-4/5 overflow-hidden">
                             <div className="absolute inset-0 z-10 bg-black/10" />
-                            <div
-                                className="h-full w-full bg-cover bg-center bg-no-repeat"
-                                style={{ backgroundImage: `url('${aboutImage || '/profile-portrait.jpg'}')` }}
+                            <SeoImage
+                                src={aboutImage || '/profile-portrait.jpg'}
+                                alt={`Moyo Ayaworan ${profileType === 'photography' ? 'photographer' : 'visual artist'} portrait`}
+                                fill
+                                sizes="(min-width: 768px) 50vw, 100vw"
+                                className="object-cover"
                             />
                         </div>
                     </GlareHover>

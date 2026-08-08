@@ -20,8 +20,14 @@ export async function POST(req: NextRequest) {
   }
 
   const timestamp = Math.round(Date.now() / 1000);
+  const uploadParams = {
+    folder: uploadFolder,
+    timestamp,
+    use_filename: true,
+    unique_filename: true,
+  };
   const signature = cloudinary.utils.api_sign_request(
-    { folder: uploadFolder, timestamp },
+    uploadParams,
     apiSecret
   );
 
@@ -29,8 +35,7 @@ export async function POST(req: NextRequest) {
     directUpload: true,
     cloudName,
     apiKey,
-    folder: uploadFolder,
-    timestamp,
+    ...uploadParams,
     signature,
   });
 }

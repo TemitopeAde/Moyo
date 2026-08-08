@@ -1,15 +1,8 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { defaultDescription, defaultOgImage, siteName, siteUrl } from '@/lib/seo';
 import './globals.css';
-import { ProfileProvider } from '@/context/ProfileContext';
-import { LanguageProvider } from '@/context/LanguageContext';
-import SocialLinks from '@/components/SocialLinks';
-import { ThemeProvider } from '@/components/ThemeProvider';
-import SessionTracker from '@/components/SessionTracker';
-import CustomCursor from '@/components/CustomCursor';
-import ClickSpark from '@/components/ClickSpark';
-import EniyanChat from '@/components/EniyanChat';
 import { JsonLd, createRootJsonLd } from '@/lib/schema';
+import AppChrome from '@/components/AppChrome';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -50,6 +43,14 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#050505',
+  colorScheme: 'dark light',
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -61,32 +62,7 @@ export default function RootLayout({
         className="font-body antialiased bg-background text-foreground selection:bg-accent selection:text-background"
       >
         <JsonLd data={createRootJsonLd()} />
-        <ThemeProvider
-          attribute="data-theme"
-          defaultTheme="light"
-          enableSystem={false}
-          storageKey="moyo-theme"
-          disableTransitionOnChange
-        >
-          <LanguageProvider>
-            <ProfileProvider>
-              <SessionTracker />
-              <CustomCursor />
-              <ClickSpark
-                sparkColor="#920110"
-                sparkSize={12}
-                sparkRadius={22}
-                sparkCount={8}
-                duration={460}
-                extraScale={1.1}
-              >
-                {children}
-                <SocialLinks />
-                <EniyanChat />
-              </ClickSpark>
-            </ProfileProvider>
-          </LanguageProvider>
-        </ThemeProvider>
+        <AppChrome>{children}</AppChrome>
       </body>
     </html>
   );

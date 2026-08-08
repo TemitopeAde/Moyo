@@ -6,6 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import GlareHover from '@/components/GlareHover';
 import { useSiteSettings } from '@/lib/useSiteSettings';
+import SeoImage from '@/components/SeoImage';
 
 type DigitalProduct = {
     id: number;
@@ -77,9 +78,12 @@ export default function DigitalProducts() {
                                 transitionDuration={760}
                             >
                                 <div className="relative aspect-[4/5] overflow-hidden bg-neutral-900">
-                                    <div
-                                        className="h-full w-full bg-cover bg-center grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0"
-                                        style={{ backgroundImage: `url(${product.image})` }}
+                                    <SeoImage
+                                        src={product.image}
+                                        alt={`${translateText(product.title)} - ${translateText(product.details)}`}
+                                        fill
+                                        sizes="(min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
+                                        className="object-cover grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0"
                                     />
                                     <a
                                         href={product.product_url || '#digital-shop'}

@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import GalleryMedia from '@/components/GalleryMedia';
 import { defaultSiteSettings, type SiteSettings } from '@/lib/siteSettings';
 import { getCloudinaryPreviewUrl, getImagePreviewSrcSet } from '@/lib/mediaUrl';
+import { createSeoImageFilename } from '@/lib/imageSeo';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   FiChevronDown,
@@ -520,6 +521,12 @@ async function prepareUploadFile(file: File, options: { preserveOriginal?: boole
   }
 }
 
+function renameFileForSeo(file: File, parts: Array<string | number | null | undefined>, index: number) {
+  const filename = createSeoImageFilename(file.name, parts, index);
+  if (filename === file.name) return file;
+  return new File([file], filename, { type: file.type, lastModified: file.lastModified });
+}
+
 const adminToggleClass = 'flex min-w-0 items-center justify-between gap-4 border border-white/10 bg-white/[0.03] px-4 py-3 text-xs text-white/60';
 
 function AdminAccordionPanel({
@@ -724,6 +731,36 @@ export default function AdminPage() {
       });
     }
   };
+  const getUploadFilenameParts = (target: string) => {
+    if (target === 'artwork-image') {
+      return [artForm.title, artForm.medium, artForm.category, 'Moyo Ayaworan artwork'];
+    }
+
+    if (target === 'catalog-image') {
+      const category = catalogCategories.find((item) => item.id === Number(catalogImageForm.category_id));
+      return [
+        catalogImageForm.alt_text || catalogImageForm.title,
+        category?.name,
+        'Moyo Ayaworan photograph',
+      ];
+    }
+
+    if (target === 'digital-product-image') {
+      return [digitalProductForm.title, digitalProductForm.details, 'Moyo Ayaworan digital product'];
+    }
+
+    if (target.startsWith('content-')) {
+      return [target.replace(/^content-/, '').replace(/-/g, ' '), 'Moyo Ayaworan'];
+    }
+
+    if (target.startsWith('gallery-')) {
+      const galleryId = Number(target.match(/^gallery-(\d+)/)?.[1]);
+      const gallery = galleries.find((item) => item.id === galleryId);
+      return [gallery?.client_name, target.includes('finished') ? 'finished work' : 'client gallery', 'Moyo Ayaworan'];
+    }
+
+    return ['Moyo Ayaworan image'];
+  };
 
   const headers = useMemo(
     () => ({
@@ -891,7 +928,8 @@ export default function AdminPage() {
       setUploadProgress((prev) => ({ ...prev, [target]: { current: completedCount, total: files.length } }));
 
       const uploadSingleFile = async (file: File, index: number) => {
-        const prepared = await prepareUploadFile(file, { preserveOriginal });
+        const seoNamedFile = renameFileForSeo(file, getUploadFilenameParts(target), index);
+        const prepared = await prepareUploadFile(seoNamedFile, { preserveOriginal });
         const formData = new FormData();
         formData.append('file', prepared.file);
         const controller = new AbortController();
@@ -918,6 +956,8 @@ export default function AdminPage() {
               apiKey?: string;
               folder?: string;
               timestamp?: number;
+              use_filename?: boolean;
+              unique_filename?: boolean;
               signature?: string;
             } | null;
 
@@ -935,6 +975,8 @@ export default function AdminPage() {
               cloudinaryForm.append('api_key', signatureData.apiKey);
               cloudinaryForm.append('folder', signatureData.folder);
               cloudinaryForm.append('timestamp', String(signatureData.timestamp));
+              if (signatureData.use_filename) cloudinaryForm.append('use_filename', 'true');
+              if (signatureData.unique_filename) cloudinaryForm.append('unique_filename', 'true');
               cloudinaryForm.append('signature', signatureData.signature);
 
               const directRes = await fetch(`https://api.cloudinary.com/v1_1/${signatureData.cloudName}/auto/upload`, {

@@ -13,6 +13,7 @@ import { useTranslate } from '@/lib/translations';
 import Link from 'next/link';
 import GlareHover from '@/components/GlareHover';
 import { useSiteSettings } from '@/lib/useSiteSettings';
+import SeoImage from '@/components/SeoImage';
 
 export default function FineArtPage() {
     const { setProfile } = useProfile();
@@ -61,9 +62,12 @@ export default function FineArtPage() {
                             >
                                 <div className="relative aspect-[4/3] overflow-hidden">
                                     <div className="absolute inset-0 z-10 bg-black/20 transition-colors group-hover:bg-black/0" />
-                                    <div
-                                        className="h-full w-full bg-cover bg-center grayscale transition-all duration-[2s] group-hover:scale-105 group-hover:grayscale-0"
-                                        style={{ backgroundImage: `url('${image || '/art_preview.webp'}')` }}
+                                    <SeoImage
+                                        src={image || '/art_preview.webp'}
+                                        alt={`Selected fine art preview ${i + 1} by Moyo Ayaworan`}
+                                        fill
+                                        sizes="(min-width: 768px) 50vw, 100vw"
+                                        className="object-cover grayscale transition-all duration-[2s] group-hover:scale-105 group-hover:grayscale-0"
                                     />
                                 </div>
                             </GlareHover>

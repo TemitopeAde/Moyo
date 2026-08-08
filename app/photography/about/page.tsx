@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import GlareHover from '@/components/GlareHover';
+import SeoImage from '@/components/SeoImage';
 
 export default function PhotographyAboutPage() {
     const { language } = useLanguage();
@@ -39,10 +40,16 @@ export default function PhotographyAboutPage() {
                                 glareSize={180}
                                 transitionDuration={760}
                             >
-                                <div
-                                    className="aspect-[4/5] overflow-hidden bg-neutral-900 bg-cover bg-center bg-no-repeat"
-                                    style={{ backgroundImage: "url('/profile-portrait.jpg')" }}
-                                />
+                                <div className="relative aspect-[4/5] overflow-hidden bg-neutral-900">
+                                    <SeoImage
+                                        src="/profile-portrait.jpg"
+                                        alt="Moyo Ayaworan photographer portrait"
+                                        fill
+                                        sizes="(min-width: 1024px) 50vw, 100vw"
+                                        preload
+                                        className="object-cover"
+                                    />
+                                </div>
                             </GlareHover>
                         </motion.div>
                         <div className="flex justify-between gap-6 text-[10px] uppercase tracking-[0.24em] text-white/20 md:tracking-[0.4em]">

@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import GlareHover from '@/components/GlareHover';
+import SeoImage from '@/components/SeoImage';
 
 const items = [
     { id: 1, title: "Presence (Limited Edition)", details: "Hand Finished Print", image: "/shop_1.webp" },
@@ -62,9 +63,12 @@ export default function ArtShopPage() {
                                 transitionDuration={760}
                             >
                                 <div className="relative aspect-[4/5] overflow-hidden bg-neutral-900">
-                                    <div
-                                        className="h-full w-full bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
-                                        style={{ backgroundImage: `url(${item.image})` }}
+                                    <SeoImage
+                                        src={item.image}
+                                        alt={`${translateText(item.title)} - ${translateText(item.details)}`}
+                                        fill
+                                        sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 100vw"
+                                        className="object-cover transition-transform duration-1000 group-hover:scale-105"
                                     />
                                 </div>
 

@@ -25,7 +25,7 @@ export default function Commission() {
                             <p className="text-neutral-400 font-body leading-relaxed mb-8">
                                 {translateText('For collectors and brands seeking unique visual narratives, Moyo offers commissioned art pieces tailored to specific spaces and stories.')}
                             </p>
-                            <button className="px-8 py-3 border border-white/20 hover:bg-accent hover:text-black hover:border-accent transition-all duration-300 text-xs uppercase tracking-widest">
+                            <button type="button" className="px-8 py-3 border border-white/20 hover:bg-accent hover:text-black hover:border-accent transition-all duration-300 text-xs uppercase tracking-widest">
                                 {t('artExhibitionsPage.exploreArchive')}
                             </button>
                         </div>

@@ -9,6 +9,8 @@ type GalleryMediaProps = {
     sizes?: string;
     previewWidth?: number;
     previewHeight?: number;
+    loading?: 'eager' | 'lazy';
+    fetchPriority?: 'high' | 'low' | 'auto';
 };
 
 export function isVideoMedia(src: string) {
@@ -22,6 +24,8 @@ export default function GalleryMedia({
     sizes = '(min-width: 1280px) 25vw, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw',
     previewWidth = 900,
     previewHeight,
+    loading = 'lazy',
+    fetchPriority = 'auto',
 }: GalleryMediaProps) {
     if (isVideoMedia(src)) {
         return (
@@ -52,7 +56,8 @@ export default function GalleryMedia({
             ])}
             alt={alt}
             className={className}
-            loading="lazy"
+            loading={loading}
+            fetchPriority={fetchPriority}
             decoding="async"
             sizes={sizes}
             draggable={false}

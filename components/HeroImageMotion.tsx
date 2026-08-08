@@ -179,7 +179,7 @@ export default function HeroImageMotion() {
                                     sizes="(min-width: 1280px) 24vw, (min-width: 768px) 30vw, 76vw"
                                     alt=""
                                     className="h-full w-full object-cover"
-                                    loading="eager"
+                                    loading="lazy"
                                     decoding="async"
                                     draggable={false}
                                 />

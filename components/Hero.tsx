@@ -9,6 +9,7 @@ import ThreeAtmosphere from '@/components/ThreeAtmosphere';
 import HeroImageMotion from '@/components/HeroImageMotion';
 import { useSiteSettings } from '@/lib/useSiteSettings';
 import { getStorageItem, setStorageItem } from '@/lib/browserStorage';
+import SeoImage from '@/components/SeoImage';
 
 // Exported Masked Line inside Hero so we don't need another file optionally,
 // or we can import from MaskedText
@@ -81,14 +82,18 @@ export default function Hero({ profileType }: HeroProps) {
                         duration: isFirst ? 1.0 : 0.8,
                         ease: [0.22, 1, 0.36, 1] // Moreli exact easing
                     }}
-                    className="w-full h-full bg-neutral-900"
-                    style={{
-                        backgroundImage: `url('${heroImage || '/' + profileType + '_hero.webp'}')`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        willChange: 'transform, opacity'
-                    }}
-                />
+                    className="relative h-full w-full bg-neutral-900"
+                    style={{ willChange: 'transform, opacity' }}
+                >
+                    <SeoImage
+                        src={heroImage || '/' + profileType + '_hero.webp'}
+                        alt={`Moyo Ayaworan ${profileType === 'photography' ? 'photography' : 'fine art'} hero image`}
+                        fill
+                        sizes="100vw"
+                        preload
+                        className="object-cover"
+                    />
+                </motion.div>
                 {profileType === 'photography' && <HeroImageMotion />}
                 <ThreeAtmosphere
                     preset={profileType}

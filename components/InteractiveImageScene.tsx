@@ -178,7 +178,14 @@ export default function InteractiveImageScene({ imageSrc, mobileImageSrc, classN
         const mount = mountRef.current;
         if (!mount) return;
 
-        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        let renderer: THREE.WebGLRenderer;
+        try {
+            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        } catch (error) {
+            console.warn('[interactive-image-scene] WebGL unavailable, skipping 3D image layer', error);
+            return;
+        }
+
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
         const loader = new THREE.TextureLoader();
