@@ -150,7 +150,19 @@ export default function ThreeAtmosphere({ preset, className = '' }: ThreeAtmosph
 
         const config = presetConfig[preset];
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        let renderer: THREE.WebGLRenderer;
+
+        try {
+            renderer = new THREE.WebGLRenderer({
+                alpha: true,
+                antialias: false,
+                powerPreference: 'low-power',
+            });
+        } catch (error) {
+            console.warn('[three-atmosphere] WebGL unavailable, skipping atmosphere layer', error);
+            return;
+        }
+
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 140);
         const group = new THREE.Group();
@@ -159,6 +171,8 @@ export default function ThreeAtmosphere({ preset, className = '' }: ThreeAtmosph
         let animationFrame = 0;
         let width = 0;
         let height = 0;
+        let isVisible = true;
+        let isPageVisible = document.visibilityState === 'visible';
 
         const isMobile = window.innerWidth < 768;
         const particles = createParticleField(config, isMobile);
@@ -170,7 +184,7 @@ export default function ThreeAtmosphere({ preset, className = '' }: ThreeAtmosph
         group.add(filaments);
 
         renderer.setClearColor(0x000000, 0);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.35 : 1.75));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.1 : 1.35));
         renderer.domElement.setAttribute('aria-hidden', 'true');
         renderer.domElement.className = 'h-full w-full';
         mount.appendChild(renderer.domElement);
@@ -188,7 +202,21 @@ export default function ThreeAtmosphere({ preset, className = '' }: ThreeAtmosph
             target.y = (event.clientY / window.innerHeight - 0.5) * 2;
         };
 
+        const shouldAnimate = () => !reducedMotion && isVisible && isPageVisible;
+
+        const stopLoop = () => {
+            if (!animationFrame) return;
+            window.cancelAnimationFrame(animationFrame);
+            animationFrame = 0;
+        };
+
+        const startLoop = () => {
+            if (animationFrame || !shouldAnimate()) return;
+            animationFrame = window.requestAnimationFrame(render);
+        };
+
         const render = (time = 0) => {
+            animationFrame = 0;
             const seconds = time * 0.001;
 
             pointer.lerp(target, 0.045);
@@ -202,8 +230,17 @@ export default function ThreeAtmosphere({ preset, className = '' }: ThreeAtmosph
 
             renderer.render(scene, camera);
 
-            if (!reducedMotion) {
+            if (shouldAnimate()) {
                 animationFrame = window.requestAnimationFrame(render);
+            }
+        };
+
+        const handleVisibilityChange = () => {
+            isPageVisible = document.visibilityState === 'visible';
+            if (shouldAnimate()) {
+                startLoop();
+            } else {
+                stopLoop();
             }
         };
 
@@ -212,7 +249,35 @@ export default function ThreeAtmosphere({ preset, className = '' }: ThreeAtmosph
 
         if (!reducedMotion) {
             window.addEventListener('pointermove', handlePointerMove, { passive: true });
-            animationFrame = window.requestAnimationFrame(render);
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+            const observer = new IntersectionObserver(([entry]) => {
+                isVisible = entry?.isIntersecting ?? true;
+                if (shouldAnimate()) {
+                    startLoop();
+                } else {
+                    stopLoop();
+                }
+            });
+            observer.observe(mount);
+            startLoop();
+
+            return () => {
+                observer.disconnect();
+                document.removeEventListener('visibilitychange', handleVisibilityChange);
+                window.removeEventListener('resize', resize);
+                window.removeEventListener('pointermove', handlePointerMove);
+                stopLoop();
+
+                particles.geometry.dispose();
+                filaments.geometry.dispose();
+                (particles.material as THREE.Material).dispose();
+                (filaments.material as THREE.Material).dispose();
+                renderer.dispose();
+
+                if (renderer.domElement.parentElement === mount) {
+                    mount.removeChild(renderer.domElement);
+                }
+            };
         } else {
             group.rotation.y = preset === 'entry' ? 0.18 : 0.1;
             group.rotation.x = preset === 'photography' ? -0.05 : 0.04;
@@ -222,7 +287,7 @@ export default function ThreeAtmosphere({ preset, className = '' }: ThreeAtmosph
         return () => {
             window.removeEventListener('resize', resize);
             window.removeEventListener('pointermove', handlePointerMove);
-            if (animationFrame) window.cancelAnimationFrame(animationFrame);
+            stopLoop();
 
             particles.geometry.dispose();
             filaments.geometry.dispose();

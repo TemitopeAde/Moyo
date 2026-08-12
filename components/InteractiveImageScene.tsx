@@ -180,7 +180,11 @@ export default function InteractiveImageScene({ imageSrc, mobileImageSrc, classN
 
         let renderer: THREE.WebGLRenderer;
         try {
-            renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer = new THREE.WebGLRenderer({
+                alpha: true,
+                antialias: false,
+                powerPreference: 'low-power',
+            });
         } catch (error) {
             console.warn('[interactive-image-scene] WebGL unavailable, skipping 3D image layer', error);
             return;
@@ -209,6 +213,8 @@ export default function InteractiveImageScene({ imageSrc, mobileImageSrc, classN
         let texture: THREE.Texture | null = null;
         let activeImageSrc = '';
         let disposed = false;
+        let isVisible = true;
+        let isPageVisible = document.visibilityState === 'visible';
 
         const stars = createPointLayer(760, 22, 12, '#d9e4ff', 0.018, 0.58, 10);
         const dust = createPointLayer(430, 15, 6, '#f3e5bd', 0.028, 0.22, 210);
@@ -229,7 +235,7 @@ export default function InteractiveImageScene({ imageSrc, mobileImageSrc, classN
         if (nebulaTextureC) nebulaGroup.add(createNebulaPlane(nebulaTextureC, 7.8, 0.2, 0.0, -9, 0.03));
 
         renderer.setClearColor(0x000000, 0);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.8));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.1 : 1.35));
         renderer.domElement.className = 'h-full w-full interactive-image-canvas';
         renderer.domElement.setAttribute('aria-label', 'Interactive 3D portrait image');
         renderer.domElement.dataset.scene = 'interactive-image';
@@ -283,7 +289,21 @@ export default function InteractiveImageScene({ imageSrc, mobileImageSrc, classN
             );
         };
 
+        const shouldAnimate = () => !reducedMotion && isVisible && isPageVisible;
+
+        const stopLoop = () => {
+            if (!animationFrame) return;
+            window.cancelAnimationFrame(animationFrame);
+            animationFrame = 0;
+        };
+
+        const startLoop = () => {
+            if (animationFrame || !shouldAnimate()) return;
+            animationFrame = window.requestAnimationFrame(render);
+        };
+
         const render = (time = 0) => {
+            animationFrame = 0;
             const seconds = time * 0.001;
 
             mouse.lerp(targetMouse, reducedMotion ? 1 : 0.075);
@@ -311,7 +331,7 @@ export default function InteractiveImageScene({ imageSrc, mobileImageSrc, classN
             camera.lookAt(0, 0, 0);
             renderer.render(scene, camera);
 
-            if (!reducedMotion) {
+            if (shouldAnimate()) {
                 animationFrame = window.requestAnimationFrame(render);
             }
         };
@@ -348,7 +368,11 @@ export default function InteractiveImageScene({ imageSrc, mobileImageSrc, classN
             mesh = new THREE.Mesh(geometry, material);
             portraitGroup.add(glow, mesh);
             resizeMesh();
-            render();
+            if (reducedMotion) {
+                render();
+            } else {
+                startLoop();
+            }
         };
 
         const loadResponsiveTexture = () => {
@@ -386,6 +410,15 @@ export default function InteractiveImageScene({ imageSrc, mobileImageSrc, classN
             loadResponsiveTexture();
         };
 
+        const handleVisibilityChange = () => {
+            isPageVisible = document.visibilityState === 'visible';
+            if (shouldAnimate()) {
+                startLoop();
+            } else {
+                stopLoop();
+            }
+        };
+
         resize();
         updateScroll();
         window.addEventListener('resize', handleResponsiveResize);
@@ -393,7 +426,63 @@ export default function InteractiveImageScene({ imageSrc, mobileImageSrc, classN
         window.addEventListener('pointermove', handlePointerMove, { passive: true });
 
         if (!reducedMotion) {
-            animationFrame = window.requestAnimationFrame(render);
+            document.addEventListener('visibilitychange', handleVisibilityChange);
+            const observer = new IntersectionObserver(([entry]) => {
+                isVisible = entry?.isIntersecting ?? true;
+                if (shouldAnimate()) {
+                    startLoop();
+                } else {
+                    stopLoop();
+                }
+            });
+            observer.observe(mount);
+            startLoop();
+
+            return () => {
+                disposed = true;
+                observer.disconnect();
+                document.removeEventListener('visibilitychange', handleVisibilityChange);
+                window.removeEventListener('resize', handleResponsiveResize);
+                window.removeEventListener('scroll', updateScroll);
+                window.removeEventListener('pointermove', handlePointerMove);
+                stopLoop();
+
+                if (mesh) {
+                    portraitGroup.remove(mesh);
+                    mesh.geometry.dispose();
+                    mesh.material.dispose();
+                }
+
+                if (glow) {
+                    portraitGroup.remove(glow);
+                    glow.geometry.dispose();
+                    glow.material.dispose();
+                }
+
+                stars.geometry.dispose();
+                dust.geometry.dispose();
+                streaks.geometry.dispose();
+                (stars.material as THREE.Material).dispose();
+                (dust.material as THREE.Material).dispose();
+                (streaks.material as THREE.Material).dispose();
+                nebulaGroup.children.forEach((child) => {
+                    if (child instanceof THREE.Mesh) {
+                        child.geometry.dispose();
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach((material) => material.dispose());
+                        } else {
+                            child.material.dispose();
+                        }
+                    }
+                });
+                nebulaTextures.forEach((nebulaTexture) => nebulaTexture.dispose());
+                texture?.dispose();
+                renderer.dispose();
+
+                if (renderer.domElement.parentElement === mount) {
+                    mount.removeChild(renderer.domElement);
+                }
+            };
         }
 
         return () => {
@@ -401,7 +490,7 @@ export default function InteractiveImageScene({ imageSrc, mobileImageSrc, classN
             window.removeEventListener('resize', handleResponsiveResize);
             window.removeEventListener('scroll', updateScroll);
             window.removeEventListener('pointermove', handlePointerMove);
-            if (animationFrame) window.cancelAnimationFrame(animationFrame);
+            stopLoop();
 
             if (mesh) {
                 portraitGroup.remove(mesh);

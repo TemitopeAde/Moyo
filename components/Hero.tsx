@@ -1,12 +1,11 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import { useEffect, useState } from 'react';
-import ThreeAtmosphere from '@/components/ThreeAtmosphere';
-import HeroImageMotion from '@/components/HeroImageMotion';
 import { useSiteSettings } from '@/lib/useSiteSettings';
 import { getStorageItem, setStorageItem } from '@/lib/browserStorage';
 import SeoImage from '@/components/SeoImage';
@@ -14,6 +13,9 @@ import SeoImage from '@/components/SeoImage';
 // Exported Masked Line inside Hero so we don't need another file optionally,
 // or we can import from MaskedText
 import { MaskedLine } from '@/components/ui/MaskedText';
+
+const ThreeAtmosphere = dynamic(() => import('@/components/ThreeAtmosphere'), { ssr: false });
+const HeroImageMotion = dynamic(() => import('@/components/HeroImageMotion'), { ssr: false });
 
 interface HeroProps {
     profileType: 'photography' | 'art';
@@ -24,6 +26,7 @@ export default function Hero({ profileType }: HeroProps) {
     const { t, translateText } = useTranslate(language);
     const settings = useSiteSettings();
     const [cmsHero, setCmsHero] = useState<{ heroText: string; heroImage: string } | null>(null);
+    const [showDecorativeEffects, setShowDecorativeEffects] = useState(false);
 
     const [isInitialLoad] = useState(() => {
         if (typeof window === 'undefined') return false;
@@ -40,6 +43,13 @@ export default function Hero({ profileType }: HeroProps) {
             .then((res) => res.json())
             .then((data) => setCmsHero(data.content?.homepage))
             .catch(() => null);
+    }, []);
+
+    useEffect(() => {
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const timeout = window.setTimeout(() => setShowDecorativeEffects(!reducedMotion), reducedMotion ? 0 : 550);
+
+        return () => window.clearTimeout(timeout);
     }, []);
 
     const defaultHeadline = profileType === 'photography' ? t('hero.photography') : t('hero.art');
@@ -94,11 +104,15 @@ export default function Hero({ profileType }: HeroProps) {
                         className="object-cover"
                     />
                 </motion.div>
-                {profileType === 'photography' && <HeroImageMotion />}
-                <ThreeAtmosphere
-                    preset={profileType}
-                    className="z-10 opacity-80 mix-blend-screen"
-                />
+                {showDecorativeEffects && (
+                    <>
+                        {profileType === 'photography' && <HeroImageMotion />}
+                        <ThreeAtmosphere
+                            preset={profileType}
+                            className="z-10 opacity-80 mix-blend-screen"
+                        />
+                    </>
+                )}
                 <div className="absolute inset-0 bg-background/70 z-20" />
                 <div className="absolute inset-0 z-20 bg-radial-[at_50%_52%] from-background/62 via-background/42 to-background/82" />
             </div>

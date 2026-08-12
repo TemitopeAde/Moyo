@@ -1,9 +1,8 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import ProfileToggle from '@/components/ProfileToggle';
-import InteractiveImageScene from '@/components/InteractiveImageScene';
-import ThreeAtmosphere from '@/components/ThreeAtmosphere';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
@@ -14,10 +13,14 @@ import Shuffle from '@/components/Shuffle';
 import Image from 'next/image';
 import SeoImage from '@/components/SeoImage';
 
+const InteractiveImageScene = dynamic(() => import('@/components/InteractiveImageScene'), { ssr: false });
+const ThreeAtmosphere = dynamic(() => import('@/components/ThreeAtmosphere'), { ssr: false });
+
 export default function GlobalEntryPage() {
   const { language } = useLanguage();
   const { t, translateText } = useTranslate(language);
   const settings = useSiteSettings();
+  const [showDecorativeEffects, setShowDecorativeEffects] = React.useState(false);
   const entryTitle = translateText(settings.entry.title || 'Ijabiken Moyo');
   const entryTagline = translateText(settings.entry.tagline || t('home.tagline'));
   const philosophyLabel = translateText(settings.entry.philosophyLabel || t('home.philosophy'));
@@ -28,16 +31,27 @@ export default function GlobalEntryPage() {
   const titleFirstLine = titleWords.length > 1 ? titleWords.slice(0, -1).join(' ') : entryTitle;
   const titleSecondLine = titleWords.length > 1 ? titleWords[titleWords.length - 1] : '';
 
+  React.useEffect(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const timeout = window.setTimeout(() => setShowDecorativeEffects(!reducedMotion), reducedMotion ? 0 : 450);
+
+    return () => window.clearTimeout(timeout);
+  }, []);
+
   return (
     <main className="entry-experience relative flex min-h-[100svh] w-full flex-col items-center justify-center overflow-hidden px-4 py-8 text-left selection:bg-accent selection:text-black sm:px-6 md:px-8">
       {/* Cinematic Background Layer */}
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <InteractiveImageScene
-          imageSrc={settings.entry.desktopImage}
-          mobileImageSrc={settings.entry.mobileImage}
-          className="z-0 opacity-35 grayscale"
-        />
-        <ThreeAtmosphere preset="entry" className="z-10 opacity-80 mix-blend-screen" />
+        {showDecorativeEffects && (
+          <>
+            <InteractiveImageScene
+              imageSrc={settings.entry.desktopImage}
+              mobileImageSrc={settings.entry.mobileImage}
+              className="z-0 opacity-35 grayscale"
+            />
+            <ThreeAtmosphere preset="entry" className="z-10 opacity-80 mix-blend-screen" />
+          </>
+        )}
         <div className="entry-bg-wash absolute inset-0 z-20" />
         <div className="entry-bg-radial absolute inset-0 z-20" />
         <div className="cosmic-film-grain pointer-events-none absolute inset-0 z-20" />
