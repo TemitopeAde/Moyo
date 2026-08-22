@@ -179,7 +179,8 @@ async function ensureTables() {
       ADD COLUMN IF NOT EXISTS review_rating INTEGER,
       ADD COLUMN IF NOT EXISTS review_text TEXT DEFAULT '',
       ADD COLUMN IF NOT EXISTS review_submitted_at TIMESTAMPTZ,
-      ADD COLUMN IF NOT EXISTS review_featured BOOLEAN DEFAULT FALSE;
+      ADD COLUMN IF NOT EXISTS review_featured BOOLEAN DEFAULT FALSE,
+      ADD COLUMN IF NOT EXISTS is_locked BOOLEAN DEFAULT FALSE;
   `);
 
   await pool.query(`

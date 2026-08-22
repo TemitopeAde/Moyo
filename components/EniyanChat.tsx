@@ -5,9 +5,11 @@ import {
   ArrowRight,
   CalendarCheck,
   Camera,
+  Compass,
   Loader2,
   LockKeyhole,
   Mail,
+  MessageCircle,
   Minimize2,
   Palette,
   RotateCcw,
@@ -17,6 +19,7 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from 'next-themes';
+import { usePathname } from 'next/navigation';
 import { LanguageCode, useLanguage } from '@/context/LanguageContext';
 
 type ChatRole = 'assistant' | 'user';
@@ -299,6 +302,7 @@ function EniyanSign({
 
 export default function EniyanChat() {
   const { language } = useLanguage();
+  const pathname = usePathname();
   const { resolvedTheme, theme } = useTheme();
   const copy = ENIYAN_COPY[language] || ENIYAN_COPY.EN;
   const isLight = (resolvedTheme || theme) === 'light';
@@ -316,6 +320,7 @@ export default function EniyanChat() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const recentMessages = useMemo(() => messages.slice(-8), [messages]);
+  const currentRouteLabel = ROUTE_LABELS[pathname || '/'] || 'Current page';
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -381,35 +386,38 @@ export default function EniyanChat() {
   }
 
   return (
-    <div className="fixed bottom-5 right-5 z-[120] flex max-w-[calc(100vw-2rem)] flex-col items-end gap-3 md:bottom-8 md:right-8">
+    <div className="fixed bottom-4 right-4 z-[120] flex max-w-[calc(100vw-2rem)] flex-col items-end gap-3 md:bottom-6 md:right-6">
       <AnimatePresence>
         {isOpen && (
           <motion.section
-            initial={{ opacity: 0, y: 16, scale: 0.98 }}
+            initial={{ opacity: 0, y: 18, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.98 }}
-            transition={{ duration: 0.28, ease: [0.19, 1, 0.22, 1] }}
-            className={`relative w-[min(440px,calc(100vw-2rem))] overflow-hidden rounded-[18px] border shadow-2xl backdrop-blur-xl ${
+            exit={{ opacity: 0, y: 14, scale: 0.98 }}
+            transition={{ duration: 0.32, ease: [0.19, 1, 0.22, 1] }}
+            className={`relative max-h-[calc(100svh-6rem)] w-[min(920px,calc(100vw-2rem))] overflow-hidden rounded-[8px] border shadow-2xl backdrop-blur-xl ${
               isLight
-                ? 'border-black/10 bg-[#fbfaf7]/96 text-[#141414] shadow-black/12'
-                : 'border-white/10 bg-[#111111]/96 text-white shadow-black/45'
+                ? 'border-black/10 bg-[#fbfaf7]/98 text-[#141414] shadow-black/12'
+                : 'border-white/10 bg-[#0f0f0f]/98 text-white shadow-black/45'
             }`}
             aria-label="Eniyan AI chat assistant"
           >
-            <div className="relative">
-              <header className={`overflow-hidden border-b px-5 py-4 ${isLight ? 'border-black/10' : 'border-white/10'}`}>
-                <div className="flex items-start justify-between gap-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <EniyanSign compact />
-                  <div className="min-w-0">
-                    <p className={`mb-1 text-[9px] font-medium uppercase tracking-[0.28em] ${isLight ? 'text-black/40' : 'text-white/40'}`}>
-                      {copy.eyebrow}
-                    </p>
-                    <h2 className={`truncate font-heading text-2xl italic leading-none ${isLight ? 'text-[#141414]' : 'text-white'}`}>
-                      {copy.title}
-                    </h2>
-                    <p className={`mt-2 truncate text-[10px] uppercase tracking-[0.18em] ${isLight ? 'text-black/45' : 'text-white/45'}`}>
-                      {copy.subtitle}
+            <header className={`border-b px-4 py-4 sm:px-5 ${isLight ? 'border-black/10' : 'border-white/10'}`}>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex min-w-0 gap-3">
+                  <EniyanSign compact neutral light={isLight} />
+                  <div className="min-w-0 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className={`font-heading text-2xl italic leading-none ${isLight ? 'text-[#141414]' : 'text-white'}`}>
+                        {copy.title}
+                      </h2>
+                      <span className={`border px-2 py-1 text-[8px] uppercase tracking-[0.18em] ${
+                        isLight ? 'border-black/10 bg-black/[0.035] text-black/45' : 'border-white/10 bg-white/[0.045] text-white/45'
+                      }`}>
+                        {copy.eyebrow}
+                      </span>
+                    </div>
+                    <p className={`max-w-xl text-xs leading-relaxed ${isLight ? 'text-black/52' : 'text-white/52'}`}>
+                      {copy.subtitle}. You are on {currentRouteLabel}.
                     </p>
                   </div>
                 </div>
@@ -417,7 +425,7 @@ export default function EniyanChat() {
                   <button
                     type="button"
                     onClick={resetChat}
-                    className={`grid size-9 place-items-center rounded-full transition ${
+                    className={`grid size-9 place-items-center rounded-[8px] transition ${
                       isLight ? 'text-black/45 hover:bg-black/5 hover:text-black' : 'text-white/50 hover:bg-white/8 hover:text-white'
                     }`}
                     aria-label="Reset Eniyan chat"
@@ -427,7 +435,7 @@ export default function EniyanChat() {
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
-                    className={`grid size-9 place-items-center rounded-full transition ${
+                    className={`grid size-9 place-items-center rounded-[8px] transition ${
                       isLight ? 'text-black/45 hover:bg-black/5 hover:text-black' : 'text-white/50 hover:bg-white/8 hover:text-white'
                     }`}
                     aria-label="Minimize Eniyan"
@@ -437,7 +445,7 @@ export default function EniyanChat() {
                   <button
                     type="button"
                     onClick={closeChat}
-                    className={`grid size-9 place-items-center rounded-full transition ${
+                    className={`grid size-9 place-items-center rounded-[8px] transition ${
                       isLight ? 'text-black/45 hover:bg-black/5 hover:text-black' : 'text-white/50 hover:bg-white/8 hover:text-white'
                     }`}
                     aria-label="Close Eniyan"
@@ -445,173 +453,187 @@ export default function EniyanChat() {
                     <X className="size-4" aria-hidden="true" />
                   </button>
                 </div>
-                </div>
-              </header>
-
-              <div className={`border-b px-5 py-3 ${isLight ? 'border-black/10' : 'border-white/10'}`}>
-                <div className="flex gap-3 overflow-x-auto pb-1">
-                {FEATURE_CARDS.map((card) => {
-                  const Icon = card.icon;
-                  const cardCopy = copy.features[card.id] || ENIYAN_COPY.EN.features[card.id];
-                  if (!cardCopy) return null;
-                  return (
-                  <a
-                    key={card.href}
-                    href={card.href}
-                    className={`group flex w-[146px] shrink-0 flex-col rounded-[14px] border p-3 transition ${
-                      isLight
-                        ? 'border-black/10 bg-white/45 hover:bg-white/75'
-                        : 'border-white/10 bg-white/[0.035] hover:bg-white/[0.06]'
-                    }`}
-                  >
-                    <span
-                      className={`mb-3 grid size-9 place-items-center rounded-[10px] border transition ${
-                        isLight
-                          ? 'border-black/10 bg-[#111111] text-white'
-                          : 'border-white/10 bg-white/[0.045] text-white/64'
-                      }`}
-                    >
-                      <Icon
-                        className="size-4"
-                        color={isLight ? '#ffffff' : 'rgba(255, 255, 255, 0.72)'}
-                        strokeWidth={2}
-                        aria-hidden="true"
-                      />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className={`mb-1 block text-[8px] font-semibold uppercase tracking-[0.2em] ${isLight ? 'text-black/38' : 'text-white/38'}`}>
-                        {cardCopy.label}
-                      </span>
-                      <span className={`block text-sm font-semibold leading-tight ${isLight ? 'text-black/85' : 'text-white/86'}`}>
-                        {cardCopy.title}
-                      </span>
-                      <span className={`mt-3 inline-flex items-center gap-1.5 text-[10px] font-semibold ${isLight ? 'text-black/52' : 'text-white/52'}`}>
-                        {cardCopy.action}
-                        <ArrowRight className="size-3.5 transition group-hover:translate-x-1" aria-hidden="true" />
-                      </span>
-                    </span>
-                  </a>
-                  );
-                })}
-                </div>
               </div>
+            </header>
 
-            <div ref={scrollRef} className="max-h-[34svh] space-y-4 overflow-y-auto px-5 py-4">
-              {recentMessages.map((message) => {
-                const links = message.role === 'assistant' ? getMessageLinks(message.content) : [];
+            <div className="grid min-h-[520px] md:grid-cols-[minmax(0,1fr)_280px]">
+              <section className="flex min-h-0 flex-col">
+                <div ref={scrollRef} className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-5">
+                  {recentMessages.map((message) => {
+                    const links = message.role === 'assistant' ? getMessageLinks(message.content) : [];
 
-                return (
-                <div
-                  key={message.id}
-                  className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}
-                >
-                  <p
-                    className={`max-w-[84%] whitespace-pre-wrap rounded-[2px] px-3 py-2.5 text-sm leading-relaxed ${
-                      message.role === 'user'
-                        ? isLight
-                          ? 'bg-[#181818] text-white'
-                          : 'bg-white text-[#111111]'
-                        : isLight
-                          ? 'border-l border-black/18 bg-black/[0.035] text-black/72'
-                          : 'border-l border-white/18 bg-white/[0.045] text-white/78'
-                    }`}
-                  >
-                    {message.content}
-                  </p>
-                  {links.length > 0 && (
-                    <div className="mt-2 flex max-w-[84%] flex-wrap gap-2">
-                      {links.map((path) => (
-                        <a
-                          key={path}
-                          href={path}
-                          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] transition ${
-                            isLight
-                              ? 'border-black/10 bg-white/70 text-black/62 hover:border-black/22 hover:text-black'
-                              : 'border-white/10 bg-white/[0.045] text-white/62 hover:border-white/22 hover:text-white'
-                          }`}
-                        >
-                          {ROUTE_LABELS[path]}
-                          <ArrowRight className="size-3" aria-hidden="true" />
-                        </a>
-                      ))}
+                    return (
+                      <div
+                        key={message.id}
+                        className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        {message.role === 'assistant' && <EniyanSign compact neutral light={isLight} />}
+                        <div className={`flex max-w-[86%] flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
+                          <p
+                            className={`whitespace-pre-wrap rounded-[8px] px-4 py-3 text-sm leading-relaxed ${
+                              message.role === 'user'
+                                ? isLight
+                                  ? 'bg-[#181818] text-white'
+                                  : 'bg-white text-[#111111]'
+                                : isLight
+                                  ? 'border border-black/8 bg-black/[0.035] text-black/72'
+                                  : 'border border-white/10 bg-white/[0.045] text-white/78'
+                            }`}
+                          >
+                            {message.content}
+                          </p>
+                          {links.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {links.map((path) => (
+                                <a
+                                  key={path}
+                                  href={path}
+                                  className={`inline-flex items-center gap-1.5 rounded-[8px] border px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] transition ${
+                                    isLight
+                                      ? 'border-black/10 bg-white/70 text-black/62 hover:border-black/22 hover:text-black'
+                                      : 'border-white/10 bg-white/[0.045] text-white/62 hover:border-white/22 hover:text-white'
+                                  }`}
+                                >
+                                  {ROUTE_LABELS[path]}
+                                  <ArrowRight className="size-3" aria-hidden="true" />
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {isSending && (
+                    <div className="flex justify-start gap-3">
+                      <EniyanSign compact neutral light={isLight} />
+                      <div
+                        className={`flex items-center gap-2 rounded-[8px] border px-4 py-3 text-sm ${
+                          isLight ? 'border-black/8 bg-black/[0.035] text-black/55' : 'border-white/10 bg-white/[0.045] text-white/55'
+                        }`}
+                      >
+                        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                        {copy.thinking}
+                      </div>
                     </div>
                   )}
+                  {error && <p className="text-xs leading-relaxed text-red-500">{error}</p>}
                 </div>
-                );
-              })}
-              {isSending && (
-                <div className="flex justify-start">
-                  <div
-                    className={`flex items-center gap-2 rounded-[2px] border-l border-accent/45 px-3 py-2 text-sm ${
-                      isLight ? 'bg-black/[0.035] text-black/55' : 'bg-white/[0.045] text-white/55'
-                    }`}
-                  >
-                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                    {copy.thinking}
+
+                <div className={`border-t px-4 py-4 sm:px-5 ${isLight ? 'border-black/10' : 'border-white/10'}`}>
+                  <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+                    {copy.starterPrompts.map((prompt) => (
+                      <button
+                        key={prompt}
+                        type="button"
+                        onClick={() => sendMessage(prompt)}
+                        className={`shrink-0 rounded-[8px] border px-3 py-2 text-left text-[10px] uppercase tracking-[0.12em] transition ${
+                          isLight ? 'border-black/10 bg-white/45 text-black/52 hover:bg-white/75 hover:text-black' : 'border-white/10 bg-white/[0.035] text-white/55 hover:bg-white/[0.07] hover:text-white'
+                        }`}
+                      >
+                        {prompt}
+                      </button>
+                    ))}
                   </div>
-                </div>
-              )}
-              {error && <p className="text-xs leading-relaxed text-red-500">{error}</p>}
-            </div>
 
-            <div className={`border-t px-5 py-4 ${isLight ? 'border-black/10' : 'border-white/10'}`}>
-              <div className="mb-3 flex flex-wrap gap-2">
-                {copy.starterPrompts.map((prompt) => (
-                  <button
-                    key={prompt}
-                    type="button"
-                    onClick={() => sendMessage(prompt)}
-                    className={`rounded-full border px-3 py-2 text-left text-[10px] uppercase tracking-[0.12em] transition ${
-                      isLight ? 'border-black/10 bg-white/45 text-black/52' : 'border-white/10 bg-white/[0.035] text-white/55'
+                  <form
+                    className={`flex items-end gap-2 rounded-[8px] border p-2 ${
+                      isLight ? 'border-black/10 bg-white/60' : 'border-white/10 bg-white/[0.035]'
                     }`}
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-
-              <form
-                className="flex items-end gap-2"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  sendMessage(input);
-                }}
-              >
-                <label className="sr-only" htmlFor="eniyan-message">
-                  Message Eniyan
-                </label>
-                <textarea
-                  id="eniyan-message"
-                  value={input}
-                  rows={1}
-                  onChange={(event) => setInput(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && !event.shiftKey) {
+                    onSubmit={(event) => {
                       event.preventDefault();
                       sendMessage(input);
-                    }
-                  }}
-                  placeholder={copy.placeholder}
-                  className={`max-h-24 min-h-11 flex-1 resize-none rounded-full border px-4 py-3 text-sm outline-none transition ${
-                    isLight
-                      ? 'border-black/10 bg-white/70 text-black placeholder:text-black/30 focus:border-black/24'
-                      : 'border-white/10 bg-white/[0.035] text-white placeholder:text-white/30 focus:border-white/24'
-                  }`}
-                />
-                <button
-                  type="submit"
-                  disabled={!input.trim() || isSending}
-                  className={`grid size-11 shrink-0 place-items-center rounded-full transition disabled:cursor-not-allowed ${
-                    isLight
-                      ? 'bg-black/[0.08] text-accent hover:bg-black/[0.12]'
-                      : 'bg-white/[0.08] text-accent hover:bg-white/[0.12]'
-                  }`}
-                  aria-label="Send message"
-                >
-                  <Send className="size-4 text-accent" aria-hidden="true" />
-                </button>
-              </form>
-            </div>
+                    }}
+                  >
+                    <label className="sr-only" htmlFor="eniyan-message">
+                      Message Eniyan
+                    </label>
+                    <textarea
+                      id="eniyan-message"
+                      value={input}
+                      rows={1}
+                      onChange={(event) => setInput(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' && !event.shiftKey) {
+                          event.preventDefault();
+                          sendMessage(input);
+                        }
+                      }}
+                      placeholder={copy.placeholder}
+                      className={`max-h-24 min-h-11 flex-1 resize-none bg-transparent px-2 py-3 text-sm outline-none transition ${
+                        isLight
+                          ? 'text-black placeholder:text-black/30'
+                          : 'text-white placeholder:text-white/30'
+                      }`}
+                    />
+                    <button
+                      type="submit"
+                      disabled={!input.trim() || isSending}
+                      className={`grid size-11 shrink-0 place-items-center rounded-[8px] transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                        isLight
+                          ? 'bg-black text-white hover:bg-accent hover:text-black'
+                          : 'bg-white text-black hover:bg-accent'
+                      }`}
+                      aria-label="Send message"
+                    >
+                      <Send className="size-4" aria-hidden="true" />
+                    </button>
+                  </form>
+                </div>
+              </section>
+
+              <aside className={`hidden border-l p-4 md:block ${isLight ? 'border-black/10 bg-black/[0.025]' : 'border-white/10 bg-white/[0.025]'}`}>
+                <div className="mb-4 flex items-center gap-2">
+                  <Compass className={`size-4 ${isLight ? 'text-black/45' : 'text-white/45'}`} aria-hidden="true" />
+                  <p className={`text-[10px] uppercase tracking-[0.24em] ${isLight ? 'text-black/45' : 'text-white/45'}`}>
+                    Go straight to
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  {FEATURE_CARDS.map((card) => {
+                    const Icon = card.icon;
+                    const cardCopy = copy.features[card.id] || ENIYAN_COPY.EN.features[card.id];
+                    if (!cardCopy) return null;
+                    return (
+                      <a
+                        key={card.href}
+                        href={card.href}
+                        className={`group flex items-center gap-3 rounded-[8px] border p-3 transition ${
+                            isLight
+                              ? 'border-black/10 bg-white/50 hover:bg-white/85'
+                              : 'border-white/10 bg-white/[0.035] hover:bg-white/[0.07]'
+                          }`}
+                        >
+                          <span
+                            className={`grid size-10 shrink-0 place-items-center rounded-[8px] border ${
+                              isLight
+                                ? 'border-black/10 bg-[#111111] text-white'
+                                : 'border-white/10 bg-white/[0.045] text-white/70'
+                            }`}
+                          >
+                            <Icon className="size-4" aria-hidden="true" />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className={`block text-[8px] font-semibold uppercase tracking-[0.2em] ${isLight ? 'text-black/38' : 'text-white/38'}`}>
+                              {cardCopy.label}
+                            </span>
+                            <span className={`mt-1 block truncate text-sm font-semibold ${isLight ? 'text-black/82' : 'text-white/84'}`}>
+                              {cardCopy.title}
+                            </span>
+                          </span>
+                          <ArrowRight className={`size-4 shrink-0 transition group-hover:translate-x-1 ${isLight ? 'text-black/35' : 'text-white/35'}`} aria-hidden="true" />
+                        </a>
+                      );
+                    })}
+                </div>
+
+                <div className={`mt-4 rounded-[8px] border p-4 ${isLight ? 'border-black/10 text-black/48' : 'border-white/10 text-white/48'}`}>
+                  <MessageCircle className="mb-3 size-4" aria-hidden="true" />
+                  <p className="text-xs leading-relaxed">
+                    Ask for a page, a booking path, a client gallery step, or help choosing between photography and fine art.
+                  </p>
+                </div>
+              </aside>
             </div>
           </motion.section>
         )}
@@ -620,7 +642,7 @@ export default function EniyanChat() {
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className={`group grid size-11 place-items-center rounded-full border shadow-xl shadow-black/20 backdrop-blur-xl transition ${
+        className={`group flex h-12 items-center gap-3 rounded-full border px-3 shadow-xl shadow-black/20 backdrop-blur-xl transition ${
           isLight
             ? 'border-black/10 bg-white/80 text-black/70 hover:border-black/18 hover:bg-white hover:text-black'
             : 'border-white/10 bg-[#171717]/86 text-white/68 hover:border-white/18 hover:bg-[#1f1f1f]/90 hover:text-white/86'
@@ -628,9 +650,15 @@ export default function EniyanChat() {
         aria-label={isOpen ? 'Hide Eniyan chat' : 'Open Eniyan chat'}
       >
         {isOpen ? (
-          <X className="size-5" aria-hidden="true" />
+          <>
+            <X className="size-5" aria-hidden="true" />
+            <span className="hidden pr-1 text-[10px] font-semibold uppercase tracking-[0.18em] sm:inline">Close</span>
+          </>
         ) : (
-          <EniyanSign compact neutral light={isLight} />
+          <>
+            <EniyanSign compact neutral light={isLight} />
+            <span className="hidden pr-1 text-[10px] font-semibold uppercase tracking-[0.18em] sm:inline">Ask Eniyan</span>
+          </>
         )}
       </button>
     </div>

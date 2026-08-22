@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   const { rows } = await query(
     `SELECT id, images, is_locked
      FROM galleries
-     WHERE id = $1 AND access_code = $2
+     WHERE id = $1 AND UPPER(access_code) = UPPER($2)
      LIMIT 1`,
     [galleryId, accessCode]
   );

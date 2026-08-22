@@ -35,7 +35,7 @@ function audienceButtonClass(isActive: boolean) {
 
 export default function NewsletterAdminPage() {
   const [adminKey, setAdminKey] = useState('');
-  const [isAuthed, setIsAuthed] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(true);
   const [authChecking, setAuthChecking] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -45,10 +45,6 @@ export default function NewsletterAdminPage() {
   const [notice, setNotice] = useState<Notice>(null);
   const [campaign, setCampaign] = useState({ subject: '', previewText: '', body: '', bodyHtml: '' });
   const editorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    localStorage.removeItem('moyo-admin-key');
-  }, []);
 
   useEffect(() => {
     if (!notice) return;

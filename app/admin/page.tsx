@@ -700,7 +700,7 @@ export default function AdminPage() {
   const [galleryDocuments, setGalleryDocuments] = useState<Record<number, GalleryDocument[]>>({});
   const [galleryDocumentForms, setGalleryDocumentForms] = useState<Record<number, GalleryDocumentForm>>({});
   const [documentActionIds, setDocumentActionIds] = useState<Record<string, boolean>>({});
-  const [isAuthed, setIsAuthed] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(true);
   const [authChecking, setAuthChecking] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -883,18 +883,15 @@ export default function AdminPage() {
       });
       if (!res.ok) {
         setIsAuthed(false);
-        localStorage.removeItem('moyo-admin-key');
         setAuthError('Invalid admin password');
         return false;
       }
       setAdminKey(submittedKey);
       setIsAuthed(true);
-      localStorage.setItem('moyo-admin-key', submittedKey);
       setMessage({ text: 'Admin unlocked', type: 'success' });
       return true;
     } catch {
       setIsAuthed(false);
-      localStorage.removeItem('moyo-admin-key');
       setAuthError('Unable to verify password');
       return false;
     } finally {
@@ -906,13 +903,6 @@ export default function AdminPage() {
     e.preventDefault();
     await verifyAdminKey(adminKey);
   };
-
-  useEffect(() => {
-    const savedKey = localStorage.getItem('moyo-admin-key');
-    if (!savedKey || isAuthed || authChecking) return;
-    setAdminKey(savedKey);
-    void verifyAdminKey(savedKey);
-  }, [isAuthed, authChecking]);
 
   const generateAccessCode = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 
@@ -2112,11 +2102,10 @@ export default function AdminPage() {
                   setAdminKey('');
                   setIsAuthed(false);
                   setAuthError(null);
-                  localStorage.removeItem('moyo-admin-key');
                 }}
                 className="w-full text-white/60 hover:text-white text-xs underline"
               >
-                Clear saved password
+                Clear password
               </button>
             </form>
           </section>
@@ -2175,12 +2164,13 @@ export default function AdminPage() {
               }}
             />
             <button
-              onClick={() => {
+              onClick={async () => {
+                await fetch('/api/admin/logout', { method: 'POST' }).catch(() => null);
                 setAdminKey('');
                 setIsAuthed(false);
                 setAuthError(null);
                 setMessage(null);
-                localStorage.removeItem('moyo-admin-key');
+                window.location.href = '/admin/login';
               }}
               className="text-[10px] uppercase tracking-[0.2em] px-3 py-2 border border-white/10 text-white/60 hover:text-white sm:tracking-[0.3em]"
             >

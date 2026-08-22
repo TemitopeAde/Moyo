@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import AboutSection from '@/components/AboutSection';
@@ -15,15 +15,58 @@ import GlareHover from '@/components/GlareHover';
 import { useSiteSettings } from '@/lib/useSiteSettings';
 import SeoImage from '@/components/SeoImage';
 
+type Artwork = {
+    id: number;
+    title: string;
+    image: string;
+    category: string;
+    is_featured?: boolean;
+};
+
 export default function FineArtPage() {
     const { setProfile } = useProfile();
     const { language } = useLanguage();
-    const { t } = useTranslate(language);
+    const { t, translateText } = useTranslate(language);
     const settings = useSiteSettings();
+    const [featuredWorks, setFeaturedWorks] = useState<Artwork[]>([]);
+    const previewWorks = useMemo(() => {
+        const featuredPreviews = featuredWorks.slice(0, 2).map((work) => ({
+            image: work.image,
+            title: work.title,
+            category: work.category,
+        }));
+        const fallbackPreviews = [settings.art.previewImageOne, settings.art.previewImageTwo]
+            .filter(Boolean)
+            .map((image, index) => ({
+                image,
+                title: `Selected fine art preview ${index + 1}`,
+                category: '',
+            }));
+
+        return [...featuredPreviews, ...fallbackPreviews].slice(0, 2);
+    }, [featuredWorks, settings.art.previewImageOne, settings.art.previewImageTwo]);
 
     useEffect(() => {
         setProfile('art');
     }, [setProfile]);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        fetch('/api/artworks')
+            .then((res) => (res.ok ? res.json() : Promise.reject()))
+            .then((data: { artworks?: Artwork[] }) => {
+                if (!isMounted) return;
+                setFeaturedWorks((data.artworks || []).filter((work) => work.is_featured));
+            })
+            .catch(() => {
+                if (isMounted) setFeaturedWorks([]);
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     return (
         <main className="bg-background min-h-screen">
@@ -46,9 +89,9 @@ export default function FineArtPage() {
                     </header>
 
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-12">
-                        {[settings.art.previewImageOne, settings.art.previewImageTwo].map((image, i) => (
+                        {previewWorks.map((work, i) => (
                             <GlareHover
-                                key={`${image}-${i}`}
+                                key={`${work.image}-${i}`}
                                 width="100%"
                                 height="auto"
                                 background="var(--color-surface)"
@@ -63,12 +106,24 @@ export default function FineArtPage() {
                                 <div className="relative aspect-[4/3] overflow-hidden">
                                     <div className="absolute inset-0 z-10 bg-black/20 transition-colors group-hover:bg-black/0" />
                                     <SeoImage
-                                        src={image || '/art_preview.webp'}
-                                        alt={`Selected fine art preview ${i + 1} by Moyo Ayaworan`}
+                                        src={work.image || '/art_preview.webp'}
+                                        alt={`${translateText(work.title)} by Moyo Ayaworan`}
                                         fill
                                         sizes="(min-width: 768px) 50vw, 100vw"
                                         className="object-cover grayscale transition-all duration-[2s] group-hover:scale-105 group-hover:grayscale-0"
                                     />
+                                    {(work.title || work.category) && (
+                                        <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/80 to-transparent px-5 py-5">
+                                            {work.category && (
+                                                <p className="mb-2 text-[9px] uppercase tracking-[0.28em] text-accent">
+                                                    {translateText(work.category)}
+                                                </p>
+                                            )}
+                                            <h3 className="font-heading text-2xl italic text-white">
+                                                {translateText(work.title)}
+                                            </h3>
+                                        </div>
+                                    )}
                                 </div>
                             </GlareHover>
                         ))}

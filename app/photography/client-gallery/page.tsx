@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { motion } from 'framer-motion';
@@ -9,6 +9,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useTranslate } from '@/lib/translations';
 import GalleryMedia from '@/components/GalleryMedia';
 import GlareHover from '@/components/GlareHover';
+import { Check, ChevronLeft, ChevronRight, Maximize2, X } from 'lucide-react';
 
 type ClientGallery = {
     id: number;
@@ -40,22 +41,27 @@ export default function ClientGalleryPage() {
     const [approvalMessage, setApprovalMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
     const { setProfile } = useProfile();
     const { language } = useLanguage();
     const { t, translateText } = useTranslate(language);
     const selectedImageSet = useMemo(() => new Set(selectedImages), [selectedImages]);
+    const hasReadUrlAccessCode = useRef(false);
+    const approvedSelectionKey = useMemo(
+        () => [...(gallery?.approved_images || [])].sort().join('\n'),
+        [gallery?.approved_images]
+    );
+    const selectedSelectionKey = useMemo(
+        () => [...selectedImages].sort().join('\n'),
+        [selectedImages]
+    );
+    const hasSelectionChanges = selectedSelectionKey !== approvedSelectionKey;
+    const activeImage = activeImageIndex !== null ? gallery?.images[activeImageIndex] : null;
 
     const getFinishedDownloadUrl = (image: string) =>
         `/api/galleries/download?galleryId=${gallery?.id || ''}&accessCode=${encodeURIComponent(accessCode.trim())}&file=${encodeURIComponent(image)}`;
 
-    useEffect(() => {
-        setProfile('photography');
-    }, [setProfile]);
-
-    const handleAccessSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        const code = accessCode.trim();
-
+    const openGallery = useCallback(async (code: string) => {
         setError('');
         setGallery(null);
         setSelectedImages([]);
@@ -77,7 +83,7 @@ export default function ClientGalleryPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ accessCode: code }),
             });
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
 
             if (!res.ok) {
                 setError(data.error || t('clientGallery.openError'));
@@ -85,9 +91,9 @@ export default function ClientGalleryPage() {
             }
 
             setGallery(data.gallery);
-            setSelectedImages(data.gallery.approved_images || []);
-            setReviewRating(data.gallery.review_rating || 5);
-            setReviewText(data.gallery.review_text || '');
+            setSelectedImages(data.gallery?.approved_images || []);
+            setReviewRating(data.gallery?.review_rating || 5);
+            setReviewText(data.gallery?.review_text || '');
             setReviewMessage('');
             setReviewError('');
         } catch {
@@ -95,10 +101,33 @@ export default function ClientGalleryPage() {
         } finally {
             setIsLoading(false);
         }
+    }, [t]);
+
+    useEffect(() => {
+        setProfile('photography');
+    }, [setProfile]);
+
+    useEffect(() => {
+        if (hasReadUrlAccessCode.current) return;
+        hasReadUrlAccessCode.current = true;
+
+        const params = new URLSearchParams(window.location.search);
+        const code = (params.get('code') || params.get('accessCode') || '').trim();
+        if (!code) return;
+
+        setAccessCode(code);
+        void openGallery(code);
+    }, [openGallery]);
+
+    const handleAccessSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const code = accessCode.trim();
+        await openGallery(code);
     };
 
     const resetGallery = () => {
         setGallery(null);
+        setActiveImageIndex(null);
         setAccessCode('');
         setError('');
         setSelectedImages([]);
@@ -107,9 +136,11 @@ export default function ClientGalleryPage() {
         setReviewMessage('');
         setReviewError('');
         setApprovalMessage('');
+        window.history.replaceState(null, '', window.location.pathname);
     };
 
     const toggleImageSelection = (image: string) => {
+        if (isApproving) return;
         setApprovalMessage('');
         setSelectedImages((current) => {
             const next = new Set(current);
@@ -122,8 +153,50 @@ export default function ClientGalleryPage() {
         });
     };
 
+    const openLightbox = (index: number) => {
+        setActiveImageIndex(index);
+    };
+
+    const closeLightbox = useCallback(() => {
+        setActiveImageIndex(null);
+    }, []);
+
+    const showPreviousImage = useCallback(() => {
+        if (!gallery?.images.length) return;
+        setActiveImageIndex((current) => {
+            const index = current ?? 0;
+            return (index - 1 + gallery.images.length) % gallery.images.length;
+        });
+    }, [gallery?.images]);
+
+    const showNextImage = useCallback(() => {
+        if (!gallery?.images.length) return;
+        setActiveImageIndex((current) => {
+            const index = current ?? 0;
+            return (index + 1) % gallery.images.length;
+        });
+    }, [gallery?.images]);
+
+    useEffect(() => {
+        if (activeImageIndex === null) return;
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') closeLightbox();
+            if (event.key === 'ArrowLeft') showPreviousImage();
+            if (event.key === 'ArrowRight') showNextImage();
+        };
+
+        document.body.style.overflow = 'hidden';
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.body.style.overflow = '';
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [activeImageIndex, closeLightbox, showNextImage, showPreviousImage]);
+
     const approveSelection = async () => {
-        if (!gallery || selectedImages.length === 0) return;
+        if (!gallery || selectedImages.length === 0 || !hasSelectionChanges) return;
 
         setIsApproving(true);
         setError('');
@@ -139,7 +212,7 @@ export default function ClientGalleryPage() {
                     images: selectedImages,
                 }),
             });
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
 
             if (!res.ok) {
                 setError(data.error || t('clientGallery.approveError'));
@@ -180,7 +253,7 @@ export default function ClientGalleryPage() {
                     reviewText,
                 }),
             });
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
 
             if (!res.ok) {
                 setReviewError(data.error || t('clientGallery.reviewError'));
@@ -240,6 +313,9 @@ export default function ClientGalleryPage() {
                             <form onSubmit={handleAccessSubmit} className="space-y-6">
                                 <input
                                     type="password"
+                                    autoComplete="one-time-code"
+                                    autoCapitalize="characters"
+                                    aria-invalid={Boolean(error)}
                                     placeholder={t('clientGallery.accessCodePlaceholder')}
                                     value={accessCode}
                                     onChange={(event) => {
@@ -268,123 +344,126 @@ export default function ClientGalleryPage() {
                         </GlareHover>
                     </motion.div>
                 ) : (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="space-y-16"
-                    >
-                        <div className="text-center space-y-4">
-                            <span className="text-accent text-[10px] tracking-[0.5em] uppercase">
-                                {gallery.slug}
-                            </span>
-                            <h1 className="text-3xl md:text-4xl font-heading text-white italic">
-                                {gallery.client_name}
-                            </h1>
-                            <p className="text-white/40 text-sm italic">
-                                {gallery.image_count} {gallery.image_count === 1 ? t('ui.imageSingular') : t('ui.images')} {t('clientGallery.privateGalleryCountText')}
-                            </p>
-                            <p className="text-white/50 text-xs uppercase tracking-[0.25em]">
-                                {t('clientGallery.selectionStatus')
-                                    .replace('{count}', selectedImages.length.toString())
-                                    .replace('{total}', gallery.image_count.toString())}
-                            </p>
-                        </div>
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 md:space-y-16">
+                        <section className="relative -mx-6 overflow-hidden border-y border-white/10 bg-black md:-mx-12">
+                            {gallery.images[0] && (
+                                <GalleryMedia
+                                    src={gallery.images[0]}
+                                    alt={`${gallery.client_name} ${t('clientGallery.galleryImageAlt')} 1`}
+                                    className="h-[56svh] min-h-[420px] w-full object-cover opacity-70 grayscale md:h-[68svh]"
+                                    previewWidth={1600}
+                                    loading="eager"
+                                    fetchPriority="high"
+                                />
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-black/20" />
+                            <div className="absolute inset-x-0 bottom-0 px-6 py-8 md:px-12 md:py-12">
+                                <div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-end md:justify-between">
+                                    <div className="max-w-3xl space-y-4">
+                                        <span className="text-accent text-[10px] tracking-[0.5em] uppercase">
+                                            {gallery.slug}
+                                        </span>
+                                        <h1 className="text-4xl font-heading text-white italic md:text-6xl">
+                                            {gallery.client_name}
+                                        </h1>
+                                        <p className="text-sm leading-relaxed text-white/55 md:max-w-xl">
+                                            {gallery.image_count} {gallery.image_count === 1 ? t('ui.imageSingular') : t('ui.images')} {t('clientGallery.privateGalleryCountText')}
+                                        </p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-px border border-white/10 bg-white/10 text-center md:min-w-[340px]">
+                                        <div className="bg-background/80 px-5 py-4 backdrop-blur-md">
+                                            <p className="text-2xl font-heading italic text-white">{selectedImages.length}</p>
+                                            <p className="mt-1 text-[9px] uppercase tracking-[0.24em] text-white/35">{t('ui.selected')}</p>
+                                        </div>
+                                        <div className="bg-background/80 px-5 py-4 backdrop-blur-md">
+                                            <p className="text-2xl font-heading italic text-white">{gallery.image_count}</p>
+                                            <p className="mt-1 text-[9px] uppercase tracking-[0.24em] text-white/35">{t('ui.images')}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
 
                         {gallery.images.length > 0 ? (
                             <>
-                                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
+                                <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 2xl:columns-4">
                                     {gallery.images.map((image, index) => {
                                         const isSelected = selectedImageSet.has(image);
+                                        const aspectClass = index % 5 === 0 ? 'aspect-[4/5]' : index % 5 === 2 ? 'aspect-[3/4]' : 'aspect-[5/6]';
 
                                         return (
-                                            <GlareHover
+                                            <figure
                                                 key={`${image}-${index}`}
-                                                width="100%"
-                                                height="auto"
-                                                background="#111"
-                                                borderRadius="2px"
-                                                borderColor="rgba(255,255,255,0.1)"
-                                                glareOpacity={0.18}
-                                                glareAngle={-30}
-                                                glareSize={180}
-                                                transitionDuration={720}
-                                                className="aspect-[4/5] group border-white/10 transition-colors hover:border-white/25"
+                                                className="group relative mb-4 break-inside-avoid overflow-hidden border border-white/10 bg-black transition-colors duration-500 hover:border-white/25"
                                             >
                                                 <button
                                                     type="button"
-                                                    onClick={() => toggleImageSelection(image)}
-                                                    aria-pressed={isSelected}
-                                                    className="absolute inset-0 z-10 cursor-pointer"
+                                                    onClick={() => openLightbox(index)}
+                                                    className={`relative block w-full cursor-zoom-in overflow-hidden bg-[#050505] ${aspectClass}`}
+                                                    aria-label={`${t('ui.preview')} ${gallery.client_name} ${index + 1}`}
                                                 >
-                                                    <span className="sr-only">
-                                                        {isSelected ? t('ui.removeImage') : t('ui.selectImage')}
+                                                    <GalleryMedia
+                                                        src={image}
+                                                        alt={`${gallery.client_name} ${t('clientGallery.galleryImageAlt')} ${index + 1}`}
+                                                        className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.025]"
+                                                        previewWidth={900}
+                                                        loading={index < 3 ? 'eager' : 'lazy'}
+                                                        fetchPriority={index === 0 ? 'high' : 'auto'}
+                                                    />
+                                                    <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/15" />
+                                                    <span className="pointer-events-none absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center border border-white/15 bg-black/45 text-white/70 opacity-0 backdrop-blur-md transition-opacity duration-300 group-hover:opacity-100">
+                                                        <Maximize2 className="h-4 w-4" />
                                                     </span>
                                                 </button>
-                                                <GalleryMedia
-                                                    src={image}
-                                                    alt={`${gallery.client_name} ${t('clientGallery.galleryImageAlt')} ${index + 1}`}
-                                                    className="pointer-events-none w-full h-full object-cover"
-                                                    previewWidth={720}
-                                                    loading={index < 4 ? 'eager' : 'lazy'}
-                                                    fetchPriority={index === 0 ? 'high' : 'auto'}
-                                                />
-                                                <div className="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                                                 <button
                                                     type="button"
                                                     onClick={() => toggleImageSelection(image)}
                                                     aria-pressed={isSelected}
                                                     aria-label={isSelected ? t('ui.removeImage') : t('ui.selectImage')}
-                                                    className={`absolute left-3 top-3 z-20 h-6 w-6 rounded-full border transition-all ${
+                                                    className={`absolute left-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border transition-all ${
                                                         isSelected
-                                                            ? 'border-white bg-white shadow-[0_0_18px_rgba(255,255,255,0.22)]'
+                                                            ? 'border-white bg-white text-black shadow-[0_0_18px_rgba(255,255,255,0.22)]'
                                                             : 'border-white/65 bg-black/20 hover:border-white hover:bg-white/10'
                                                     }`}
                                                 >
-                                                    <span className="sr-only">
-                                                        {isSelected ? t('ui.removeImage') : t('ui.selectImage')}
-                                                    </span>
+                                                    <Check className={`h-4 w-4 ${isSelected ? 'opacity-100' : 'opacity-0'}`} />
                                                 </button>
-                                                <a
-                                                    href={image}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    onClick={(event) => event.stopPropagation()}
-                                                    className="absolute bottom-3 right-3 z-30 border border-white/20 bg-black/50 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-white/70 transition-colors hover:border-accent hover:text-accent"
-                                                >
-                                                    {t('ui.preview')}
-                                                </a>
-                                            </GlareHover>
+                                                <figcaption className="flex items-center justify-between gap-4 border-t border-white/10 px-4 py-3">
+                                                    <span className="text-[10px] uppercase tracking-[0.24em] text-white/35">
+                                                        {String(index + 1).padStart(2, '0')}
+                                                    </span>
+                                                    {isSelected && (
+                                                        <span className="text-[9px] uppercase tracking-[0.22em] text-accent">
+                                                            {t('ui.selected')}
+                                                        </span>
+                                                    )}
+                                                </figcaption>
+                                            </figure>
                                         );
                                     })}
                                 </div>
 
-                                <GlareHover
-                                    width="100%"
-                                    height="auto"
-                                    background="rgba(255,255,255,0.05)"
-                                    borderRadius="2px"
-                                    borderColor="rgba(255,255,255,0.1)"
-                                    glareOpacity={0.16}
-                                    glareAngle={-30}
-                                    glareSize={170}
-                                    transitionDuration={780}
-                                    className="mx-auto max-w-2xl"
-                                    contentClassName="space-y-4 p-6 text-center"
-                                >
-                                    <p className="text-white/45 text-sm">
-                                        {t('clientGallery.selectionInstructions')}
-                                    </p>
+                                <div className="sticky bottom-4 z-40 mx-auto max-w-3xl border border-white/10 bg-background/88 p-3 shadow-2xl backdrop-blur-xl">
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                        <div className="min-w-0 px-2">
+                                            <p className="text-[10px] uppercase tracking-[0.24em] text-white/35">
+                                                {t('clientGallery.selectionStatus')
+                                                    .replace('{count}', selectedImages.length.toString())
+                                                    .replace('{total}', gallery.image_count.toString())}
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={approveSelection}
+                                            disabled={selectedImages.length === 0 || isApproving || !hasSelectionChanges}
+                                            className="bg-white px-5 py-4 text-[10px] font-bold uppercase tracking-[0.28em] text-black transition-colors duration-500 hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            {isApproving ? t('ui.approving') : t('clientGallery.approveSelection')}
+                                        </button>
+                                    </div>
                                     {error && <p className="text-red-300 text-xs leading-relaxed">{error}</p>}
                                     {approvalMessage && <p className="text-accent text-xs leading-relaxed">{approvalMessage}</p>}
-                                    <button
-                                        type="button"
-                                        onClick={approveSelection}
-                                        disabled={selectedImages.length === 0 || isApproving}
-                                        className="w-full bg-white text-black text-[10px] tracking-[0.4em] uppercase py-4 font-bold hover:bg-accent transition-colors duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {isApproving ? t('ui.approving') : t('clientGallery.approveSelection')}
-                                    </button>
-                                </GlareHover>
+                                </div>
                             </>
                         ) : (
                             <GlareHover width="100%" height="auto" background="rgba(255,255,255,0.05)" borderRadius="2px" borderColor="rgba(255,255,255,0.1)" glareOpacity={0.16} className="max-w-xl mx-auto" contentClassName="text-center p-10 space-y-3">
@@ -551,6 +630,78 @@ export default function ClientGalleryPage() {
                     </motion.div>
                 )}
             </div>
+
+            {activeImage && activeImageIndex !== null && gallery && (
+                <div className="fixed inset-0 z-[240] flex items-center justify-center bg-black/94 px-3 py-5 backdrop-blur-md sm:px-6">
+                    <button
+                        type="button"
+                        onClick={closeLightbox}
+                        className="absolute inset-0 cursor-default"
+                        aria-label={translateText('Close')}
+                    />
+
+                    <div className="relative z-10 flex h-full w-full max-w-7xl flex-col">
+                        <div className="mb-3 flex items-center justify-between gap-4 text-white">
+                            <div className="min-w-0">
+                                <p className="text-[10px] uppercase tracking-[0.28em] text-white/35">
+                                    {String(activeImageIndex + 1).padStart(2, '0')} / {String(gallery.images.length).padStart(2, '0')}
+                                </p>
+                                <h2 className="mt-1 truncate font-heading text-2xl italic text-white">
+                                    {gallery.client_name}
+                                </h2>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={closeLightbox}
+                                className="flex h-11 w-11 shrink-0 items-center justify-center border border-white/15 bg-white/5 text-white/70 transition-colors hover:border-accent hover:text-accent"
+                                aria-label={translateText('Close')}
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <div className="relative min-h-0 flex-1 overflow-hidden border border-white/10 bg-black">
+                            <GalleryMedia
+                                src={activeImage}
+                                alt={`${gallery.client_name} ${t('clientGallery.galleryImageAlt')} ${activeImageIndex + 1}`}
+                                className="h-full w-full object-contain"
+                                previewWidth={1800}
+                                loading="eager"
+                                fetchPriority="high"
+                            />
+                            <button
+                                type="button"
+                                onClick={showPreviousImage}
+                                className="absolute left-3 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center border border-white/15 bg-black/50 text-white/70 backdrop-blur-md transition-colors hover:border-accent hover:text-accent"
+                                aria-label={translateText('Previous image')}
+                            >
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={showNextImage}
+                                className="absolute right-3 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center border border-white/15 bg-black/50 text-white/70 backdrop-blur-md transition-colors hover:border-accent hover:text-accent"
+                                aria-label={translateText('Next image')}
+                            >
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => toggleImageSelection(activeImage)}
+                                disabled={isApproving}
+                                className={`absolute bottom-3 left-3 right-3 flex items-center justify-center gap-3 border px-5 py-4 text-[10px] font-bold uppercase tracking-[0.28em] transition-colors sm:left-auto sm:right-3 sm:w-auto ${
+                                    selectedImageSet.has(activeImage)
+                                        ? 'border-white bg-white text-black hover:bg-accent'
+                                        : 'border-white/20 bg-black/60 text-white hover:border-accent hover:text-accent'
+                                }`}
+                            >
+                                <Check className="h-4 w-4" />
+                                {selectedImageSet.has(activeImage) ? t('ui.selected') : t('ui.selectImage')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <Footer />
         </main>

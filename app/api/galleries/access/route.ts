@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
             review_submitted_at,
             is_locked
      FROM galleries
-     WHERE access_code = $1
+     WHERE UPPER(access_code) = UPPER($1)
      ORDER BY created_at DESC
      LIMIT 1`,
     [accessCode]
