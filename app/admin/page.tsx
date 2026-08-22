@@ -712,6 +712,7 @@ export default function AdminPage() {
   const [uploadProgress, setUploadProgress] = useState<Record<string, UploadProgress>>({});
   const [uploadingMediaGalleryId, setUploadingMediaGalleryId] = useState<number | null>(null);
   const [uploadingFinishedGalleryId, setUploadingFinishedGalleryId] = useState<number | null>(null);
+  const [updatingGalleryIds, setUpdatingGalleryIds] = useState<Record<number, boolean>>({});
   const [openAdminSection, setOpenAdminSection] = useState<AdminSection | null>(null);
   const displayedOpenSection = activeRouteSection || openAdminSection;
   const setDisplayedOpenSection = isSectionRoute ? (() => {}) : setOpenAdminSection;
@@ -1596,25 +1597,33 @@ export default function AdminPage() {
   };
 
   const updateGallery = async (id: string, action: string, payload?: Record<string, unknown>) => {
+    const galleryId = Number(id);
+    setUpdatingGalleryIds((prev) => ({ ...prev, [galleryId]: true }));
     try {
       const res = await fetch('/api/galleries', {
         method: 'PUT',
         headers,
+        credentials: 'same-origin',
         body: JSON.stringify({ id, action, payload }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.gallery) {
         setMessage({ text: data.error || 'Unable to update gallery', type: 'error' });
         return null;
       }
 
-      setGalleries((prev) => prev.map((g) => (g.id === Number(id) ? data.gallery : g)));
+      setGalleries((prev) => prev.map((g) => (g.id === galleryId ? data.gallery : g)));
       setGalleryPaymentUrls((prev) => ({ ...prev, [id]: data.gallery.payment_url || '' }));
+      if (action === 'lock' || action === 'unlock') {
+        setMessage({ text: data.gallery.is_locked ? 'Gallery locked' : 'Gallery unlocked', type: 'success' });
+      }
       return data.gallery as Gallery;
     } catch (error) {
       console.error('[admin] gallery update error', error);
       setMessage({ text: 'Unable to update gallery', type: 'error' });
       return null;
+    } finally {
+      setUpdatingGalleryIds((prev) => ({ ...prev, [galleryId]: false }));
     }
   };
 
@@ -3578,20 +3587,29 @@ export default function AdminPage() {
                     const finishedTarget = `gallery-${gal.id}-finished`;
                     const isMediaUploading = uploadingMediaGalleryId === gal.id;
                     const isFinishedUploading = uploadingFinishedGalleryId === gal.id;
+                    const isUpdatingGallery = Boolean(updatingGalleryIds[gal.id]);
                     return (
                       <>
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
                       <p className="text-white font-heading italic">{gal.client_name}</p>
                       <p className="text-[10px] text-white/40 uppercase tracking-widest">
                         slug: {gal.slug} • code: {gal.access_code}
                       </p>
                     </div>
                     <button
+                      type="button"
                       onClick={() => updateGallery(gal.id.toString(), gal.is_locked ? 'unlock' : 'lock')}
-                      className="p-2 border border-white/10 text-white/60 hover:text-white"
+                      disabled={isUpdatingGallery}
+                      className={`inline-flex min-h-11 items-center justify-center gap-2 border px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                        gal.is_locked
+                          ? 'border-red-300/35 bg-red-500/10 text-red-200 hover:border-red-200 hover:text-white'
+                          : 'border-green-300/30 bg-green-500/10 text-green-200 hover:border-green-200 hover:text-white'
+                      }`}
+                      aria-label={gal.is_locked ? 'Unlock gallery' : 'Lock gallery'}
                     >
-                      {gal.is_locked ? <FiUnlock /> : <FiLock />}
+                      {gal.is_locked ? <FiUnlock aria-hidden="true" /> : <FiLock aria-hidden="true" />}
+                      {isUpdatingGallery ? 'Saving' : gal.is_locked ? 'Locked' : 'Unlocked'}
                     </button>
                   </div>
                   <div className="flex flex-wrap gap-2 text-[10px] text-white/60">
@@ -3604,6 +3622,9 @@ export default function AdminPage() {
                     {gal.review_featured && <span className="text-green-300">Featured on home</span>}
                     <span className={gal.payment_verified ? 'text-green-300' : 'text-white/40'}>
                       {gal.payment_verified ? 'Payment verified' : 'Payment pending'}
+                    </span>
+                    <span className={gal.is_locked ? 'text-red-200' : 'text-green-300'}>
+                      {gal.is_locked ? 'Client access locked' : 'Client access open'}
                     </span>
                   </div>
                   {gal.review_submitted_at && (

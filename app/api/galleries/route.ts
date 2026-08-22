@@ -3,8 +3,20 @@ import { query } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
 import slugify from 'slugify';
 
+type GalleryRow = {
+  id: number;
+};
+
 function randomCode() {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+function galleryResponse(rows: GalleryRow[]) {
+  if (!rows[0]) {
+    return NextResponse.json({ error: 'Gallery not found' }, { status: 404 });
+  }
+
+  return NextResponse.json({ gallery: rows[0] });
 }
 
 export async function GET(req: NextRequest) {
@@ -75,7 +87,7 @@ export async function PUT(req: NextRequest) {
        RETURNING *`,
       [payload?.images || [], id]
     );
-    return NextResponse.json({ gallery: rows[0] });
+    return galleryResponse(rows);
   }
   if (action === 'addFinishedImages') {
     const { rows } = await query(
@@ -93,7 +105,7 @@ export async function PUT(req: NextRequest) {
        RETURNING *`,
       [payload?.images || [], id]
     );
-    return NextResponse.json({ gallery: rows[0] });
+    return galleryResponse(rows);
   }
   if (action === 'removeImages') {
     const { rows } = await query(
@@ -114,7 +126,7 @@ export async function PUT(req: NextRequest) {
        RETURNING *`,
       [payload?.images || [], id]
     );
-    return NextResponse.json({ gallery: rows[0] });
+    return galleryResponse(rows);
   }
   if (action === 'removeFinishedImage') {
     const { rows } = await query(
@@ -129,7 +141,7 @@ export async function PUT(req: NextRequest) {
        RETURNING *`,
       [payload?.images || [], id]
     );
-    return NextResponse.json({ gallery: rows[0] });
+    return galleryResponse(rows);
   }
   if (action === 'approve') {
     const { rows } = await query(
@@ -147,7 +159,7 @@ export async function PUT(req: NextRequest) {
        RETURNING *`,
       [payload?.images || [], id]
     );
-    return NextResponse.json({ gallery: rows[0] });
+    return galleryResponse(rows);
   }
   if (action === 'reject') {
     const { rows } = await query(
@@ -162,21 +174,21 @@ export async function PUT(req: NextRequest) {
        RETURNING *`,
       [payload?.images || [], id]
     );
-    return NextResponse.json({ gallery: rows[0] });
+    return galleryResponse(rows);
   }
   if (action === 'payment') {
     const { rows } = await query(
       `UPDATE galleries SET payment_verified=$1, payment_url=$2 WHERE id=$3 RETURNING *`,
       [Boolean(payload?.paymentVerified), String(payload?.paymentUrl || ''), id]
     );
-    return NextResponse.json({ gallery: rows[0] });
+    return galleryResponse(rows);
   }
   if (action === 'lock' || action === 'unlock') {
     const { rows } = await query(
       `UPDATE galleries SET is_locked=$1 WHERE id=$2 RETURNING *`,
       [action === 'lock', id]
     );
-    return NextResponse.json({ gallery: rows[0] });
+    return galleryResponse(rows);
   }
   if (action === 'featureReview') {
     const { rows } = await query(
@@ -187,7 +199,7 @@ export async function PUT(req: NextRequest) {
        RETURNING *`,
       [Boolean(payload?.featured), id]
     );
-    return NextResponse.json({ gallery: rows[0] });
+    return galleryResponse(rows);
   }
 
   // generic update
@@ -217,7 +229,7 @@ export async function PUT(req: NextRequest) {
       id,
     ]
   );
-  return NextResponse.json({ gallery: rows[0] });
+  return galleryResponse(rows);
 }
 
 export async function DELETE(req: NextRequest) {
