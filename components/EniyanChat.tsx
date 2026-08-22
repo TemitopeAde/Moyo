@@ -386,7 +386,7 @@ export default function EniyanChat() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-[120] flex max-w-[calc(100vw-2rem)] flex-col items-end gap-3 md:bottom-6 md:right-6">
+    <div className="fixed inset-x-2 bottom-2 z-[120] flex max-w-[calc(100vw-1rem)] flex-col items-stretch gap-3 pb-[env(safe-area-inset-bottom)] sm:inset-x-auto sm:bottom-4 sm:right-4 sm:max-w-[calc(100vw-2rem)] sm:items-end md:bottom-6 md:right-6">
       <AnimatePresence>
         {isOpen && (
           <motion.section
@@ -394,38 +394,40 @@ export default function EniyanChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 14, scale: 0.98 }}
             transition={{ duration: 0.32, ease: [0.19, 1, 0.22, 1] }}
-            className={`relative max-h-[calc(100svh-6rem)] w-[min(920px,calc(100vw-2rem))] overflow-hidden rounded-[8px] border shadow-2xl backdrop-blur-xl ${
+            className={`relative flex h-[min(720px,calc(100dvh-5rem))] max-h-[calc(100dvh-5rem)] w-full min-w-0 max-w-full flex-col overflow-hidden rounded-[8px] border shadow-2xl backdrop-blur-xl sm:h-[min(720px,calc(100dvh-6.5rem))] sm:w-[min(560px,calc(100vw-2rem))] lg:w-[min(920px,calc(100vw-2rem))] ${
               isLight
                 ? 'border-black/10 bg-[#fbfaf7]/98 text-[#141414] shadow-black/12'
                 : 'border-white/10 bg-[#0f0f0f]/98 text-white shadow-black/45'
             }`}
             aria-label="Eniyan AI chat assistant"
           >
-            <header className={`border-b px-4 py-4 sm:px-5 ${isLight ? 'border-black/10' : 'border-white/10'}`}>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex min-w-0 gap-3">
-                  <EniyanSign compact neutral light={isLight} />
-                  <div className="min-w-0 space-y-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className={`font-heading text-2xl italic leading-none ${isLight ? 'text-[#141414]' : 'text-white'}`}>
+            <header className={`min-w-0 shrink-0 border-b px-3 py-3 sm:px-5 sm:py-4 ${isLight ? 'border-black/10' : 'border-white/10'}`}>
+              <div className="flex min-w-0 items-start justify-between gap-2 sm:gap-4">
+                <div className="flex min-w-0 flex-1 gap-3">
+                  <span className="hidden shrink-0 min-[380px]:inline-flex">
+                    <EniyanSign compact neutral light={isLight} />
+                  </span>
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <h2 className={`min-w-0 font-heading text-2xl italic leading-none [overflow-wrap:anywhere] ${isLight ? 'text-[#141414]' : 'text-white'}`}>
                         {copy.title}
                       </h2>
-                      <span className={`border px-2 py-1 text-[8px] uppercase tracking-[0.18em] ${
+                      <span className={`max-w-full border px-2 py-1 text-[8px] uppercase tracking-[0.16em] [overflow-wrap:anywhere] ${
                         isLight ? 'border-black/10 bg-black/[0.035] text-black/45' : 'border-white/10 bg-white/[0.045] text-white/45'
                       }`}>
                         {copy.eyebrow}
                       </span>
                     </div>
-                    <p className={`max-w-xl text-xs leading-relaxed ${isLight ? 'text-black/52' : 'text-white/52'}`}>
+                    <p className={`line-clamp-2 max-w-xl text-xs leading-relaxed ${isLight ? 'text-black/52' : 'text-white/52'}`}>
                       {copy.subtitle}. You are on {currentRouteLabel}.
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
                   <button
                     type="button"
                     onClick={resetChat}
-                    className={`grid size-9 place-items-center rounded-[8px] transition ${
+                    className={`grid size-9 place-items-center rounded-[8px] transition sm:size-9 ${
                       isLight ? 'text-black/45 hover:bg-black/5 hover:text-black' : 'text-white/50 hover:bg-white/8 hover:text-white'
                     }`}
                     aria-label="Reset Eniyan chat"
@@ -435,7 +437,7 @@ export default function EniyanChat() {
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
-                    className={`grid size-9 place-items-center rounded-[8px] transition ${
+                    className={`grid size-9 place-items-center rounded-[8px] transition sm:size-9 ${
                       isLight ? 'text-black/45 hover:bg-black/5 hover:text-black' : 'text-white/50 hover:bg-white/8 hover:text-white'
                     }`}
                     aria-label="Minimize Eniyan"
@@ -445,7 +447,7 @@ export default function EniyanChat() {
                   <button
                     type="button"
                     onClick={closeChat}
-                    className={`grid size-9 place-items-center rounded-[8px] transition ${
+                    className={`grid size-9 place-items-center rounded-[8px] transition sm:size-9 ${
                       isLight ? 'text-black/45 hover:bg-black/5 hover:text-black' : 'text-white/50 hover:bg-white/8 hover:text-white'
                     }`}
                     aria-label="Close Eniyan"
@@ -456,21 +458,25 @@ export default function EniyanChat() {
               </div>
             </header>
 
-            <div className="grid min-h-[520px] md:grid-cols-[minmax(0,1fr)_280px]">
-              <section className="flex min-h-0 flex-col">
-                <div ref={scrollRef} className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-5">
+            <div className="grid min-h-0 min-w-0 flex-1 lg:grid-cols-[minmax(0,1fr)_280px]">
+              <section className="flex min-h-0 min-w-0 flex-col">
+                <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-3 py-4 sm:space-y-5 sm:px-5 sm:py-5">
                   {recentMessages.map((message) => {
                     const links = message.role === 'assistant' ? getMessageLinks(message.content) : [];
 
                     return (
                       <div
                         key={message.id}
-                        className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                        className={`flex min-w-0 gap-2 sm:gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
-                        {message.role === 'assistant' && <EniyanSign compact neutral light={isLight} />}
-                        <div className={`flex max-w-[86%] flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
+                        {message.role === 'assistant' && (
+                          <span className="hidden shrink-0 sm:inline-flex">
+                            <EniyanSign compact neutral light={isLight} />
+                          </span>
+                        )}
+                        <div className={`flex min-w-0 max-w-full flex-col sm:max-w-[86%] ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
                           <p
-                            className={`whitespace-pre-wrap rounded-[8px] px-4 py-3 text-sm leading-relaxed ${
+                            className={`max-w-full whitespace-pre-wrap rounded-[8px] px-3 py-2.5 text-sm leading-relaxed [overflow-wrap:anywhere] sm:px-4 sm:py-3 ${
                               message.role === 'user'
                                 ? isLight
                                   ? 'bg-[#181818] text-white'
@@ -483,7 +489,7 @@ export default function EniyanChat() {
                             {message.content}
                           </p>
                           {links.length > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-2">
+                            <div className="mt-2 flex max-w-full flex-wrap gap-2">
                               {links.map((path) => (
                                 <a
                                   key={path}
@@ -506,7 +512,9 @@ export default function EniyanChat() {
                   })}
                   {isSending && (
                     <div className="flex justify-start gap-3">
-                      <EniyanSign compact neutral light={isLight} />
+                      <span className="hidden shrink-0 sm:inline-flex">
+                        <EniyanSign compact neutral light={isLight} />
+                      </span>
                       <div
                         className={`flex items-center gap-2 rounded-[8px] border px-4 py-3 text-sm ${
                           isLight ? 'border-black/8 bg-black/[0.035] text-black/55' : 'border-white/10 bg-white/[0.045] text-white/55'
@@ -520,14 +528,14 @@ export default function EniyanChat() {
                   {error && <p className="text-xs leading-relaxed text-red-500">{error}</p>}
                 </div>
 
-                <div className={`border-t px-4 py-4 sm:px-5 ${isLight ? 'border-black/10' : 'border-white/10'}`}>
-                  <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
+                <div className={`shrink-0 border-t px-3 py-3 sm:px-5 sm:py-4 ${isLight ? 'border-black/10' : 'border-white/10'}`}>
+                  <div className="mb-3 flex max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-1 [-webkit-overflow-scrolling:touch]">
                     {copy.starterPrompts.map((prompt) => (
                       <button
                         key={prompt}
                         type="button"
                         onClick={() => sendMessage(prompt)}
-                        className={`shrink-0 rounded-[8px] border px-3 py-2 text-left text-[10px] uppercase tracking-[0.12em] transition ${
+                        className={`max-w-[72vw] shrink-0 rounded-[8px] border px-3 py-2 text-left text-[10px] uppercase tracking-[0.12em] [overflow-wrap:anywhere] transition sm:max-w-none ${
                           isLight ? 'border-black/10 bg-white/45 text-black/52 hover:bg-white/75 hover:text-black' : 'border-white/10 bg-white/[0.035] text-white/55 hover:bg-white/[0.07] hover:text-white'
                         }`}
                       >
@@ -537,7 +545,7 @@ export default function EniyanChat() {
                   </div>
 
                   <form
-                    className={`flex items-end gap-2 rounded-[8px] border p-2 ${
+                    className={`flex min-w-0 items-end gap-2 rounded-[8px] border p-2 ${
                       isLight ? 'border-black/10 bg-white/60' : 'border-white/10 bg-white/[0.035]'
                     }`}
                     onSubmit={(event) => {
@@ -560,7 +568,7 @@ export default function EniyanChat() {
                         }
                       }}
                       placeholder={copy.placeholder}
-                      className={`max-h-24 min-h-11 flex-1 resize-none bg-transparent px-2 py-3 text-sm outline-none transition ${
+                      className={`max-h-24 min-h-11 min-w-0 flex-1 resize-none bg-transparent px-2 py-3 text-sm outline-none transition ${
                         isLight
                           ? 'text-black placeholder:text-black/30'
                           : 'text-white placeholder:text-white/30'
@@ -582,11 +590,11 @@ export default function EniyanChat() {
                 </div>
               </section>
 
-              <aside className={`hidden border-l p-4 md:block ${isLight ? 'border-black/10 bg-black/[0.025]' : 'border-white/10 bg-white/[0.025]'}`}>
+              <aside className={`hidden border-l p-4 lg:block ${isLight ? 'border-black/10 bg-black/[0.025]' : 'border-white/10 bg-white/[0.025]'}`}>
                 <div className="mb-4 flex items-center gap-2">
                   <Compass className={`size-4 ${isLight ? 'text-black/45' : 'text-white/45'}`} aria-hidden="true" />
                   <p className={`text-[10px] uppercase tracking-[0.24em] ${isLight ? 'text-black/45' : 'text-white/45'}`}>
-                    Go straight to
+                    Navigation
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -630,7 +638,7 @@ export default function EniyanChat() {
                 <div className={`mt-4 rounded-[8px] border p-4 ${isLight ? 'border-black/10 text-black/48' : 'border-white/10 text-white/48'}`}>
                   <MessageCircle className="mb-3 size-4" aria-hidden="true" />
                   <p className="text-xs leading-relaxed">
-                    Ask for a page, a booking path, a client gallery step, or help choosing between photography and fine art.
+                    Studio guide for photography, fine art, bookings, galleries, and commissions.
                   </p>
                 </div>
               </aside>
@@ -642,7 +650,7 @@ export default function EniyanChat() {
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className={`group flex h-12 items-center gap-3 rounded-full border px-3 shadow-xl shadow-black/20 backdrop-blur-xl transition ${
+        className={`group ml-auto flex h-12 w-fit max-w-full items-center gap-3 rounded-full border px-3 shadow-xl shadow-black/20 backdrop-blur-xl transition ${
           isLight
             ? 'border-black/10 bg-white/80 text-black/70 hover:border-black/18 hover:bg-white hover:text-black'
             : 'border-white/10 bg-[#171717]/86 text-white/68 hover:border-white/18 hover:bg-[#1f1f1f]/90 hover:text-white/86'

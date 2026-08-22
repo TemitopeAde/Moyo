@@ -68,6 +68,14 @@ function truncate(value: string, maxLength: number) {
   return value.length > maxLength ? value.slice(0, maxLength) : value;
 }
 
+function sanitizeFilename(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'document';
+}
+
 function normalizeId(value: unknown) {
   if (typeof value === 'number' && Number.isFinite(value)) return String(value);
   return normalize(value);
@@ -90,8 +98,17 @@ function parseAmount(value: unknown) {
 
 function isValidDateInput(value: string) {
   if (!value) return true;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  return !Number.isNaN(new Date(`${value}T00:00:00.000Z`).getTime());
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
 }
 
 function escapeHtml(value: string) {
@@ -229,7 +246,7 @@ function documentText(doc: GalleryDocument) {
     '',
     itemText,
     '',
-    doc.terms || 'Thank you.',
+    doc.terms || 'Contract terms, usage rights, payment, and delivery notes to be confirmed.',
   ]
     .filter((line) => line !== '')
     .join('\n');
@@ -269,7 +286,13 @@ function pdfEscape(value: string) {
 }
 
 function pdfSafe(value: string) {
-  return value.replace(/[^\x09\x0A\x0D\x20-\x7E]/g, '');
+  return value
+    .replace(/[’‘]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[–—]/g, '-')
+    .replace(/×/g, 'x')
+    .replace(/₦/g, 'NGN ')
+    .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, '');
 }
 
 function getDocumentLines(doc: GalleryDocument) {
@@ -389,7 +412,7 @@ function buildPdf(doc: GalleryDocument) {
   const createdAt = doc.created_at ? new Date(doc.created_at) : new Date();
   const createdDate = createdAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   const lines = getDocumentLines(doc);
-  const terms = wrapText(doc.terms || 'Thank you for trusting Ijabiken Moyo.', 62).slice(0, 7);
+  const terms = wrapText(doc.terms || 'Contract terms, usage rights, payment, and delivery notes to be confirmed.', 62);
   const logo = getPdfLogo();
   const commands: string[] = [];
   const text = (value: string, x: number, y: number, size = 10, font = 'F1', color = '0.08 0.08 0.08') => {
@@ -490,9 +513,11 @@ function buildPdf(doc: GalleryDocument) {
   text('+2348148192201', 420, 39, 7, 'F1', '0.25 0.25 0.25');
 
   if (terms.length > 0) {
-    text(label === 'INVOICE' ? 'Notes' : 'Terms', 86, Math.max(y - 2, 220), 8, 'F2', BRAND_RED_RGB);
-    terms.forEach((termLine, index) => {
-      text(termLine, 86, Math.max(y - 18 - index * 12, 196), 8, 'F1', '0.28 0.28 0.28');
+    const notesTitleY = Math.max(y - 2, 270);
+    const availableLines = Math.max(1, Math.floor((notesTitleY - 252) / 12));
+    text(label === 'INVOICE' ? 'Contract / Terms' : 'Terms', 86, notesTitleY, 8, 'F2', BRAND_RED_RGB);
+    terms.slice(0, availableLines).forEach((termLine, index) => {
+      text(termLine, 86, notesTitleY - 16 - index * 12, 8, 'F1', '0.28 0.28 0.28');
     });
   }
 
@@ -635,7 +660,7 @@ function emailHtml(doc: GalleryDocument) {
                       </td>
                     </tr>
                   </table>
-                  ${doc.terms ? `<p style="margin:22px 0 0;color:#555555;font-size:12px;line-height:1.7;white-space:pre-line;">${escapeHtml(doc.terms)}</p>` : ''}
+                  ${doc.terms ? `<div style="margin:22px 0 0;padding:16px 0 0;border-top:1px solid #cbc7bd;"><p style="margin:0 0 8px;color:#777777;font-size:10px;line-height:1.3;letter-spacing:2px;text-transform:uppercase;">${label === 'Invoice' ? 'Contract / Terms' : 'Terms'}</p><p style="margin:0;color:#555555;font-size:12px;line-height:1.7;white-space:pre-line;">${escapeHtml(doc.terms)}</p></div>` : ''}
                   <p style="margin:26px 0 0;color:#222222;font-size:13px;line-height:1.6;">Thank you! A PDF copy is attached.</p>
                 </td>
               </tr>
@@ -705,22 +730,37 @@ function parseGeminiDraft(text: string) {
 }
 
 export async function GET(req: NextRequest) {
-  const unauthorized = requireAdmin(req);
-  if (unauthorized) return unauthorized;
-
   const id = req.nextUrl.searchParams.get('id');
   const format = req.nextUrl.searchParams.get('format');
+  const token = req.nextUrl.searchParams.get('token') || '';
   if (id && format === 'pdf') {
     const doc = await getDocument(id);
     if (!doc) return NextResponse.json({ error: 'Document not found.' }, { status: 404 });
+    if (token) {
+      const { rows } = await query(
+        `SELECT id
+         FROM bookings
+         WHERE manage_token = $1
+           AND gallery_id = $2
+         LIMIT 1`,
+        [token, doc.gallery_id]
+      );
+      if (!rows[0]) return NextResponse.json({ error: 'Document not available for this booking.' }, { status: 403 });
+    } else {
+      const unauthorized = requireAdmin(req);
+      if (unauthorized) return unauthorized;
+    }
     const pdf = buildPdf(doc);
     return new NextResponse(pdf, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${doc.document_type}-${doc.id}.pdf"`,
+        'Content-Disposition': `attachment; filename="${sanitizeFilename(`${doc.document_type}-${doc.id}-${doc.title}`)}.pdf"`,
       },
     });
   }
+
+  const unauthorized = requireAdmin(req);
+  if (unauthorized) return unauthorized;
 
   const galleryId = req.nextUrl.searchParams.get('galleryId');
   const params = galleryId ? [galleryId] : [];
@@ -773,8 +813,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Enter a valid amount.' }, { status: 400 });
     }
     if (documentType === 'invoice' && action !== 'generate') {
-      if (!invoiceItems.some((item) => item.description && item.quantity > 0 && item.unitPrice >= 0)) {
-        return NextResponse.json({ error: 'Add at least one invoice item.' }, { status: 400 });
+      if (!invoiceItems.some((item) => item.description && item.quantity > 0 && item.unitPrice > 0)) {
+        return NextResponse.json({ error: 'Add at least one invoice item with a price above zero.' }, { status: 400 });
       }
     }
     if (!/^[A-Z]{3,5}$/.test(currency)) {
@@ -899,7 +939,7 @@ export async function PUT(req: NextRequest) {
         attachments: [
           ...(logoAttachment ? [logoAttachment] : []),
           {
-            filename: `${doc.document_type}-${doc.id}.pdf`,
+            filename: `${sanitizeFilename(`${doc.document_type}-${doc.id}-${doc.title}`)}.pdf`,
             content: buildPdf(doc),
             contentType: 'application/pdf',
           },

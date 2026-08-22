@@ -167,7 +167,33 @@ type Content = {
 type Contact = { phone: string; email: string; address: string };
 type Social = { id: number; platform: string; url: string; icon?: string };
 type Order = { id: number; items: unknown[]; total_price: number; status: string; customer_email: string };
-type AdminSection = 'artwork' | 'digital-products' | 'catalog' | 'galleries' | 'content-contact' | 'orders';
+type Booking = {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  service: string;
+  message: string;
+  booking_date: string;
+  booking_time: string;
+  scheduled_at: string;
+  timezone: string;
+  status: string;
+  manage_token: string;
+  client_notes: string;
+  internal_notes: string;
+  gallery_id: number | null;
+  confirmation_sent_at: string | null;
+  reminder_24h_sent_at: string | null;
+  reminder_day_sent_at: string | null;
+  created_at: string;
+};
+type BookingEditForm = {
+  status: string;
+  clientNotes: string;
+  internalNotes: string;
+};
+type AdminSection = 'bookings' | 'artwork' | 'digital-products' | 'catalog' | 'galleries' | 'content-contact' | 'orders';
 type UploadBatchResult = { urls: string[]; failedFiles: File[] };
 type UploadProgress = { current: number; total: number };
 
@@ -185,6 +211,7 @@ const adminSections: Array<{
   description: string;
   href: string;
 }> = [
+  { id: 'bookings', title: 'Bookings', description: 'Run client requests, reminders, portal notes, and project handoff.', href: '/admin/bookings' },
   { id: 'artwork', title: 'Artwork', description: 'Create and manage fine art catalogue entries.', href: '/admin/artwork' },
   { id: 'digital-products', title: 'Digital Products', description: 'Manage downloadable products and assets.', href: '/admin/digital-products' },
   { id: 'catalog', title: 'Photography Catalog', description: 'Upload and organize portfolio categories.', href: '/admin/catalog' },
@@ -193,10 +220,10 @@ const adminSections: Array<{
   { id: 'orders', title: 'Orders', description: 'Review and update customer order status.', href: '/admin/orders' },
 ];
 
-const sectionCard = 'min-w-0 bg-black/20 p-4 sm:p-6 md:p-8 border border-white/10 space-y-6';
+const sectionCard = 'min-w-0 bg-black/20 p-5 sm:p-7 md:p-9 border border-white/10 space-y-7';
 const label = 'text-[10px] uppercase tracking-[0.18em] text-white/40 sm:tracking-widest';
 const inputClass =
-  'min-w-0 w-full rounded-sm bg-white/[0.04] border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-accent outline-none transition-colors';
+  'min-w-0 w-full rounded-sm bg-white/[0.05] border border-white/10 px-4 py-3.5 text-sm text-white placeholder:text-white/30 focus:border-accent focus:bg-white/[0.07] outline-none transition-colors';
 const mediaAccept = 'image/*,video/*';
 const uploadConcurrency = 2;
 const uploadSaveChunkSize = 25;
@@ -235,6 +262,56 @@ function normalizeDocumentLines(value: string, fallback: string) {
 function toFiniteNumber(value: string | number) {
   const numeric = Number(value || 0);
   return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function isValidDateInput(value: string) {
+  if (!value) return true;
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
+
+function sanitizeFilename(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'document';
+}
+
+function formatBookingDateTime(value: string) {
+  if (!value) return 'Date pending';
+  return new Intl.DateTimeFormat('en-GB', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'Africa/Lagos',
+  }).format(new Date(value));
+}
+
+function getBookingPortalUrl(token: string) {
+  if (!token) return '/client/booking';
+  if (typeof window === 'undefined') return `/client/booking/${token}`;
+  return `${window.location.origin}/client/booking/${token}`;
+}
+
+function createBookingEditForm(booking: Booking): BookingEditForm {
+  return {
+    status: booking.status || 'pending',
+    clientNotes: booking.client_notes || '',
+    internalNotes: booking.internal_notes || '',
+  };
 }
 
 function formatDocumentAmount(amount: string | number, currency: string, zeroLabel = 'To be confirmed') {
@@ -292,13 +369,13 @@ function getDocumentFormIssues(form: GalleryDocumentForm) {
   if (!email) issues.push('Add client email.');
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) issues.push('Use a valid client email.');
   if (currency && !/^[A-Z]{3,5}$/.test(currency.toUpperCase())) issues.push('Currency should be 3 to 5 letters.');
-  if (form.dueDate && Number.isNaN(new Date(`${form.dueDate}T00:00:00`).getTime())) issues.push('Choose a valid due date.');
+  if (!isValidDateInput(form.dueDate)) issues.push('Choose a valid due date.');
   if (form.title.length > 140) issues.push('Keep the title under 140 characters.');
   if (form.lineItems.length > 3000) issues.push('Line items are too long.');
   if (form.terms.length > 3000) issues.push('Terms are too long.');
   if (form.documentType === 'invoice') {
-    if (!calculation.items.some((item) => item.description && item.quantity > 0 && item.unitPrice >= 0)) {
-      issues.push('Add at least one invoice item with a description and quantity.');
+    if (!calculation.items.some((item) => item.description && item.quantity > 0 && item.unitPrice > 0)) {
+      issues.push('Add at least one invoice item with a description, quantity, and price above zero.');
     }
     if (getDefaultInvoiceItems(form).some((item) => item.quantity && toFiniteNumber(item.quantity) <= 0)) {
       issues.push('Item quantities must be above zero.');
@@ -328,7 +405,7 @@ function DocumentPreview({ gallery, form }: { gallery: Gallery; form: GalleryDoc
   const dueDate = form.dueDate || 'On receipt';
   const title = form.title.trim() || `Photography ${labelText}`;
   const email = form.clientEmail.trim() || 'client@email.com';
-  const terms = form.terms.trim() || 'Payment, delivery, and usage notes will appear here.';
+  const terms = form.terms.trim() || 'Contract terms, usage rights, payment, and delivery notes will appear here.';
 
   return (
     <aside className="min-w-0 overflow-hidden border border-white/10 bg-[#f6f3eb] text-[#141414]">
@@ -408,7 +485,7 @@ function DocumentPreview({ gallery, form }: { gallery: Gallery; form: GalleryDoc
 
         <div className="min-w-0 border-l-4 border-accent bg-black/[0.035] p-4">
           <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-black/40">
-            {form.documentType === 'contract' ? 'Terms' : 'Notes'}
+            {form.documentType === 'contract' ? 'Terms' : 'Contract / Terms'}
           </p>
           <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-black/68 [overflow-wrap:anywhere]">{terms}</p>
         </div>
@@ -630,6 +707,7 @@ export default function AdminPage() {
   const shouldShowSection = (section: AdminSection) => activeRouteSection === section;
 
   const [artworks, setArtworks] = useState<Artwork[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [digitalProducts, setDigitalProducts] = useState<DigitalProduct[]>([]);
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [catalogCategories, setCatalogCategories] = useState<PhotographyCatalogCategory[]>([]);
@@ -651,6 +729,7 @@ export default function AdminPage() {
     isAvailable: false,
   });
   const [editingArtworks, setEditingArtworks] = useState<Record<number, ArtworkEditForm>>({});
+  const [editingBookings, setEditingBookings] = useState<Record<number, BookingEditForm>>({});
   const [editingArtworkId, setEditingArtworkId] = useState<number | null>(null);
   const [digitalProductForm, setDigitalProductForm] = useState({
     title: '',
@@ -773,8 +852,9 @@ export default function AdminPage() {
   const fetchAll = useCallback(async () => {
     if (!isAuthed) return;
     try {
-      const [artRes, digitalRes, galRes, documentRes, contentRes, contactRes, socialRes, orderRes] = await Promise.all([
+      const [artRes, bookingRes, digitalRes, galRes, documentRes, contentRes, contactRes, socialRes, orderRes] = await Promise.all([
         fetch('/api/artworks'),
+        fetch('/api/bookings?view=admin', { headers }),
         fetch('/api/digital-products'),
         fetch('/api/galleries', { headers }),
         fetch('/api/galleries/documents', { headers }),
@@ -786,6 +866,7 @@ export default function AdminPage() {
       const catalogRes = await fetch('/api/photography-catalog/categories', { headers });
 
       const artData = await artRes.json();
+      const bookingData = await bookingRes.json();
       const digitalData = await digitalRes.json();
       const galData = await galRes.json();
       const documentData = await documentRes.json();
@@ -796,6 +877,13 @@ export default function AdminPage() {
       const catalogData = await catalogRes.json();
 
       setArtworks(artData.artworks || []);
+      setBookings(bookingData.bookings || []);
+      setEditingBookings(
+        (bookingData.bookings || []).reduce((acc: Record<number, BookingEditForm>, booking: Booking) => {
+          acc[booking.id] = createBookingEditForm(booking);
+          return acc;
+        }, {})
+      );
       setEditingArtworks(
         (artData.artworks || []).reduce((acc: Record<number, ArtworkEditForm>, artwork: Artwork) => {
           acc[artwork.id] = createArtworkEditForm(artwork);
@@ -1757,7 +1845,7 @@ export default function AdminPage() {
       const url = URL.createObjectURL(blob);
       const link = window.document.createElement('a');
       link.href = url;
-      link.download = `${document.document_type}-${document.id}.pdf`;
+      link.download = `${sanitizeFilename(`${document.document_type}-${document.id}-${document.title}`)}.pdf`;
       link.style.display = 'none';
       window.document.body.appendChild(link);
       link.click();
@@ -2056,7 +2144,88 @@ export default function AdminPage() {
     if (res.ok) setOrders((p) => p.map((o) => (o.id === Number(id) ? data.order : o)));
   };
 
+  const updateBookingDraft = (id: number, patch: Partial<BookingEditForm>) => {
+    const booking = bookings.find((item) => item.id === id);
+    setEditingBookings((prev) => ({
+      ...prev,
+      [id]: {
+        ...(prev[id] || {
+          status: booking?.status || 'pending',
+          clientNotes: booking?.client_notes || '',
+          internalNotes: booking?.internal_notes || '',
+        }),
+        ...patch,
+      },
+    }));
+  };
+
+  const saveBooking = async (booking: Booking) => {
+    const draft = editingBookings[booking.id] || createBookingEditForm(booking);
+    const res = await fetch('/api/bookings', {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        id: booking.id,
+        status: draft.status,
+        clientNotes: draft.clientNotes,
+        internalNotes: draft.internalNotes,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.booking) return setMessage({ text: data.error || 'Unable to update booking', type: 'error' });
+    setBookings((prev) => prev.map((item) => (item.id === booking.id ? data.booking : item)));
+    setEditingBookings((prev) => ({ ...prev, [booking.id]: createBookingEditForm(data.booking) }));
+    setMessage({ text: 'Booking updated', type: 'success' });
+  };
+
+  const copyBookingPortal = async (booking: Booking) => {
+    try {
+      await navigator.clipboard.writeText(getBookingPortalUrl(booking.manage_token));
+      setMessage({ text: 'Client portal link copied', type: 'success' });
+    } catch {
+      setMessage({ text: 'Unable to copy portal link', type: 'error' });
+    }
+  };
+
+  const createGalleryFromBooking = async (booking: Booking) => {
+    if (!adminKey) return setMessage({ text: 'Add admin key first', type: 'error' });
+    const accessCode = generateAccessCode();
+    const slugBase = `${booking.name || 'client'}-${booking.id}`;
+    const res = await fetch('/api/galleries', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        clientName: booking.name,
+        slug: slugBase.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
+        access_code: accessCode,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.gallery) return setMessage({ text: data.error || 'Unable to create gallery', type: 'error' });
+    setGalleries((prev) => [data.gallery, ...prev]);
+    setGalleryPaymentUrls((prev) => ({ ...prev, [data.gallery.id]: data.gallery.payment_url || '' }));
+    const draft = editingBookings[booking.id] || createBookingEditForm(booking);
+    const bookingRes = await fetch('/api/bookings', {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        id: booking.id,
+        status: draft.status === 'pending' ? 'confirmed' : draft.status,
+        clientNotes: draft.clientNotes,
+        internalNotes: draft.internalNotes,
+        galleryId: data.gallery.id,
+      }),
+    });
+    const bookingData = await bookingRes.json().catch(() => ({}));
+    if (bookingRes.ok && bookingData.booking) {
+      setBookings((prev) => prev.map((item) => (item.id === booking.id ? bookingData.booking : item)));
+      setEditingBookings((prev) => ({ ...prev, [booking.id]: createBookingEditForm(bookingData.booking) }));
+    }
+    setMessage({ text: `Gallery created for ${booking.name}`, type: 'success' });
+  };
+
   const getAdminSectionMetric = (section: AdminSection) => {
+    if (section === 'bookings') return `${bookings.length} ${bookings.length === 1 ? 'booking' : 'bookings'}`;
     if (section === 'artwork') return `${artworks.length} ${artworks.length === 1 ? 'work' : 'works'}`;
     if (section === 'digital-products') return `${digitalProducts.length} products`;
     if (section === 'catalog') return `${catalogCategories.length} categories`;
@@ -2130,7 +2299,7 @@ export default function AdminPage() {
         <div className="mb-10 grid min-w-0 gap-4 md:grid-cols-4">
           <div className="flex min-w-0 flex-wrap gap-3 text-xs text-white/50 md:col-span-3">
             <span className="px-3 py-2 border border-white/10 bg-white/5 uppercase tracking-[0.16em] sm:tracking-[0.25em]">
-              Connected to MongoDB
+              Connected to PostgreSQL
             </span>
             <span className="px-3 py-2 border border-white/10 bg-white/5 uppercase tracking-[0.16em] sm:tracking-[0.25em]">
               Cloudinary uploads
@@ -2194,7 +2363,7 @@ export default function AdminPage() {
           </motion.div>
         )}
 
-        <div className="mb-12 grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mb-12 grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4">
           {adminSections.map((section) => {
             const isActive = activeRouteSection === section.id;
             return (
@@ -2237,6 +2406,163 @@ export default function AdminPage() {
         )}
 
         <div className="space-y-4">
+          {/* Bookings */}
+          {shouldShowSection('bookings') && (
+          <AdminAccordionPanel
+            id="bookings"
+            title="Bookings"
+            summary={`${bookings.length} ${bookings.length === 1 ? 'booking' : 'bookings'}`}
+            openSection={displayedOpenSection}
+            onOpen={setDisplayedOpenSection}
+          >
+          <section className="space-y-8">
+            <div className="grid gap-4 md:grid-cols-4">
+              {[
+                ['Pending', bookings.filter((booking) => booking.status === 'pending').length],
+                ['Confirmed', bookings.filter((booking) => booking.status === 'confirmed').length],
+                ['Documents', bookings.filter((booking) => ['contract-sent', 'invoiced'].includes(booking.status)).length],
+                ['Completed', bookings.filter((booking) => booking.status === 'completed').length],
+              ].map(([title, value]) => (
+                <div key={title} className="border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-white/35">{title}</p>
+                  <p className="mt-3 font-heading text-3xl italic text-white">{value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid gap-4">
+              {bookings.map((booking) => {
+                const draft = editingBookings[booking.id] || createBookingEditForm(booking);
+                const portalUrl = getBookingPortalUrl(booking.manage_token);
+                const matchingGallery = galleries.find((gallery) =>
+                  gallery.id === booking.gallery_id ||
+                  gallery.client_name.toLowerCase().trim() === booking.name.toLowerCase().trim()
+                );
+                return (
+                  <div key={booking.id} className="grid gap-5 border border-white/10 bg-black/20 p-4 md:p-5 xl:grid-cols-[0.85fr_1.15fr]">
+                    <div className="min-w-0 space-y-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-heading text-2xl italic text-white [overflow-wrap:anywhere]">{booking.name}</p>
+                          <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-white/40 [overflow-wrap:anywhere]">
+                            {booking.email} {booking.phone ? `• ${booking.phone}` : ''}
+                          </p>
+                        </div>
+                        <span className="border border-accent/35 bg-accent/10 px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-accent">
+                          {booking.status}
+                        </span>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="border border-white/10 bg-white/[0.025] p-3">
+                          <p className="text-[10px] uppercase tracking-[0.2em] text-white/35">Booked for</p>
+                          <p className="mt-2 text-sm text-white/75">{formatBookingDateTime(booking.scheduled_at)}</p>
+                        </div>
+                        <div className="border border-white/10 bg-white/[0.025] p-3">
+                          <p className="text-[10px] uppercase tracking-[0.2em] text-white/35">Service</p>
+                          <p className="mt-2 text-sm capitalize text-white/75">{booking.service}</p>
+                        </div>
+                      </div>
+
+                      <div className="border border-white/10 bg-white/[0.025] p-3">
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-white/35">Brief</p>
+                        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-white/55">{booking.message || 'No brief added.'}</p>
+                      </div>
+
+                      <div className="grid gap-2 text-[10px] uppercase tracking-[0.16em] text-white/35 sm:grid-cols-3">
+                        <span className={booking.confirmation_sent_at ? 'text-green-300' : ''}>
+                          {booking.confirmation_sent_at ? 'Confirmed email' : 'No confirmation'}
+                        </span>
+                        <span className={booking.reminder_24h_sent_at ? 'text-green-300' : ''}>
+                          {booking.reminder_24h_sent_at ? '24h sent' : '24h pending'}
+                        </span>
+                        <span className={booking.reminder_day_sent_at ? 'text-green-300' : ''}>
+                          {booking.reminder_day_sent_at ? 'Day sent' : 'Day pending'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="min-w-0 space-y-4">
+                      <div className="grid gap-3 sm:grid-cols-[180px_minmax(0,1fr)]">
+                        <select
+                          className={inputClass}
+                          value={draft.status}
+                          onChange={(e) => updateBookingDraft(booking.id, { status: e.target.value })}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="confirmed">Confirmed</option>
+                          <option value="contract-sent">Contract sent</option>
+                          <option value="invoiced">Invoiced</option>
+                          <option value="completed">Completed</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                        <input
+                          className={`${inputClass} text-xs`}
+                          value={portalUrl}
+                          readOnly
+                          aria-label="Client portal URL"
+                        />
+                      </div>
+
+                      <textarea
+                        className={`${inputClass} min-h-24 resize-y`}
+                        maxLength={2000}
+                        placeholder="Client-facing note. This appears in their private booking portal."
+                        value={draft.clientNotes}
+                        onChange={(e) => updateBookingDraft(booking.id, { clientNotes: e.target.value })}
+                      />
+                      <textarea
+                        className={`${inputClass} min-h-24 resize-y`}
+                        maxLength={2000}
+                        placeholder="Internal notes for call time, contract needs, invoice status, crew, or delivery."
+                        value={draft.internalNotes}
+                        onChange={(e) => updateBookingDraft(booking.id, { internalNotes: e.target.value })}
+                      />
+
+                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                        <button
+                          type="button"
+                          onClick={() => saveBooking(booking)}
+                          className="bg-white px-3 py-3 text-[9px] font-bold uppercase tracking-[0.16em] text-black transition-colors hover:bg-accent"
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => copyBookingPortal(booking)}
+                          className="border border-accent/45 px-3 py-3 text-[9px] font-bold uppercase tracking-[0.16em] text-accent transition-colors hover:bg-accent hover:text-black"
+                        >
+                          Copy Link
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => createGalleryFromBooking(booking)}
+                          className="border border-white/15 px-3 py-3 text-[9px] uppercase tracking-[0.16em] text-white/65 transition-colors hover:border-accent hover:text-accent"
+                        >
+                          Create Gallery
+                        </button>
+                        <Link
+                          href={matchingGallery ? '/admin/galleries' : '/admin/galleries'}
+                          className="border border-white/15 px-3 py-3 text-center text-[9px] uppercase tracking-[0.16em] text-white/65 transition-colors hover:border-accent hover:text-accent"
+                        >
+                          {matchingGallery ? 'Open Gallery' : 'Galleries'}
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {bookings.length === 0 && (
+                <div className="border border-white/10 bg-white/[0.03] p-8 text-sm text-white/45">
+                  No bookings yet. New calendar requests from the public booking form will appear here.
+                </div>
+              )}
+            </div>
+          </section>
+          </AdminAccordionPanel>
+          )}
+
           {/* Artwork */}
           {shouldShowSection('artwork') && (
           <AdminAccordionPanel
@@ -2398,7 +2724,7 @@ export default function AdminPage() {
                 </button>
               </form>
             </div>
-            <div className="space-y-4 max-h-[640px] overflow-y-auto pr-2">
+            <div className="space-y-4">
               <h3 className="text-[10px] uppercase tracking-[0.28em] text-accent sm:tracking-[0.5em]">Existing</h3>
               {artworks.map((art) => {
                 const draft = editingArtworks[art.id] || createArtworkEditForm(art);
@@ -2712,7 +3038,7 @@ export default function AdminPage() {
               </form>
             </div>
 
-            <div className="max-h-[760px] space-y-4 overflow-y-auto pr-2">
+            <div className="space-y-4">
               <h3 className="text-[10px] uppercase tracking-[0.28em] text-accent sm:tracking-[0.5em]">Existing Products</h3>
               {digitalProducts.map((product) => {
                 const draft = editingDigitalProducts[product.id] || {
@@ -2846,7 +3172,7 @@ export default function AdminPage() {
             openSection={displayedOpenSection}
             onOpen={setDisplayedOpenSection}
           >
-          <section className="grid lg:grid-cols-2 gap-12 items-start">
+          <section className="grid gap-8 xl:grid-cols-[0.78fr_1.22fr] xl:items-start">
             <div className={sectionCard}>
               <h2 className="text-2xl font-heading text-white italic">Photography Catalog</h2>
               <form className="space-y-4" onSubmit={createCatalogCategory}>
@@ -3023,7 +3349,7 @@ export default function AdminPage() {
               </form>
             </div>
 
-            <div className="space-y-4 max-h-[760px] overflow-y-auto pr-2">
+            <div className="space-y-4">
               <h3 className="text-[10px] uppercase tracking-[0.28em] text-accent sm:tracking-[0.5em]">Catalog Categories</h3>
               {catalogCategories.map((category) => (
                 <div key={category.id} className="bg-surface/20 border border-white/5 p-4 space-y-4">
@@ -3155,7 +3481,7 @@ export default function AdminPage() {
             openSection={displayedOpenSection}
             onOpen={setDisplayedOpenSection}
           >
-          <section className="grid lg:grid-cols-2 gap-12 items-start">
+          <section className="grid gap-8 xl:grid-cols-[0.68fr_1.32fr] xl:items-start">
             <div className={sectionCard}>
               <h2 className="text-2xl font-heading text-white italic">Galleries</h2>
               <form className="space-y-4" onSubmit={createGallery}>
@@ -3203,7 +3529,7 @@ export default function AdminPage() {
                 </button>
               </form>
             </div>
-            <div className="space-y-4 max-h-[640px] overflow-y-auto pr-2">
+            <div className="space-y-5">
               <div className="flex items-center justify-between gap-4">
                 <h3 className="text-[10px] uppercase tracking-[0.28em] text-accent sm:tracking-[0.5em]">Existing</h3>
                 <button
@@ -3686,7 +4012,7 @@ export default function AdminPage() {
                               <textarea
                                 className={`${inputClass} min-h-24 resize-y`}
                                 maxLength={3000}
-                                placeholder="Payment terms, usage rights, delivery notes..."
+                                placeholder="Contract terms, usage rights, payment terms, delivery notes..."
                                 value={docForm.terms}
                                 onChange={(e) => updateGalleryDocumentForm(gal.id, { terms: e.target.value })}
                               />
@@ -3788,7 +4114,7 @@ export default function AdminPage() {
             openSection={displayedOpenSection}
             onOpen={setDisplayedOpenSection}
           >
-          <section className="grid lg:grid-cols-2 gap-12 items-start">
+          <section className="grid gap-8 xl:grid-cols-[0.95fr_1.05fr] xl:items-start">
             <div className={sectionCard}>
               <h2 className="text-2xl font-heading text-white italic">Homepage & About</h2>
               <div className="space-y-3">
@@ -4377,7 +4703,7 @@ export default function AdminPage() {
                 >
                   Add Social
                 </button>
-                <div className="space-y-2 max-h-72 overflow-y-auto sm:max-h-40">
+                <div className="space-y-2">
                   {socials.map((s) => (
                     <div key={s.id} className="grid min-w-0 gap-2 border border-white/10 p-3 text-xs lg:grid-cols-[1fr_1.5fr_0.8fr_auto]">
                       <input
@@ -4442,7 +4768,7 @@ export default function AdminPage() {
           >
           <section className={sectionCard}>
             <h2 className="text-2xl font-heading text-white italic mb-4">Orders</h2>
-            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+            <div className="space-y-3">
               {orders.map((order) => (
                 <div key={order.id} className="border border-white/10 p-4 space-y-2">
                   <div className="flex items-center justify-between text-sm text-white">

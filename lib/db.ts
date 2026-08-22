@@ -122,6 +122,29 @@ async function ensureTables() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
 
+    CREATE TABLE IF NOT EXISTS bookings (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT DEFAULT '',
+      service TEXT NOT NULL,
+      message TEXT DEFAULT '',
+      booking_date DATE NOT NULL,
+      booking_time TEXT NOT NULL,
+      scheduled_at TIMESTAMPTZ NOT NULL,
+      timezone TEXT DEFAULT 'Africa/Lagos',
+      status TEXT DEFAULT 'pending',
+      manage_token TEXT UNIQUE,
+      client_notes TEXT DEFAULT '',
+      internal_notes TEXT DEFAULT '',
+      gallery_id INTEGER REFERENCES galleries(id) ON DELETE SET NULL,
+      confirmation_sent_at TIMESTAMPTZ,
+      reminder_24h_sent_at TIMESTAMPTZ,
+      reminder_day_sent_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
     CREATE TABLE IF NOT EXISTS digital_products (
       id SERIAL PRIMARY KEY,
       title TEXT NOT NULL,
@@ -214,6 +237,35 @@ async function ensureTables() {
       ADD COLUMN IF NOT EXISTS display_order INTEGER DEFAULT 0,
       ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE,
       ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+  `);
+
+  await pool.query(`
+    ALTER TABLE bookings
+      ADD COLUMN IF NOT EXISTS phone TEXT DEFAULT '',
+      ADD COLUMN IF NOT EXISTS message TEXT DEFAULT '',
+      ADD COLUMN IF NOT EXISTS booking_date DATE,
+      ADD COLUMN IF NOT EXISTS booking_time TEXT,
+      ADD COLUMN IF NOT EXISTS scheduled_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS timezone TEXT DEFAULT 'Africa/Lagos',
+      ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending',
+      ADD COLUMN IF NOT EXISTS manage_token TEXT UNIQUE,
+      ADD COLUMN IF NOT EXISTS client_notes TEXT DEFAULT '',
+      ADD COLUMN IF NOT EXISTS internal_notes TEXT DEFAULT '',
+      ADD COLUMN IF NOT EXISTS gallery_id INTEGER REFERENCES galleries(id) ON DELETE SET NULL,
+      ADD COLUMN IF NOT EXISTS confirmation_sent_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS reminder_24h_sent_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS reminder_day_sent_at TIMESTAMPTZ,
+      ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+    CREATE UNIQUE INDEX IF NOT EXISTS bookings_active_slot_idx
+      ON bookings (scheduled_at)
+      WHERE status <> 'cancelled';
+  `);
+
+  await pool.query(`
+    UPDATE bookings
+    SET manage_token = lower(substr(md5(random()::text || clock_timestamp()::text || id::text), 1, 24))
+    WHERE manage_token IS NULL OR manage_token = '';
   `);
 
   await pool.query(`
