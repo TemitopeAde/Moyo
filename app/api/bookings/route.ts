@@ -151,16 +151,21 @@ export async function GET(req: NextRequest) {
   const view = req.nextUrl.searchParams.get('view');
 
   if (view === 'admin') {
-    const unauthorized = requireAdmin(req);
-    if (unauthorized) return unauthorized;
-    const { rows } = await query(
-      `SELECT id, name, email, phone, service, message, booking_date::text, booking_time, scheduled_at::text, timezone, status,
-              manage_token, client_notes, internal_notes, gallery_id, confirmation_sent_at::text, reminder_24h_sent_at::text, reminder_day_sent_at::text, created_at::text
-       FROM bookings
-       ORDER BY scheduled_at DESC
-       LIMIT 100`
-    );
-    return NextResponse.json({ bookings: rows });
+    try {
+      const unauthorized = requireAdmin(req);
+      if (unauthorized) return unauthorized;
+      const { rows } = await query(
+        `SELECT id, name, email, phone, service, message, booking_date::text, booking_time, scheduled_at::text, timezone, status,
+                manage_token, client_notes, internal_notes, gallery_id, confirmation_sent_at::text, reminder_24h_sent_at::text, reminder_day_sent_at::text, created_at::text, updated_at::text
+         FROM bookings
+         ORDER BY scheduled_at DESC
+         LIMIT 100`
+      );
+      return NextResponse.json({ bookings: rows });
+    } catch (error) {
+      console.error('[bookings] Failed to load admin bookings:', error);
+      return NextResponse.json({ error: 'Failed to load bookings.' }, { status: 500 });
+    }
   }
 
   const start = req.nextUrl.searchParams.get('start') || '';
@@ -243,7 +248,7 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json() as Record<string, unknown>;
-    const id = normalize(body.id);
+    const id = Number(body.id);
     const status = normalize(body.status).toLowerCase();
     const clientNotes = normalize(body.clientNotes).slice(0, 2000);
     const internalNotes = normalize(body.internalNotes).slice(0, 2000);
@@ -252,7 +257,7 @@ export async function PUT(req: NextRequest) {
       : Number(body.galleryId);
     const allowedStatuses = new Set(['pending', 'confirmed', 'contract-sent', 'invoiced', 'completed', 'cancelled']);
 
-    if (!id) return NextResponse.json({ error: 'Missing booking id.' }, { status: 400 });
+    if (!Number.isInteger(id) || id <= 0) return NextResponse.json({ error: 'Missing booking id.' }, { status: 400 });
     if (!allowedStatuses.has(status)) return NextResponse.json({ error: 'Choose a valid booking status.' }, { status: 400 });
     if (galleryId !== null && (!Number.isInteger(galleryId) || galleryId <= 0)) {
       return NextResponse.json({ error: 'Choose a valid gallery.' }, { status: 400 });
@@ -263,11 +268,11 @@ export async function PUT(req: NextRequest) {
        SET status = $1,
            client_notes = $2,
            internal_notes = $3,
-           gallery_id = COALESCE($4, gallery_id),
+           gallery_id = $4,
            updated_at = NOW()
        WHERE id = $5
        RETURNING id, name, email, phone, service, message, booking_date::text, booking_time, scheduled_at::text, timezone, status,
-                 manage_token, client_notes, internal_notes, gallery_id, confirmation_sent_at::text, reminder_24h_sent_at::text, reminder_day_sent_at::text, created_at::text`,
+                 manage_token, client_notes, internal_notes, gallery_id, confirmation_sent_at::text, reminder_24h_sent_at::text, reminder_day_sent_at::text, created_at::text, updated_at::text`,
       [status, clientNotes, internalNotes, galleryId, id]
     );
 

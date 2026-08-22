@@ -192,6 +192,7 @@ type BookingEditForm = {
   status: string;
   clientNotes: string;
   internalNotes: string;
+  galleryId: string;
 };
 type AdminSection = 'bookings' | 'artwork' | 'digital-products' | 'catalog' | 'galleries' | 'content-contact' | 'orders';
 type UploadBatchResult = { urls: string[]; failedFiles: File[] };
@@ -311,7 +312,17 @@ function createBookingEditForm(booking: Booking): BookingEditForm {
     status: booking.status || 'pending',
     clientNotes: booking.client_notes || '',
     internalNotes: booking.internal_notes || '',
+    galleryId: booking.gallery_id ? String(booking.gallery_id) : '',
   };
+}
+
+async function readJsonResponse<T>(res: Response, fallbackMessage: string): Promise<T> {
+  const data = await res.json().catch(() => ({})) as { error?: unknown };
+  if (!res.ok) {
+    const error = typeof data.error === 'string' ? data.error : fallbackMessage;
+    throw new Error(error);
+  }
+  return data as T;
 }
 
 function formatDocumentAmount(amount: string | number, currency: string, zeroLabel = 'To be confirmed') {
@@ -854,27 +865,27 @@ export default function AdminPage() {
     try {
       const [artRes, bookingRes, digitalRes, galRes, documentRes, contentRes, contactRes, socialRes, orderRes] = await Promise.all([
         fetch('/api/artworks'),
-        fetch('/api/bookings?view=admin', { headers }),
+        fetch('/api/bookings?view=admin', { headers, credentials: 'same-origin' }),
         fetch('/api/digital-products'),
-        fetch('/api/galleries', { headers }),
-        fetch('/api/galleries/documents', { headers }),
+        fetch('/api/galleries', { headers, credentials: 'same-origin' }),
+        fetch('/api/galleries/documents', { headers, credentials: 'same-origin' }),
         fetch('/api/content'),
         fetch('/api/contact'),
         fetch('/api/socials'),
         fetch('/api/orders'),
       ]);
-      const catalogRes = await fetch('/api/photography-catalog/categories', { headers });
+      const catalogRes = await fetch('/api/photography-catalog/categories', { headers, credentials: 'same-origin' });
 
-      const artData = await artRes.json();
-      const bookingData = await bookingRes.json();
-      const digitalData = await digitalRes.json();
-      const galData = await galRes.json();
-      const documentData = await documentRes.json();
-      const conData = await contentRes.json();
-      const contactData = await contactRes.json();
-      const socialData = await socialRes.json();
-      const orderData = await orderRes.json();
-      const catalogData = await catalogRes.json();
+      const artData = await readJsonResponse<{ artworks?: Artwork[] }>(artRes, 'Failed to load artworks');
+      const bookingData = await readJsonResponse<{ bookings?: Booking[] }>(bookingRes, 'Failed to load bookings');
+      const digitalData = await readJsonResponse<{ products?: DigitalProduct[] }>(digitalRes, 'Failed to load digital products');
+      const galData = await readJsonResponse<{ galleries?: Gallery[] }>(galRes, 'Failed to load galleries');
+      const documentData = await readJsonResponse<{ documents?: GalleryDocument[] }>(documentRes, 'Failed to load documents');
+      const conData = await readJsonResponse<{ content?: Content }>(contentRes, 'Failed to load content');
+      const contactData = await readJsonResponse<{ contact?: Contact }>(contactRes, 'Failed to load contact');
+      const socialData = await readJsonResponse<{ socials?: Social[] }>(socialRes, 'Failed to load socials');
+      const orderData = await readJsonResponse<{ orders?: Order[] }>(orderRes, 'Failed to load orders');
+      const catalogData = await readJsonResponse<{ categories?: PhotographyCatalogCategory[] }>(catalogRes, 'Failed to load catalog');
 
       setArtworks(artData.artworks || []);
       setBookings(bookingData.bookings || []);
@@ -941,7 +952,7 @@ export default function AdminPage() {
       );
     } catch (error) {
       console.error(error);
-      setMessage({ text: 'Failed to load data', type: 'error' });
+      setMessage({ text: error instanceof Error ? error.message : 'Failed to load data', type: 'error' });
     }
   }, [headers, isAuthed]);
 
@@ -2153,6 +2164,7 @@ export default function AdminPage() {
           status: booking?.status || 'pending',
           clientNotes: booking?.client_notes || '',
           internalNotes: booking?.internal_notes || '',
+          galleryId: booking?.gallery_id ? String(booking.gallery_id) : '',
         }),
         ...patch,
       },
@@ -2164,14 +2176,16 @@ export default function AdminPage() {
     const res = await fetch('/api/bookings', {
       method: 'PUT',
       headers,
+      credentials: 'same-origin',
       body: JSON.stringify({
         id: booking.id,
         status: draft.status,
         clientNotes: draft.clientNotes,
         internalNotes: draft.internalNotes,
+        galleryId: draft.galleryId ? Number(draft.galleryId) : null,
       }),
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.booking) return setMessage({ text: data.error || 'Unable to update booking', type: 'error' });
     setBookings((prev) => prev.map((item) => (item.id === booking.id ? data.booking : item)));
     setEditingBookings((prev) => ({ ...prev, [booking.id]: createBookingEditForm(data.booking) }));
@@ -2188,12 +2202,12 @@ export default function AdminPage() {
   };
 
   const createGalleryFromBooking = async (booking: Booking) => {
-    if (!adminKey) return setMessage({ text: 'Add admin key first', type: 'error' });
     const accessCode = generateAccessCode();
     const slugBase = `${booking.name || 'client'}-${booking.id}`;
     const res = await fetch('/api/galleries', {
       method: 'POST',
       headers,
+      credentials: 'same-origin',
       body: JSON.stringify({
         clientName: booking.name,
         slug: slugBase.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
@@ -2208,6 +2222,7 @@ export default function AdminPage() {
     const bookingRes = await fetch('/api/bookings', {
       method: 'PUT',
       headers,
+      credentials: 'same-origin',
       body: JSON.stringify({
         id: booking.id,
         status: draft.status === 'pending' ? 'confirmed' : draft.status,
@@ -2503,6 +2518,22 @@ export default function AdminPage() {
                           aria-label="Client portal URL"
                         />
                       </div>
+
+                      <label className="block space-y-2">
+                        <span className="block text-[10px] uppercase tracking-[0.2em] text-white/35">Linked gallery</span>
+                        <select
+                          className={inputClass}
+                          value={draft.galleryId}
+                          onChange={(e) => updateBookingDraft(booking.id, { galleryId: e.target.value })}
+                        >
+                          <option value="">No gallery linked</option>
+                          {galleries.map((gallery) => (
+                            <option key={gallery.id} value={gallery.id}>
+                              {gallery.client_name} / {gallery.slug}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
 
                       <textarea
                         className={`${inputClass} min-h-24 resize-y`}
